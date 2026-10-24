@@ -1,13 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '../audio/sfx';
 import { speak, stopSpeaking } from '../audio/voice';
-import { cardId, instruction, type CardParams, type Mission } from '../content/missions';
+import { cardId, instruction, voiceText, type CardParams, type Mission } from '../content/missions';
 import type { Attempt, HelpLevel, Mode, Variant } from '../engine/types';
+import { ArrayGame } from '../games/ArrayGame';
 import { BasketGame } from '../games/BasketGame';
 import { BoxesGame } from '../games/BoxesGame';
+import { CompareGame } from '../games/CompareGame';
+import { CountGame } from '../games/CountGame';
 import { CupsGame } from '../games/CupsGame';
+import { FactsGame } from '../games/FactsGame';
+import { HiddenGame } from '../games/HiddenGame';
 import { ParcelsGame } from '../games/ParcelsGame';
+import { RecordGame } from '../games/RecordGame';
 import { SeatsGame } from '../games/SeatsGame';
+import { ShapesGame } from '../games/ShapesGame';
+import { StoryGame } from '../games/StoryGame';
+import { TenFrameGame } from '../games/TenFrameGame';
+import { TensGame } from '../games/TensGame';
 import type { GameResult } from '../games/types';
 import { Emoji } from '../ui/art';
 
@@ -53,9 +63,10 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
   const busy = useRef(false);
   const step = steps[pos];
   const text = instruction(step.params);
+  const helpTexts = mission.helpFor?.(step.params) ?? mission.help;
 
   useEffect(() => {
-    if (!done) speak(text);
+    if (!done) speak(voiceText(text));
   }, [text, pos, done]);
 
   useEffect(() => () => stopSpeaking(), []);
@@ -64,8 +75,8 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
     if (help >= 3) return;
     const next = (help + 1) as HelpLevel;
     setHelp(next);
-    speak(mission.help[next - 1]);
-    setMessage(mission.help[next - 1]);
+    speak(voiceText(helpTexts[next - 1]));
+    setMessage(helpTexts[next - 1]);
   };
 
   const submit = (r: GameResult) => {
@@ -92,8 +103,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
 
     if (r.correct && r.final === false) {
       sfx.good();
-      speak('Верно! А теперь: сколько всего?');
-      setMessage('Верно! А теперь: сколько всего?');
+      const next = r.next ?? 'Верно! А теперь: сколько всего?';
+      speak(next);
+      setMessage(next);
       release(600);
       return;
     }
@@ -154,7 +166,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
             <span key={i} className={`dot ${i < pos ? 'past' : i === pos ? 'now' : ''}`} title={STEP_TITLE[s.variant]} />
           ))}
         </div>
-        <button className="btn icon" onClick={() => speak(text)} aria-label="Повторить задание">🔊</button>
+        <button className="btn icon" onClick={() => speak(voiceText(text))} aria-label="Повторить задание">🔊</button>
         <button
           className={`btn icon help ${errors > 0 && help === 0 ? 'pulse' : ''}`}
           onClick={raiseHelp}
@@ -174,6 +186,16 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       {p.kind === 'seats' && <SeatsGame key={key} params={p} {...gameProps} />}
       {p.kind === 'parcels' && <ParcelsGame key={key} params={p} {...gameProps} />}
       {p.kind === 'boxes' && <BoxesGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'count' && <CountGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'compare' && <CompareGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'hidden' && <HiddenGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'shapes' && <ShapesGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'tenframe' && <TenFrameGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'tens' && <TensGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'record' && <RecordGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'array' && <ArrayGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'facts' && <FactsGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'story' && <StoryGame key={key} params={p} {...gameProps} />}
     </div>
   );
 }

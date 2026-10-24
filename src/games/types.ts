@@ -5,6 +5,8 @@ export interface GameResult {
   answer: string;
   /** false — это промежуточный шаг карточки (например, раскладка до вопроса об итоге). */
   final?: boolean;
+  /** Вопрос следующего шага, если final === false. */
+  next?: string;
 }
 
 export interface GameProps<P> {

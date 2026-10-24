@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { sfx } from '../audio/sfx';
 import { FRUITS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
+import { NumberTile } from '../ui/NumberTile';
 import type { GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'basket' }>;
@@ -27,6 +28,11 @@ export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
 
   return (
     <div className="game">
+      {params.cue === 'digit' && (
+        <div className="digit-cue" aria-label={`Цифра ${params.target}`}>
+          <NumberTile n={params.target} dots={help >= 2} />
+        </div>
+      )}
       <div className="stock wide">
         {Array.from({ length: stock }, (_, i) => (
           <button key={i} className="tap" onClick={put} aria-label={`Положить: ${fruit.forms[0]}`}>

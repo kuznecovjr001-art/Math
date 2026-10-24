@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { speak } from '../audio/voice';
-import { MISSIONS } from '../content/missions';
-import {
-  isReviewDue, missionCompleted, missionUnlocked, suggestMissions,
-} from '../engine/progress';
+import { ISLANDS, islandOpen, missionOpen, orderedMissions } from '../content/levels';
+import { getMission } from '../content/missions';
+import { isReviewDue, missionCompleted, suggestMissions } from '../engine/progress';
 import type { Attempt, Profile } from '../engine/types';
 import { Emoji } from '../ui/art';
 import type { PlayMode } from './MissionPlayer';
@@ -22,7 +21,9 @@ const REASON = { review: 'Вспомним', new: 'Новое', again: 'Ещё �
 
 export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, onSwitch }: Props) {
   const own = attempts.filter((a) => a.profileId === profile.id);
-  const suggestions = suggestMissions(own, MISSIONS, now);
+  const start0 = profile.startIsland ?? 0;
+  const isOpen = (id: string) => missionOpen(own, getMission(id)!, start0);
+  const suggestions = suggestMissions(own, orderedMissions(), isOpen, now);
 
   useEffect(() => {
     speak(suggestions.length > 1 ? 'Выбери, во что поиграем.' : 'Нажми на картинку, чтобы начать.');
@@ -45,7 +46,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
 
       <section className="today" aria-label="Сегодня">
         {suggestions.map((s) => {
-          const m = MISSIONS.find((x) => x.id === s.id)!;
+          const m = getMission(s.id)!;
           return (
             <button key={s.id} className={`today-card ${s.reason}`} onClick={() => start(s.id)}>
               <Emoji code={m.icon} size={88} />
@@ -56,32 +57,38 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
         })}
       </section>
 
-      <section className="island" aria-label="Остров счёта">
-        <h2>Остров счёта</h2>
-        <ol className="path">
-          {MISSIONS.map((m) => {
-            const open = missionUnlocked(own, m);
-            const done = missionCompleted(own, m.id);
-            const due = isReviewDue(own, m.id, now);
-            return (
-              <li key={m.id} className={`stone ${open ? 'open' : 'locked'} ${done ? 'done' : ''}`}>
-                <button
-                  className="tap stone-btn"
-                  disabled={!open}
-                  onClick={() => start(m.id)}
-                  aria-label={`${m.title}${open ? '' : ', пока закрыто'}`}
-                >
-                  <Emoji code={m.icon} size={56} />
-                  {done && <span className="stone-star"><Emoji code="2B50" size={26} /></span>}
-                  {due && <span className="stone-due">Вспомним</span>}
-                  {!open && <span className="stone-lock" aria-hidden="true">🔒</span>}
-                </button>
-                <span className="stone-title">{m.title}</span>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+      {ISLANDS.map((isl, index) => {
+        const islOpen = islandOpen(own, index, start0);
+        return (
+          <section key={isl.id} className={`island ${islOpen ? '' : 'locked'}`} aria-label={isl.title}>
+            <h2>{islOpen ? '' : '🔒 '}{isl.title}</h2>
+            <ol className="path">
+              {isl.missions.map((id) => {
+                const m = getMission(id)!;
+                const open = isOpen(id);
+                const done = missionCompleted(own, id);
+                const due = isReviewDue(own, id, now);
+                return (
+                  <li key={id} className={`stone ${open ? 'open' : 'locked'} ${done ? 'done' : ''}`}>
+                    <button
+                      className="tap stone-btn"
+                      disabled={!open}
+                      onClick={() => start(id)}
+                      aria-label={`${m.title}${open ? '' : ', пока закрыто'}`}
+                    >
+                      <Emoji code={m.icon} size={56} />
+                      {done && <span className="stone-star"><Emoji code="2B50" size={26} /></span>}
+                      {due && <span className="stone-due">Вспомним</span>}
+                      {!open && <span className="stone-lock" aria-hidden="true">🔒</span>}
+                    </button>
+                    <span className="stone-title">{m.title}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        );
+      })}
     </div>
   );
 }

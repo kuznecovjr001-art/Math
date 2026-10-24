@@ -87,11 +87,12 @@ export function missionUnlocked(attempts: Attempt[], m: MissionRef): boolean {
 
 /**
  * Предлагаем ребёнку две миссии: сначала то, что пора повторить,
- * затем новые доступные, затем любые пройденные.
+ * затем новые открытые, затем любые пройденные.
  */
 export function suggestMissions(
   attempts: Attempt[],
-  missions: MissionRef[],
+  missions: { id: string }[],
+  isOpen: (id: string) => boolean,
   now: number,
   count = 2,
 ): { id: string; reason: 'review' | 'new' | 'again' }[] {
@@ -101,7 +102,7 @@ export function suggestMissions(
   };
   for (const m of missions) if (isReviewDue(attempts, m.id, now)) push(m.id, 'review');
   for (const m of missions) {
-    if (missionUnlocked(attempts, m) && !missionCompleted(attempts, m.id)) push(m.id, 'new');
+    if (isOpen(m.id) && !missionCompleted(attempts, m.id)) push(m.id, 'new');
   }
   for (const m of missions) if (missionCompleted(attempts, m.id)) push(m.id, 'again');
   return out;
