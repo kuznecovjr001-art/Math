@@ -52,7 +52,35 @@ export type CardParams =
   | { kind: 'record'; per: number; groups: number; item: ItemId }
   | { kind: 'array'; rows: number; cols: number }
   | { kind: 'facts'; a: number; b: number; model: boolean }
-  | { kind: 'story'; text: string; ops: string[]; op: number; answer: number };
+  | { kind: 'story'; text: string; ops: string[]; op: number; answer: number }
+  | { kind: 'position'; where: Where }
+  | { kind: 'sort'; bins: [SortBin, SortBin]; items: SortItem[] }
+  | { kind: 'pattern'; unit: Bead[]; shown: number }
+  | { kind: 'flash'; n: number; layout: 'dice' | 'frame' }
+  | { kind: 'zero'; start: number; lose: number }
+  | { kind: 'fingers'; total: 5 | 10; up: number }
+  | { kind: 'measure'; attr: MeasureAttr; a: Thing; b: Thing }
+  | { kind: 'order'; events: DayEvent[] };
+
+/** Где посадить котёнка: на стол, под стол, в коробку, рядом с коробкой. */
+export type Where = 'on' | 'under' | 'in' | 'next';
+export const WHERE_TEXT: Record<Where, string> = {
+  on: 'на стол', under: 'под стол', in: 'в коробку', next: 'рядом с коробкой',
+};
+/** Подписи зон на ступени помощи 2. */
+export const WHERE_LABEL: Record<Where, string> = { on: 'на', under: 'под', in: 'в', next: 'рядом' };
+
+export interface SortBin { title: string; icon: string }
+export interface SortItem { icon: string; name: string; bin: 0 | 1 }
+
+export type Bead = 'red' | 'blue' | 'yellow' | 'green';
+export const BEAD_NAME: Record<Bead, string> = { red: 'красная', blue: 'синяя', yellow: 'жёлтая', green: 'зелёная' };
+
+export type MeasureAttr = 'longer' | 'shorter' | 'heavier' | 'lighter';
+/** Для длины — лента длиной len клеток со сдвигом shift; для массы — предмет на весах. */
+export interface Thing { len?: number; shift?: number; icon?: string; name?: string; weight?: number }
+
+export interface DayEvent { icon: string; name: string }
 
 export interface Mission {
   id: string;
@@ -144,7 +172,39 @@ export function instruction(p: CardParams): string {
       return `Сколько будет ${p.a} × ${p.b}?`;
     case 'story':
       return p.text;
+    case 'position':
+      return `Посади котёнка ${WHERE_TEXT[p.where]}.`;
+    case 'sort':
+      return `Разложи по корзинам: ${p.bins[0].title.toLowerCase()} и ${p.bins[1].title.toLowerCase()}.`;
+    case 'pattern':
+      return 'Какая бусина будет следующей?';
+    case 'flash':
+      return 'Сколько точек на карточке? Посмотри и выбери цифру.';
+    case 'zero':
+      return `На рубашке ${count(p.start, 'пуговица', 'пуговицы', 'пуговиц')}. ${p.lose === 1 ? 'Одна оторвалась' : `${p.lose} оторвались`}. Сколько осталось?`;
+    case 'fingers':
+      return p.total === 5
+        ? 'Сколько пальцев загнуто на руке?'
+        : 'Сколько пальцев загнуто на двух руках?';
+    case 'measure':
+      return {
+        longer: 'Какая лента длиннее?',
+        shorter: 'Какая лента короче?',
+        heavier: 'Что тяжелее? Посмотри на весы.',
+        lighter: 'Что легче? Посмотри на весы.',
+      }[p.attr];
+    case 'order':
+      return 'Что сначала, что потом? Нажимай по порядку.';
   }
+}
+
+/** Индекс правильного предмета в сравнении: 0 — левый, 1 — правый. */
+export function measureAnswer(p: Extract<CardParams, { kind: 'measure' }>): number {
+  const len = p.attr === 'longer' || p.attr === 'shorter';
+  const va = len ? p.a.len! : p.a.weight!;
+  const vb = len ? p.b.len! : p.b.weight!;
+  const bigger = va > vb ? 0 : 1;
+  return p.attr === 'longer' || p.attr === 'heavier' ? bigger : 1 - bigger;
 }
 
 /** Правильный числовой ответ карточки (для отчёта и проверки). */
@@ -165,6 +225,14 @@ export function expectedAnswer(p: CardParams): number {
     case 'array': return p.rows * p.cols;
     case 'facts': return p.a * p.b;
     case 'story': return p.answer;
+    case 'position': return (['on', 'under', 'in', 'next'] as Where[]).indexOf(p.where);
+    case 'sort': return p.items.length;
+    case 'pattern': return (['red', 'blue', 'yellow', 'green'] as Bead[]).indexOf(p.unit[p.shown % p.unit.length]);
+    case 'flash': return p.n;
+    case 'zero': return p.start - p.lose;
+    case 'fingers': return p.total - p.up;
+    case 'measure': return measureAnswer(p);
+    case 'order': return p.events.length;
   }
 }
 
@@ -557,6 +625,176 @@ export const MISSIONS: Mission[] = [
     praise: 'Ты выбрал действие и решил задачу!',
     finish: 'Все задачи разобраны.',
     home: 'Придумайте вместе задачу про покупки в магазине и решите её.',
+  },
+  // ——— Добавлено по учебникам NCERT: остров счёта
+  {
+    id: 'N09', title: 'Где котёнок?', skill: 'M15', requires: [], icon: '1F431',
+    cards: {
+      A: [{ kind: 'position', where: 'on' }, { kind: 'position', where: 'in' }],
+      B: [{ kind: 'position', where: 'under' }, { kind: 'position', where: 'next' }],
+      C: [{ kind: 'position', where: 'in' }, { kind: 'position', where: 'under' }],
+    },
+    help: [
+      'Где верх у стола? Где низ? Где коробка?',
+      'Я подписал места: на, под, в, рядом.',
+      'Послушай ещё раз и нажми на место, которое светится.',
+    ],
+    praise: 'Ты нашёл правильное место!',
+    finish: 'Котёнок доволен: он сидит там, где ты сказал.',
+    home: 'Поиграйте в прятки с игрушкой: «Мишка под стулом? На полке? В коробке?»',
+  },
+  {
+    id: 'N10', title: 'Разложи по корзинам', skill: 'M16', requires: [], icon: '1F9F8',
+    cards: {
+      A: [{
+        kind: 'sort',
+        bins: [{ title: 'Еда', icon: '1F37D' }, { title: 'Игрушки', icon: '1F9F8' }],
+        items: [
+          { icon: '1F34E', name: 'яблоко', bin: 0 }, { icon: '26BD', name: 'мяч', bin: 1 },
+          { icon: '1F955', name: 'морковка', bin: 0 }, { icon: '1F388', name: 'шарик', bin: 1 },
+          { icon: '1F36A', name: 'печенье', bin: 0 }, { icon: '1F697', name: 'машинка', bin: 1 },
+        ],
+      }],
+      B: [{
+        kind: 'sort',
+        bins: [{ title: 'Животные', icon: '1F431' }, { title: 'Еда', icon: '1F37D' }],
+        items: [
+          { icon: '1F418', name: 'слон', bin: 0 }, { icon: '1F350', name: 'груша', bin: 1 },
+          { icon: '1F424', name: 'цыплёнок', bin: 0 }, { icon: '1F36A', name: 'печенье', bin: 1 },
+          { icon: '1F42D', name: 'мышка', bin: 0 }, { icon: '1F353', name: 'ягода', bin: 1 },
+        ],
+      }],
+      C: [{
+        kind: 'sort',
+        bins: [{ title: 'Игрушки', icon: '1F9F8' }, { title: 'Животные', icon: '1F431' }],
+        items: [
+          { icon: '1F697', name: 'машинка', bin: 0 }, { icon: '1F436', name: 'собака', bin: 1 },
+          { icon: '1F388', name: 'шарик', bin: 0 }, { icon: '1F41F', name: 'рыбка', bin: 1 },
+          { icon: '1F9F8', name: 'мишка-игрушка', bin: 0 }, { icon: '1F430', name: 'кролик', bin: 1 },
+        ],
+      }],
+    },
+    help: [
+      'Что общего у предметов в одной корзине?',
+      'Я отметил то, что лежит не в своей корзине. Нажми на него, чтобы вернуть.',
+      'Едой называют то, что едят. Игрушками играют. Животные живые.',
+    ],
+    praise: 'Ты разложил всё по группам!',
+    finish: 'В корзинах порядок.',
+    home: 'Разберите вместе игрушки: машинки в одну коробку, мягкие игрушки в другую. Потом придумайте другое правило.',
+  },
+  {
+    id: 'N11', title: 'Продолжи бусы', skill: 'M16', requires: ['N10'], icon: '1F381',
+    cards: {
+      A: [{ kind: 'pattern', unit: ['red', 'blue'], shown: 5 }, { kind: 'pattern', unit: ['red', 'red', 'blue'], shown: 6 }],
+      B: [{ kind: 'pattern', unit: ['yellow', 'green'], shown: 4 }, { kind: 'pattern', unit: ['blue', 'yellow', 'yellow'], shown: 7 }],
+      C: [{ kind: 'pattern', unit: ['red', 'blue', 'yellow'], shown: 7 }, { kind: 'pattern', unit: ['green', 'green', 'red'], shown: 5 }],
+    },
+    help: [
+      'Какие бусины повторяются? Назови их по порядку.',
+      'Я разделил бусы на одинаковые кусочки.',
+      'Скажи вслух все бусины подряд, и следующая сама придёт.',
+    ],
+    praise: 'Ты нашёл правило узора!',
+    finish: 'Бусы готовы.',
+    home: 'Сделайте узор хлопками: хлоп, хлоп, топ… Пусть ребёнок продолжит.',
+  },
+  {
+    id: 'N12', title: 'Точки на карточке', skill: 'M02', requires: ['A02'], icon: '1F43C',
+    cards: {
+      A: [{ kind: 'flash', n: 3, layout: 'dice' }, { kind: 'flash', n: 5, layout: 'dice' }],
+      B: [{ kind: 'flash', n: 4, layout: 'dice' }, { kind: 'flash', n: 6, layout: 'frame' }],
+      C: [{ kind: 'flash', n: 2, layout: 'dice' }, { kind: 'flash', n: 7, layout: 'frame' }],
+    },
+    help: [
+      'Какие знакомые кусочки ты видишь: два, три?',
+      'Карточка больше не прячется. Посмотри спокойно.',
+      'Я пронумеровал точки.',
+    ],
+    praise: 'Ты узнал число с одного взгляда!',
+    finish: 'Все карточки узнаны.',
+    home: 'Покажите кубик на секунду и спросите, сколько точек. Потом поменяйтесь.',
+  },
+  {
+    id: 'N13', title: 'Пуговицы и ноль', skill: 'M03', requires: ['N01'], icon: '1F455',
+    cards: {
+      A: [{ kind: 'zero', start: 3, lose: 1 }, { kind: 'zero', start: 2, lose: 2 }],
+      B: [{ kind: 'zero', start: 4, lose: 4 }, { kind: 'zero', start: 3, lose: 2 }],
+      C: [{ kind: 'zero', start: 5, lose: 5 }, { kind: 'zero', start: 4, lose: 3 }],
+    },
+    help: [
+      'Сколько было? Сколько оторвалось?',
+      'Я зачеркнул пуговицы, которые оторвались.',
+      'Если не осталось ни одной, это ноль: 0.',
+    ],
+    praise: 'Ты знаешь, что ноль — это когда ничего нет!',
+    finish: 'Рубашку можно пришивать.',
+    home: 'Ешьте виноград по одной ягоде и считайте, сколько осталось, до нуля.',
+  },
+
+  // ——— Добавлено по учебникам NCERT: остров состава
+  {
+    id: 'N14', title: 'Пары на пальцах', skill: 'M05', requires: ['A03'], icon: '1F430',
+    cards: {
+      A: [{ kind: 'fingers', total: 5, up: 3 }, { kind: 'fingers', total: 10, up: 6 }],
+      B: [{ kind: 'fingers', total: 5, up: 2 }, { kind: 'fingers', total: 10, up: 7 }],
+      C: [{ kind: 'fingers', total: 5, up: 4 }, { kind: 'fingers', total: 10, up: 3 }],
+    },
+    help: [
+      'Сколько всего пальцев? Сколько поднято?',
+      'Я подписал поднятые пальцы.',
+      'На руке 5 пальцев: поднятые и загнутые вместе дают 5. На двух руках — 10.',
+    ],
+    praise: 'Ты знаешь пары чисел до пяти и до десяти!',
+    finish: 'Пальцы сосчитаны.',
+    home: 'Покажите 3 пальца: «Сколько загнуто?» Потом пусть ребёнок загадывает вам.',
+  },
+  {
+    id: 'N15', title: 'Длиннее и тяжелее', skill: 'M17', requires: [], icon: '1F418',
+    cards: {
+      A: [
+        { kind: 'measure', attr: 'longer', a: { len: 4, shift: 3 }, b: { len: 6, shift: 0 } },
+        { kind: 'measure', attr: 'heavier', a: { icon: '1FAB6', name: 'перо', weight: 1 }, b: { icon: '1FAA8', name: 'камень', weight: 5 } },
+      ],
+      B: [
+        { kind: 'measure', attr: 'shorter', a: { len: 5, shift: 0 }, b: { len: 3, shift: 3 } },
+        { kind: 'measure', attr: 'heavier', a: { icon: '1FAA8', name: 'камень', weight: 5 }, b: { icon: '1F388', name: 'шарик', weight: 1 } },
+      ],
+      C: [
+        { kind: 'measure', attr: 'longer', a: { len: 7, shift: 0 }, b: { len: 5, shift: 3 } },
+        { kind: 'measure', attr: 'lighter', a: { icon: '270F', name: 'карандаш', weight: 2 }, b: { icon: '1FAB6', name: 'перо', weight: 1 } },
+      ],
+    },
+    help: [
+      'Начинаются ли ленты в одном месте? Какая чаша весов ниже?',
+      'Я выровнял ленты по началу. На весах тяжёлое опускается вниз.',
+      'Длиннее та, у которой конец дальше при общем начале. Тяжелее то, что перевешивает.',
+    ],
+    praise: 'Ты сравнил правильно, а не на глаз!',
+    finish: 'Все ленты и грузы сравнены.',
+    home: 'Сравните два шнурка, приложив концы, и подержите в руках яблоко и мандарин: что тяжелее?',
+  },
+  {
+    id: 'N16', title: 'Утро, день, вечер', skill: 'M18', requires: [], icon: '1F305',
+    cards: {
+      A: [{ kind: 'order', events: [
+        { icon: '1F305', name: 'просыпаемся' }, { icon: '1F3EB', name: 'идём в садик' }, { icon: '1F6CF', name: 'ложимся спать' },
+      ] }],
+      B: [{ kind: 'order', events: [
+        { icon: '1FAA5', name: 'чистим зубы утром' }, { icon: '1F37D', name: 'обедаем' }, { icon: '1F319', name: 'смотрим на луну' },
+      ] }],
+      C: [{ kind: 'order', events: [
+        { icon: '1F305', name: 'просыпаемся' }, { icon: '1F37D', name: 'обедаем' }, { icon: '1F319', name: 'наступает вечер' }, { icon: '1F6CF', name: 'ложимся спать' },
+      ] }],
+    },
+    help: [
+      'Что ты делаешь сразу, как проснёшься? А перед сном?',
+      'Я подписал места: утро, день, вечер.',
+      'Утром встаём, днём гуляем и обедаем, вечером ложимся спать.',
+    ],
+    praise: 'Ты расставил день по порядку!',
+    finish: 'День расписан.',
+    home: 'Вечером вспомните вместе, что было утром, днём и вечером.',
   },
 ];
 

@@ -16,6 +16,11 @@ export const SKILLS: Record<SkillId, { title: string; requires: SkillId[] }> = {
   M12: { title: 'Таблица 1–10', requires: ['M11'] },
   M13: { title: 'Распределение и неизвестное', requires: ['M09'] },
   M14: { title: 'Самостоятельное применение', requires: [] },
+  // Добавлено по учебникам NCERT (Индия): Joyful Mathematics 1 и Maths Mela 3.
+  M15: { title: 'Расположение: на, под, в, рядом', requires: [] },
+  M16: { title: 'Группировка и закономерности', requires: [] },
+  M17: { title: 'Длина и масса: сравнение', requires: ['M04'] },
+  M18: { title: 'Время: части суток и порядок', requires: [] },
 };
 
 export const STATUS_TEXT: Record<SkillStatus, string> = {
