@@ -17,8 +17,10 @@ export const ART_NAMES: Record<string, string> = {
 
 /** Имя файла без расширения → код картинки. Неизвестные имена считаются кодами. */
 export function artCodeFromFile(path: string): string {
-  const base = path.split('/').pop()!.replace(/\.(png|webp|svg|jpe?g)$/i, '');
-  return ART_NAMES[base.toLowerCase()] ?? base.toUpperCase();
+  const rel = path.replace(/^.*\/assets\/art\//, '').replace(/\.(png|webp|svg|jpe?g)$/i, '');
+  // Файлы в подпапках (ui/icon-home, bg/map-land) ищутся по пути, как в ТЗ на графику.
+  if (rel.includes('/')) return rel.toLowerCase();
+  return ART_NAMES[rel.toLowerCase()] ?? rel.toUpperCase();
 }
 
 export function buildArtMap(files: Record<string, string>): Record<string, string> {
@@ -27,7 +29,7 @@ export function buildArtMap(files: Record<string, string>): Record<string, strin
   return map;
 }
 
-const files = import.meta.glob<string>('../assets/art/*.{png,webp,svg,jpg,jpeg}', {
+const files = import.meta.glob<string>('../assets/art/**/*.{png,webp,svg,jpg,jpeg}', {
   eager: true, query: '?url', import: 'default',
 });
 
@@ -39,4 +41,9 @@ export function artSrc(code: string): string {
 
 export function hasCustomArt(code: string): boolean {
   return code in CUSTOM;
+}
+
+/** Свой рисунок из подпапки (ui/icon-home, bg/map-land) или undefined, если его ещё нет. */
+export function customArt(path: string): string | undefined {
+  return CUSTOM[path];
 }

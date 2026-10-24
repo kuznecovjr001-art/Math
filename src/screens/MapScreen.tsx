@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import { speak } from '../audio/voice';
 import { ISLANDS, islandOpen, missionOpen, orderedMissions } from '../content/levels';
+import { customArt } from '../content/art';
 import { getMission } from '../content/missions';
 import { isReviewDue, missionCompleted, suggestMissions } from '../engine/progress';
 import type { Attempt, Profile } from '../engine/types';
-import { Emoji } from '../ui/art';
+import { Emoji, Icon } from '../ui/art';
 import type { PlayMode } from './MissionPlayer';
 
 interface Props {
@@ -15,6 +16,14 @@ interface Props {
   onStart: (missionId: string, mode: PlayMode) => void;
   onAlbum: () => void;
   onSwitch: () => void;
+}
+
+/** Фон из src/assets/art/bg/<name>-land и -port, если он уже нарисован; CSS выбирает по ориентации. */
+function bgVars(name: string): CSSProperties | undefined {
+  const land = customArt(`bg/${name}-land`);
+  const port = customArt(`bg/${name}-port`) ?? land;
+  if (!land && !port) return undefined;
+  return { '--bg-land': `url(${land ?? port})`, '--bg-port': `url(${port})` } as CSSProperties;
 }
 
 const REASON = { review: 'Вспомним', new: 'Новое', again: 'Ещё раз' };
@@ -33,7 +42,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
   const start = (id: string) => onStart(id, isReviewDue(own, id, now) ? 'review' : 'play');
 
   return (
-    <div className="screen map">
+    <div className="screen map" style={bgVars('world')}>
       <header className="map-bar">
         <button className="tap avatar mini" onClick={onSwitch} aria-label="Сменить игрока">
           <Emoji code={profile.avatar} size={48} />
@@ -60,8 +69,14 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
       {ISLANDS.map((isl, index) => {
         const islOpen = islandOpen(own, index, start0);
         return (
-          <section key={isl.id} className={`island ${islOpen ? '' : 'locked'}`} aria-label={isl.title}>
-            <h2>{islOpen ? '' : '🔒 '}{isl.title}</h2>
+          <section
+            key={isl.id}
+            className={`island ${islOpen ? '' : 'locked'}`}
+            data-island={isl.id}
+            style={bgVars(isl.id === 'count' ? 'map' : `map-${isl.id}`)}
+            aria-label={isl.title}
+          >
+            <h2>{!islOpen && <Icon name="lock" size={28} />}{isl.title}</h2>
             <ol className="path">
               {isl.missions.map((id) => {
                 const m = getMission(id)!;
@@ -79,7 +94,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
                       <Emoji code={m.icon} size={56} />
                       {done && <span className="stone-star"><Emoji code="2B50" size={26} /></span>}
                       {due && <span className="stone-due">Вспомним</span>}
-                      {!open && <span className="stone-lock" aria-hidden="true">🔒</span>}
+                      {!open && <span className="stone-lock"><Icon name="lock" size={28} /></span>}
                     </button>
                     <span className="stone-title">{m.title}</span>
                   </li>

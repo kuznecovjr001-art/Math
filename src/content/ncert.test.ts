@@ -78,6 +78,8 @@ describe('own artwork', () => {
     expect(artCodeFromFile('../assets/art/Cat.webp')).toBe('1F431');
     expect(artCodeFromFile('../assets/art/1f34e.svg')).toBe('1F34E');
     expect(buildArtMap({ '../assets/art/apple.png': '/a.png' })).toEqual({ '1F34E': '/a.png' });
+    expect(artCodeFromFile('../assets/art/ui/Icon-Home.png')).toBe('ui/icon-home');
+    expect(artCodeFromFile('../assets/art/bg/map-land.webp')).toBe('bg/map-land');
   });
 
   it('names every picture the missions use', () => {

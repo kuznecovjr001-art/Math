@@ -1,4 +1,4 @@
-import { artSrc } from '../content/art';
+import { artSrc, customArt } from '../content/art';
 
 /** Картинки OpenMoji (CC BY-SA 4.0) или свои рисунки из src/assets/art, и простые нарисованные предметы. */
 
@@ -59,6 +59,29 @@ export function Person({ color, size = 48 }: { color: 'red' | 'blue'; size?: num
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
       <circle cx="24" cy="14" r="9" fill={fill} stroke={stroke} strokeWidth="2.5" />
       <path d="M9 44a15 15 0 0 1 30 0z" fill={fill} stroke={stroke} strokeWidth="2.5" />
+    </svg>
+  );
+}
+
+/** Контурные иконки кнопок в стиле ТЗ; рисунок ui/icon-<name> из src/assets/art их заменяет. */
+const ICONS = {
+  home: <><path d="M8 23 24 9l16 14" /><path d="M13 20v18h22V20" fill="#ffd166" /><path d="M21 38v-9h6v9" /></>,
+  sound: <><path d="M8 19h7l9-8v26l-9-8H8z" fill="#ffd166" /><path d="M31 18a8 8 0 0 1 0 12M35 13a15 15 0 0 1 0 22" /></>,
+  help: <><path d="M17 31a11 11 0 1 1 14 0v4H17z" fill="#ffd166" /><path d="M19 40h10M21 44h6" /></>,
+  back: <path d="M28 12 16 24l12 12" />,
+  lock: <><rect x="11" y="21" width="26" height="19" rx="5" fill="#ffd166" /><path d="M16 21v-5a8 8 0 0 1 16 0v5" /></>,
+  plus: <path d="M24 10v28M10 24h28" />,
+  erase: <><path d="M16 12h24v24H16L6 24z" fill="#ffd166" /><path d="m22 19 10 10M32 19 22 29" /></>,
+};
+export type IconName = keyof typeof ICONS;
+
+export function Icon({ name, size = 36 }: { name: IconName; size?: number }) {
+  const own = customArt(`ui/icon-${name}`);
+  if (own) return <img src={own} width={size} height={size} alt="" draggable={false} className="emoji" />;
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true" fill="none"
+      stroke="#3d2c00" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+      {ICONS[name]}
     </svg>
   );
 }
