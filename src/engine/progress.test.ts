@@ -81,8 +81,11 @@ describe('missions', () => {
       { id: 'A02', requires: ['A01'] },
       { id: 'A03', requires: ['A02'] },
     ];
-    expect(suggestMissions([], missions, T0)).toEqual([{ id: 'A01', reason: 'new' }]);
-    const s = suggestMissions([att({})], missions, T0 + 2 * DAY);
+    const open = (list: Attempt[]) => (id: string) =>
+      missionUnlocked(list, missions.find((m) => m.id === id)!);
+    expect(suggestMissions([], missions, open([]), T0)).toEqual([{ id: 'A01', reason: 'new' }]);
+    const done = [att({})];
+    const s = suggestMissions(done, missions, open(done), T0 + 2 * DAY);
     expect(s).toEqual([{ id: 'A01', reason: 'review' }, { id: 'A02', reason: 'new' }]);
   });
 });

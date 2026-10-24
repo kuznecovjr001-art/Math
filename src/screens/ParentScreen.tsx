@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { MISSIONS } from '../content/missions';
+import { ISLANDS } from '../content/levels';
+import { getMission, MISSIONS } from '../content/missions';
 import { SKILLS, STATUS_TEXT } from '../content/skills';
 import { missionCompleted, skillStatus } from '../engine/progress';
 import type { AppData } from '../engine/types';
@@ -10,6 +11,7 @@ interface Props {
   onBack: () => void;
   onVoice: (on: boolean) => void;
   onDeleteProfile: (id: string) => void;
+  onStartIsland: (id: string, island: number) => void;
   onCredits: () => void;
 }
 
@@ -20,12 +22,17 @@ function fmt(ts: number) {
   return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onCredits }: Props) {
+export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onCredits }: Props) {
   const [pid, setPid] = useState(data.profiles[0]?.id ?? '');
   const profile = data.profiles.find((p) => p.id === pid);
   const own = data.attempts.filter((a) => a.profileId === pid);
   const recent = [...own].sort((a, b) => b.at - a.at).slice(0, 15);
-  const skills = [...new Set(MISSIONS.map((m) => m.skill))];
+  // Навыки по островам: каждый навык показываем там, где он встречается впервые.
+  const seen = new Set<string>();
+  const skillsByIsland = ISLANDS.map((isl) => {
+    const list = isl.missions.map((id) => getMission(id)!.skill).filter((s) => !seen.has(s) && seen.add(s));
+    return { isl, skills: [...new Set(list)] };
+  });
   const homeIdeas = MISSIONS.filter((m) => missionCompleted(own, m.id));
 
   return (
@@ -56,16 +63,42 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onCredits
               самостоятельных успехов в два разных дня. Это рабочие настройки пилота, а не диагноз.
             </p>
             <table className="report">
-              <tbody>
-                {skills.map((s) => (
-                  <tr key={s}>
-                    <td>{s}</td>
-                    <td>{SKILLS[s].title}</td>
-                    <td className={`status ${skillStatus(own, s)}`}>{STATUS_TEXT[skillStatus(own, s)]}</td>
-                  </tr>
-                ))}
-              </tbody>
+              {skillsByIsland.map(({ isl, skills }) => skills.length > 0 && (
+                <tbody key={isl.id}>
+                  <tr className="report-group"><th colSpan={3}>{isl.title} · {isl.ages}</th></tr>
+                  {skills.map((s) => (
+                    <tr key={s}>
+                      <td>{s}</td>
+                      <td>{SKILLS[s].title}</td>
+                      <td className={`status ${skillStatus(own, s)}`}>{STATUS_TEXT[skillStatus(own, s)]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              ))}
             </table>
+          </section>
+
+          <section className="card">
+            <h2>С какого острова начать</h2>
+            <p className="note">
+              Если ребёнок уже уверенно считает или учится в школе, откройте сразу нужный остров.
+              Предыдущие острова останутся доступны для повторения. Внутри острова задания идут по порядку.
+            </p>
+            <ol className="islands-choice">
+              {ISLANDS.map((isl, i) => (
+                <li key={isl.id}>
+                  <label className="toggle">
+                    <input
+                      type="radio"
+                      name="start-island"
+                      checked={(profile.startIsland ?? 0) === i}
+                      onChange={() => onStartIsland(profile.id, i)}
+                    />
+                    <span><b>{isl.title}</b> ({isl.ages}). {isl.goal}</span>
+                  </label>
+                </li>
+              ))}
+            </ol>
           </section>
 
           <section className="card">

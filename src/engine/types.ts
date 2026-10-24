@@ -38,6 +38,8 @@ export interface Profile {
   name: string;
   avatar: string;
   createdAt: number;
+  /** Остров, с которого взрослый решил начать (по текущим умениям, а не по возрасту). */
+  startIsland?: number;
 }
 
 export interface AppData {

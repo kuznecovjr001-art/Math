@@ -124,6 +124,10 @@ export function App() {
           });
           if (profileId === id) setProfileId(null);
         }}
+        onStartIsland={(id, startIsland) => setData((d) => ({
+          ...d,
+          profiles: d.profiles.map((p) => (p.id === id ? { ...p, startIsland } : p)),
+        }))}
         onCredits={() => go({ name: 'credits' })}
       />
     );

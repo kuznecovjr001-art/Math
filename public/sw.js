@@ -1,6 +1,6 @@
 // Офлайн-режим: кэшируем оболочку и всё, что приложение загрузило.
-const CACHE = 'mathkids-v1';
-const IMAGES = ['./img/openmoji/1F34A.svg', './img/openmoji/1F34E.svg', './img/openmoji/1F350.svg', './img/openmoji/1F353.svg', './img/openmoji/1F381.svg', './img/openmoji/1F427.svg', './img/openmoji/1F42D.svg', './img/openmoji/1F430.svg', './img/openmoji/1F431.svg', './img/openmoji/1F436.svg', './img/openmoji/1F43B.svg', './img/openmoji/1F43C.svg', './img/openmoji/1F686.svg', './img/openmoji/1F989.svg', './img/openmoji/1F98A.svg', './img/openmoji/1F994.svg', './img/openmoji/2B50.svg'];
+const CACHE = 'mathkids-v2';
+const IMAGES = ['./img/openmoji/1F333.svg', './img/openmoji/1F34A.svg', './img/openmoji/1F34E.svg', './img/openmoji/1F350.svg', './img/openmoji/1F353.svg', './img/openmoji/1F36A.svg', './img/openmoji/1F381.svg', './img/openmoji/1F388.svg', './img/openmoji/1F41F.svg', './img/openmoji/1F424.svg', './img/openmoji/1F427.svg', './img/openmoji/1F42D.svg', './img/openmoji/1F430.svg', './img/openmoji/1F431.svg', './img/openmoji/1F436.svg', './img/openmoji/1F43B.svg', './img/openmoji/1F43C.svg', './img/openmoji/1F4DA.svg', './img/openmoji/1F686.svg', './img/openmoji/1F955.svg', './img/openmoji/1F989.svg', './img/openmoji/1F98A.svg', './img/openmoji/1F994.svg', './img/openmoji/26BD.svg', './img/openmoji/2B50.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

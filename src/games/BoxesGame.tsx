@@ -13,7 +13,9 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const fruit = FRUITS[params.fruit];
   const used = inGroup.reduce((s, x) => s + x, 0);
   const stock = params.stock - used;
+  // В режиме «поровну» вопрос — сколько в каждой группе, иначе — сколько всего.
   const total = expectedAnswer(params);
+  const share = !!params.share;
   const arranging = step === 'arrange';
 
   const add = (i: number) => {
@@ -28,7 +30,9 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
   };
 
   const checkArrangement = () => {
-    const correct = inGroup.every((n) => n === params.per);
+    const correct = share
+      ? stock === 0 && inGroup.every((n) => n === inGroup[0])
+      : inGroup.every((n) => n === params.per);
     onSubmit({ correct, answer: `раскладка ${inGroup.join(',')}`, final: false });
     if (correct) setStep('total');
   };
@@ -43,7 +47,7 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
       )}
       <div className="groups">
         {inGroup.map((n, i) => (
-          <div key={i} className={`group ${params.holder} ${help >= 2 && arranging && n !== params.per ? 'attention' : ''}`}>
+          <div key={i} className={`group ${params.holder} ${help >= 2 && arranging && !share && n !== params.per ? 'attention' : ''}`}>
             <button
               className="group-add"
               onClick={() => add(i)}
@@ -61,7 +65,7 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
           </div>
         ))}
       </div>
-      {help >= 3 && (
+      {help >= 3 && !share && (
         <div className="sum-hint" aria-live="polite">
           {Array(params.groups).fill(params.per).join(' + ')}
         </div>
@@ -72,14 +76,14 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
         </button>
       ) : (
         <>
-          <div className="question">Сколько всего?</div>
+          <div className="question">{share ? 'Сколько на каждой?' : 'Сколько всего?'}</div>
           <div className="choices">
             {answerChoices(total).map((n) => (
               <button
                 key={n}
                 className="btn choice"
                 disabled={locked}
-                onClick={() => onSubmit({ correct: n === total, answer: `итог ${n}` })}
+                onClick={() => onSubmit({ correct: n === total, answer: `${share ? 'в каждой' : 'итог'} ${n}` })}
               >
                 <NumberTile n={n} />
               </button>
