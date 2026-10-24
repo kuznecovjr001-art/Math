@@ -1,0 +1,28 @@
+import type { SkillId, SkillStatus } from '../engine/types';
+
+/** Карта навыков из материалов проекта (документ «Математика — карта навыков»). */
+export const SKILLS: Record<SkillId, { title: string; requires: SkillId[] }> = {
+  M01: { title: 'Один предмет каждому', requires: [] },
+  M02: { title: 'Счёт и итоговое количество', requires: ['M01'] },
+  M03: { title: 'Количество и цифра', requires: ['M02'] },
+  M04: { title: 'Больше, меньше, поровну', requires: ['M01'] },
+  M05: { title: 'Состав числа', requires: ['M02', 'M04'] },
+  M06: { title: 'Сложение и вычитание', requires: ['M05'] },
+  M07: { title: 'Десяток и крупные количества', requires: ['M03', 'M06'] },
+  M08: { title: 'Пространство, форма и измерение', requires: [] },
+  M09: { title: 'Равные группы', requires: ['M02', 'M04', 'M06'] },
+  M10: { title: 'Смысл записи умножения', requires: ['M09'] },
+  M11: { title: 'Связи произведений', requires: ['M10'] },
+  M12: { title: 'Таблица 1–10', requires: ['M11'] },
+  M13: { title: 'Распределение и неизвестное', requires: ['M09'] },
+  M14: { title: 'Самостоятельное применение', requires: [] },
+};
+
+export const STATUS_TEXT: Record<SkillStatus, string> = {
+  none: 'Ещё не встречали',
+  meeting: 'Знакомится',
+  withHelp: 'Выполняет с помощью',
+  independent: 'Есть самостоятельный успех',
+  solid: 'Уверенно, в разные дни',
+  confirmed: 'Подтверждено после паузы',
+};

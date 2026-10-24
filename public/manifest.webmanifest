@@ -1,0 +1,14 @@
+{
+  "name": "Считалочка — математика для детей",
+  "short_name": "Считалочка",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff7e6",
+  "theme_color": "#ffe8b3",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
