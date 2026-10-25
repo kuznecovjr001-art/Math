@@ -5,7 +5,9 @@ import { SKILLS, STATUS_TEXT } from '../content/skills';
 import { missionDone, skillStatus } from '../engine/progress';
 import { brokenRecords, exportJson } from '../engine/storage';
 import { saveTextFile } from '../platform/files';
-import type { AppData } from '../engine/types';
+import type { AppData, Profile } from '../engine/types';
+import { ParentPlan } from './ParentPlan';
+import { ParentReport } from './ParentReport';
 import { Emoji, Icon, SceneBg } from '../ui/art';
 
 interface Props {
@@ -14,6 +16,7 @@ interface Props {
   onVoice: (on: boolean) => void;
   onDeleteProfile: (id: string) => void;
   onStartIsland: (id: string, island: number) => void;
+  onPlan: (id: string, mode: NonNullable<Profile['mode']>, plan: string[]) => void;
   onCredits: () => void;
   /** false — файл не похож на резервную копию. */
   onImport: (text: string) => boolean;
@@ -26,7 +29,8 @@ function fmt(ts: number) {
   return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onCredits, onImport }: Props) {
+export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onPlan, onCredits, onImport }: Props) {
+  const [now] = useState(Date.now);
   const [pid, setPid] = useState(data.profiles[0]?.id ?? '');
   const [backupNote, setBackupNote] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -66,6 +70,9 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
 
       {profile && (
         <>
+          <ParentReport key={`r-${pid}`} attempts={own} sessions={(data.sessions ?? []).filter((s) => s.profileId === pid)} stickers={data.stickers[pid] ?? []} now={now} />
+          <ParentPlan key={`p-${pid}`} profile={profile} attempts={own} sessions={(data.sessions ?? []).filter((s) => s.profileId === pid)} onPlan={onPlan} />
+
           <section className="card">
             <h2>Навыки</h2>
             <p className="note">

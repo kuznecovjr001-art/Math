@@ -92,7 +92,8 @@ export function App() {
 
   const trackSession = (sn: Omit<MissionSession, 'profileId'>) => {
     if (!profile) return;
-    const full: MissionSession = { ...sn, profileId: profile.id };
+    const assigned = profile.mode === 'assigned' && (profile.plan ?? []).includes(sn.missionId);
+    const full: MissionSession = { ...sn, profileId: profile.id, ...(assigned ? { assigned: true as const } : {}) };
     setData((d) => {
       const list = d.sessions ?? [];
       const i = list.findIndex((x) => x.id === sn.id);
@@ -131,6 +132,7 @@ export function App() {
       <MapScreen
         profile={profile}
         attempts={data.attempts}
+        sessions={data.sessions ?? []}
         stickers={stickers}
         now={now}
         onStart={(missionId, mode) => go({ name: 'mission', missionId, mode })}
@@ -177,6 +179,14 @@ export function App() {
           });
           if (profileId === id) setProfileId(null);
         }}
+        onPlan={(id, mode, plan) => setData((d) => ({
+          ...d,
+          // «Сделано» считается от момента, когда миссия попала в задание: у оставшихся в задании время сохраняется.
+          profiles: d.profiles.map((p) => (p.id !== id ? p : {
+            ...p, mode, plan,
+            planAt: Object.fromEntries(plan.map((m) => [m, (p.mode === 'assigned' && p.planAt?.[m]) || Date.now()])),
+          })),
+        }))}
         onStartIsland={(id, startIsland) => setData((d) => ({
           ...d,
           profiles: d.profiles.map((p) => (p.id === id ? { ...p, startIsland } : p)),
