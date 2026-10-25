@@ -17,6 +17,7 @@ export const ART_NAMES: Record<string, string> = {
   flatbread: '1FAD3', chocolate: '1F36B', butterfly: '1F98B', clock: '1F570', rope: '1FAA2', bucket: '1FAA3',
   watermelon: '1F349', ruler: '1F4CF', scales: '2696', milk: '1F95B', book: '1F4D6', abacus: '1F9EE',
   calendar: '1F4C5', ribbon: '1F380', hundred: '1F4AF', brick: '1F9F1', thinking: '1F914',
+  scarf: '1F9E3', bath: '1F6C1', potatoes: '1F954',
 };
 
 /** Имя файла без расширения → код картинки. Неизвестные имена считаются кодами. */
