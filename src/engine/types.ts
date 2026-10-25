@@ -24,6 +24,29 @@ export interface Attempt {
   helpLevel: HelpLevel;
   answer: string;
   at: number;
+  /** Заход в миссию (MissionSession.id). Нет у записей до 2026-10. */
+  sessionId?: string;
+  /** Номер карточки в заходе: вместе с sessionId определяет экземпляр карточки. */
+  step?: number;
+  /** Сколько неверных ответов на этой карточке было до этой попытки. */
+  errorsBefore?: number;
+  /** Промежуточный шаг многошаговой карточки (раскладка до итога): не ответ на карточку. */
+  partial?: true;
+}
+
+/** Один заход в миссию: сколько карточек показано и дошёл ли ребёнок до конца. */
+export interface MissionSession {
+  id: string;
+  profileId: string;
+  missionId: string;
+  mode: 'play' | 'review' | 'again';
+  /** Заход по заданию взрослого. */
+  assigned?: true;
+  startedAt: number;
+  cards: number;
+  /** Сколько карточек ребёнок увидел (номер текущей + 1). */
+  shown: number;
+  finishedAt?: number;
 }
 
 export type SkillStatus =
@@ -50,4 +73,6 @@ export interface AppData {
   /** Наклейки по профилям: id миссии, за которую получена наклейка. */
   stickers: Record<string, string[]>;
   settings: { voice: boolean };
+  /** Заходы в миссии; нет у записей до 2026-10. */
+  sessions?: MissionSession[];
 }
