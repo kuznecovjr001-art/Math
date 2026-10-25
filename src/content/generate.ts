@@ -100,8 +100,13 @@ function story(rng: Rng, kind: 'add' | 'sub' | 'mul' | 'div'): Extract<CardParam
       };
     }
     case 'mul': {
-      const g = int(rng, 2, 6);
-      const per = int(rng, 3, 8);
+      // per > g: иначе «per − g» не имеет смысла; ответ до 24, как у автора.
+      let g = 2;
+      let per = 3;
+      do {
+        g = int(rng, 2, 6);
+        per = int(rng, 3, 8);
+      } while (per <= g || per * g > 24);
       return {
         kind: 'story',
         text: `В ${g} коробках по ${count(per, 'карандашу', 'карандаша', 'карандашей')}. Сколько всего карандашей?`,
@@ -110,8 +115,13 @@ function story(rng: Rng, kind: 'add' | 'sub' | 'mul' | 'div'): Extract<CardParam
       };
     }
     case 'div': {
-      const g = int(rng, 2, 5);
-      const per = int(rng, 2, 6);
+      // Делимое до 18, как у автора; 4 : 2 = 4 − 2, такой пример не различает действия.
+      let g = 2;
+      let per = 2;
+      do {
+        g = int(rng, 2, 5);
+        per = int(rng, 2, 6);
+      } while (g * per > 18 || (g === 2 && per === 2));
       const n = g * per;
       return {
         kind: 'story',
@@ -181,7 +191,8 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
     }
     case 'shapes': {
       const target = pick(rng, SHAPES);
-      const others = shuffle(rng, SHAPES.filter((s) => s !== target)).slice(0, 2);
+      // Квадрат — тоже прямоугольник, поэтому рядом с прямоугольником его не ставим.
+      const others = shuffle(rng, SHAPES.filter((s) => s !== target && !(target === 'rectangle' && s === 'square'))).slice(0, 2);
       return { ...t, target, options: shuffle(rng, [target, ...others]), turn: pick(rng, TURNS) };
     }
     case 'tenframe': {
@@ -294,14 +305,16 @@ const keyOf = (p: CardParams) => JSON.stringify(p);
  */
 export function extendCards(
   authored: CardParams[], templates: CardParams[], pool: CardParams[], total: number, rng: Rng,
-  seen: Set<string> = new Set(),
+  seen: Set<string> = new Set(), avoid: Set<string> = new Set(),
 ): CardParams[] {
   const out = [...authored];
   authored.forEach((p) => seen.add(keyOf(p)));
   for (let i = 0; out.length < total; i++) {
     const t = templates[i % templates.length];
     let card = varyCard(t, pool, rng);
-    for (let tries = 0; tries < 40 && seen.has(keyOf(card)); tries++) card = varyCard(t, pool, rng);
+    // avoid — карточки не из этого захода: их лишь стараемся не брать, повтор внутри захода хуже.
+    for (let tries = 0; tries < 40 && (seen.has(keyOf(card)) || avoid.has(keyOf(card))); tries++) card = varyCard(t, pool, rng);
+    for (let tries = 0; tries < 200 && seen.has(keyOf(card)); tries++) card = varyCard(t, pool, rng);
     // Если вариантов мало, повтор возможен, но не подряд.
     const last = out.length ? keyOf(out[out.length - 1]) : '';
     for (let tries = 0; tries < 20 && keyOf(card) === last; tries++) card = varyCard(t, pool, rng);

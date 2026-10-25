@@ -156,8 +156,8 @@ export function clockChoices(p: { h: number; m: 0 | 30 }): string[] {
   // Перепутанные стрелки: минутная читается как часы, часовая как минуты.
   const swapped = p.m === 0 ? clockText(12, (p.h % 12) * 5) : clockText(6, (p.h % 12) * 5);
   const wrong = p.m === 30 ? [clockText(next, 30), swapped] : [swapped, clockText(p.h, 30)];
-  const all = [...new Set([right, ...wrong])];
-  if (all.length < 3) all.push(clockText(next, p.m));
+  // Запасные варианты на случай совпадений (6:30 — стрелки «перепутаны» в тот же ответ).
+  const all = [...new Set([right, ...wrong, clockText(next, p.m), clockText(p.h, p.m === 0 ? 30 : 0)])].slice(0, 3);
   const k = p.h % 3;
   return all.slice(k).concat(all.slice(0, k));
 }
