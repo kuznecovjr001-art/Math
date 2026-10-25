@@ -4,6 +4,7 @@ import { App, preloadScreens } from './App';
 import { FIXED_PHRASES } from './audio/phrases';
 import { phraseKey } from './audio/phraseKey';
 import { allArtUrls } from './content/art';
+import { isNative } from './platform/native';
 import '@fontsource-variable/nunito';
 import './styles.css';
 
@@ -13,7 +14,8 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// На Android всё уже внутри APK: кэш service worker только мешал бы обновлениям.
+if ('serviceWorker' in navigator && import.meta.env.PROD && !isNative) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register(`${import.meta.env.BASE_URL}sw.js`)
