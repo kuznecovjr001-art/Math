@@ -46,8 +46,9 @@ export function App() {
   const [now, setNow] = useState(Date.now);
 
   useEffect(() => {
-    setSaveFailed(!saveData(data));
-  }, [data]);
+    // Нечитаемую запись не удалось отложить: не трогаем её, пока взрослый не сохранит её в файл.
+    setSaveFailed(loaded.issue === 'locked' || !saveData(data));
+  }, [data, loaded.issue]);
 
   useEffect(() => {
     setVoiceEnabled(data.settings.voice);
@@ -148,9 +149,9 @@ export function App() {
         }))}
         onCredits={() => go({ name: 'credits' })}
         onImport={(text) => {
-          const merged = importMerge(data, text);
-          if (merged) setData(merged);
-          return merged !== null;
+          if (!importMerge(data, text)) return false;
+          setData((d) => importMerge(d, text) ?? d);
+          return true;
         }}
       />
     );
@@ -164,7 +165,9 @@ export function App() {
         <div className="save-warning" role="alert">
           {loaded.issue === 'restored'
             ? 'Сохранение было повреждено: восстановлена резервная копия. Повреждённая запись сохранена отдельно.'
-            : 'Сохранение не удалось прочитать. Оно сохранено отдельно и не удалено; можно восстановить копию в разделе для взрослых.'}
+            : loaded.issue === 'unreadable'
+              ? 'Сохранение не удалось прочитать. Оно отложено и не удалено: в разделе для взрослых его можно сохранить в файл.'
+              : 'Сохранение не удалось прочитать, а места, чтобы отложить его, нет. Новый прогресс не сохраняется, старая запись не тронута.'}
         </div>
       )}
       {saveFailed && (

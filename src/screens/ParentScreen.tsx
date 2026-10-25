@@ -3,7 +3,7 @@ import { ISLANDS } from '../content/levels';
 import { getMission, MISSIONS } from '../content/missions';
 import { SKILLS, STATUS_TEXT } from '../content/skills';
 import { missionCompleted, skillStatus } from '../engine/progress';
-import { exportJson } from '../engine/storage';
+import { brokenRecords, exportJson } from '../engine/storage';
 import { saveTextFile } from '../platform/files';
 import type { AppData } from '../engine/types';
 import { Emoji, Icon, SceneBg } from '../ui/art';
@@ -30,6 +30,9 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
   const [pid, setPid] = useState(data.profiles[0]?.id ?? '');
   const [backupNote, setBackupNote] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [broken] = useState(() => {
+    try { return brokenRecords(); } catch { return []; }
+  });
   const profile = data.profiles.find((p) => p.id === pid);
   const own = data.attempts.filter((a) => a.profileId === pid);
   const recent = [...own].sort((a, b) => b.at - a.at).slice(0, 15);
@@ -180,10 +183,22 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
             onChange={(e) => {
               const f = e.target.files?.[0];
               e.target.value = '';
-              f?.text().then((t) => setBackupNote(onImport(t) ? 'Данные из файла добавлены.' : 'Это не файл копии «Считалочки».'));
+              f?.text()
+                .then((t) => setBackupNote(onImport(t) ? 'Данные из файла добавлены.' : 'Это не файл копии «Считалочки».'))
+                .catch(() => setBackupNote('Не удалось прочитать файл.'));
             }}
           />
         </div>
+        {broken.length > 0 && (
+          <button
+            className="btn"
+            onClick={() => saveTextFile('schitalochka-povrezhdennoe.json', JSON.stringify({ app: 'mathkids-broken', records: broken }))
+              .then(() => setBackupNote('Повреждённое сохранение записано в файл.'))
+              .catch(() => setBackupNote('Не удалось сохранить файл.'))}
+          >
+            Повреждённое сохранение в файл ({broken.length})
+          </button>
+        )}
         {backupNote && <p className="note" role="status">{backupNote}</p>}
         <button className="btn ghost" onClick={onCredits}>Авторство картинок и лицензии</button>
       </section>

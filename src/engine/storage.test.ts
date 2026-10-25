@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emptyData, exportJson, importMerge, loadData, parseData, saveData, BACKUP_KEY, KEY } from './storage';
+import { brokenRecords, emptyData, exportJson, importMerge, loadData, parseData, saveData, BACKUP_KEY, KEY } from './storage';
 import type { AppData } from './types';
 
 function fakeStorage(init: Record<string, string> = {}): Storage {
@@ -47,6 +47,23 @@ describe('parseData', () => {
   });
 });
 
+describe('parseData validation', () => {
+  it('rejects records whose profiles or stickers have the wrong shape', () => {
+    const d = sample();
+    expect(parseData(JSON.stringify({ ...d, profiles: [null] }))).toBeNull();
+    expect(parseData(JSON.stringify({ ...d, profiles: [{ id: 1, name: {} }] }))).toBeNull();
+    expect(parseData(JSON.stringify({ ...d, stickers: { p1: 'A01' } }))).toBeNull();
+    expect(parseData(JSON.stringify({ ...d, stickers: { p1: [5] } }))).toBeNull();
+  });
+
+  it('drops attempts with wrong field types', () => {
+    const d = sample();
+    const bad = { ...d.attempts[0], id: 'b', answer: { x: 1 } };
+    const bad2 = { ...d.attempts[0], id: 'c', helpLevel: 7 };
+    expect(parseData(JSON.stringify({ ...d, attempts: [...d.attempts, bad, bad2] }))?.attempts).toEqual(d.attempts);
+  });
+});
+
 describe('loadData', () => {
   it('starts empty when nothing is stored', () => {
     expect(loadData(fakeStorage())).toEqual({ data: emptyData(), issue: null });
@@ -66,6 +83,22 @@ describe('loadData', () => {
     const r = loadData(s, T0);
     expect(r).toEqual({ data: emptyData(), issue: 'unreadable' });
     expect(s.getItem(`${KEY}:broken-${T0}`)).toBe('{broken');
+    expect(brokenRecords(s)).toEqual(['{broken']);
+  });
+
+  it('does not copy the same unreadable record twice (second render, next launch)', () => {
+    const s = fakeStorage({ [KEY]: '{broken' });
+    loadData(s, T0);
+    loadData(s, T0 + 5);
+    expect(brokenRecords(s)).toEqual(['{broken']);
+  });
+
+  it('forbids saving when the unreadable record could not be set aside', () => {
+    const s = fakeStorage({ [KEY]: '{broken', [BACKUP_KEY]: JSON.stringify(sample()) });
+    s.setItem = () => { throw new Error('quota'); };
+    const r = loadData(s, T0);
+    expect(r.issue).toBe('locked');
+    expect(r.data).toEqual(sample());
   });
 });
 
@@ -82,6 +115,12 @@ describe('saveData', () => {
     expect(JSON.parse(s.getItem(BACKUP_KEY)!)).toEqual(d1);
     saveData(d2, s, T0 + 25 * 3600 * 1000);
     expect(JSON.parse(s.getItem(BACKUP_KEY)!)).toEqual({ ...d2, stickers: {} });
+  });
+
+  it('never backs up an empty record over a good one', () => {
+    const s = fakeStorage({ [KEY]: JSON.stringify(emptyData()), [BACKUP_KEY]: JSON.stringify(sample()) });
+    saveData(sample(), s, T0);
+    expect(JSON.parse(s.getItem(BACKUP_KEY)!)).toEqual(sample());
   });
 
   it('reports failure when storage refuses to write', () => {
@@ -113,5 +152,6 @@ describe('export and import', () => {
 
   it('rejects a file that is not a backup', () => {
     expect(importMerge(sample(), 'hello')).toBeNull();
+    expect(importMerge(sample(), JSON.stringify({ app: 'mathkids', data: { version: 1, profiles: [null], attempts: [] } }))).toBeNull();
   });
 });
