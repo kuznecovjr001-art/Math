@@ -3,6 +3,7 @@
  * Список записанных фраз — public/audio/manifest.json. Чтобы заменить голос,
  * положите свои файлы с теми же именами (список фраз — public/audio/phrases.tsv).
  */
+import { isNative } from '../platform/native';
 import { phraseKey } from './phraseKey';
 
 let enabled = true;
@@ -39,7 +40,17 @@ export function canSpeak(): boolean {
   return typeof speechSynthesis !== 'undefined' || typeof Audio !== 'undefined';
 }
 
+// В Android WebView нет speechSynthesis: фразы без записи (треть карточек — новые числа) читает системный синтез.
+const nativeTts = isNative && typeof speechSynthesis === 'undefined'
+  ? import('@capacitor-community/text-to-speech').then((m) => m.TextToSpeech)
+  : null;
+
 function synth(text: string) {
+  if (nativeTts) {
+    // Нет русского голоса в системе — промолчим; текст задания всё равно на экране.
+    void nativeTts.then((t) => t.speak({ text, lang: 'ru-RU', rate: 0.92, pitch: 1.05 })).catch(() => undefined);
+    return;
+  }
   if (typeof speechSynthesis === 'undefined') return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ru-RU';
@@ -75,4 +86,5 @@ export function stopSpeaking() {
     current = null;
   }
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  void nativeTts?.then((t) => t.stop()).catch(() => undefined);
 }

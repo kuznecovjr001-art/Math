@@ -5,6 +5,7 @@ import { SKILLS, STATUS_TEXT } from '../content/skills';
 import { missionDone, skillStatus } from '../engine/progress';
 import { brokenRecords, exportJson } from '../engine/storage';
 import { saveTextFile } from '../platform/files';
+import { isNative } from '../platform/native';
 import type { AppData, Profile } from '../engine/types';
 import { ParentPlan } from './ParentPlan';
 import { ParentReport } from './ParentReport';
@@ -150,7 +151,10 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
           Озвучивать задания
         </label>
         <p className="note">
-          Сейчас задания читает голос браузера. Перед запуском фразы будут записаны заранее и проверены на слух.
+          Задания, подсказки и похвала записаны заранее. Карточки с новыми числами читает голос устройства
+          {isNative
+            ? ': на Android — системный синтез речи. Чтобы он работал без интернета, скачайте русский голос: Настройки → Система → Язык → Синтез речи.'
+            : ' (синтез речи браузера).'}
         </p>
         {profile && (
           <button
