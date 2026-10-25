@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ISLANDS } from '../content/levels';
 import { getMission, MISSIONS } from '../content/missions';
 import { SKILLS, STATUS_TEXT } from '../content/skills';
 import { missionCompleted, skillStatus } from '../engine/progress';
+import { brokenRecords, exportJson } from '../engine/storage';
+import { saveTextFile } from '../platform/files';
 import type { AppData } from '../engine/types';
 import { Emoji, Icon, SceneBg } from '../ui/art';
 
@@ -13,6 +15,8 @@ interface Props {
   onDeleteProfile: (id: string) => void;
   onStartIsland: (id: string, island: number) => void;
   onCredits: () => void;
+  /** false — файл не похож на резервную копию. */
+  onImport: (text: string) => boolean;
 }
 
 const VARIANT_TEXT = { A: 'обучение', B: 'самостоятельная проба', C: 'повтор после паузы' };
@@ -22,8 +26,13 @@ function fmt(ts: number) {
   return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onCredits }: Props) {
+export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onCredits, onImport }: Props) {
   const [pid, setPid] = useState(data.profiles[0]?.id ?? '');
+  const [backupNote, setBackupNote] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [broken] = useState(() => {
+    try { return brokenRecords(); } catch { return []; }
+  });
   const profile = data.profiles.find((p) => p.id === pid);
   const own = data.attempts.filter((a) => a.profileId === pid);
   const recent = [...own].sort((a, b) => b.at - a.at).slice(0, 15);
@@ -149,6 +158,48 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
         <p className="note">
           Все данные хранятся только в этом браузере. Приложение не собирает фото, голос и настоящие имена.
         </p>
+        <h3>Резервная копия</h3>
+        <p className="note">
+          Файл со всеми профилями и историей. Восстановление добавляет недостающее и ничего не удаляет.
+        </p>
+        <div className="row wrap">
+          <button
+            className="btn"
+            onClick={() => {
+              const day = new Date().toISOString().slice(0, 10);
+              saveTextFile(`schitalochka-${day}.json`, exportJson(data))
+                .then(() => setBackupNote('Копия сохранена.'))
+                .catch(() => setBackupNote('Не удалось сохранить копию.'));
+            }}
+          >
+            Сохранить копию
+          </button>
+          <button className="btn" onClick={() => fileRef.current?.click()}>Восстановить из файла</button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              f?.text()
+                .then((t) => setBackupNote(onImport(t) ? 'Данные из файла добавлены.' : 'Это не файл копии «Считалочки».'))
+                .catch(() => setBackupNote('Не удалось прочитать файл.'));
+            }}
+          />
+        </div>
+        {broken.length > 0 && (
+          <button
+            className="btn"
+            onClick={() => saveTextFile('schitalochka-povrezhdennoe.json', JSON.stringify({ app: 'mathkids-broken', records: broken }))
+              .then(() => setBackupNote('Повреждённое сохранение записано в файл.'))
+              .catch(() => setBackupNote('Не удалось сохранить файл.'))}
+          >
+            Повреждённое сохранение в файл ({broken.length})
+          </button>
+        )}
+        {backupNote && <p className="note" role="status">{backupNote}</p>}
         <button className="btn ghost" onClick={onCredits}>Авторство картинок и лицензии</button>
       </section>
     </div>
