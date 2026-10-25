@@ -8,8 +8,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+# По умолчанию только чтение; запись в gh-pages — у задачи build.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: pages-${{ github.ref }}
@@ -18,6 +19,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -759,3 +759,5 @@ body:has(.screen.map) { background: var(--sea); }
 @media (min-width: 760px) and (min-height: 1000px) {
   .screen.mission { zoom: 1.25; }
 }
+
+.license { white-space: pre-wrap; font-size: 13px; max-height: 50vh; overflow: auto; }
