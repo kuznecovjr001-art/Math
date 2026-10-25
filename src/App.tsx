@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { PHRASE } from './audio/phrases';
 import { setVoiceEnabled, speak } from './audio/voice';
 import { getMission } from './content/missions';
-import { loadData, newId, saveData } from './engine/storage';
+import { importMerge, loadData, newId, saveData } from './engine/storage';
 import type { AppData, Attempt } from './engine/types';
 import { MapScreen } from './screens/MapScreen';
 import type { PlayMode } from './screens/MissionPlayer';
@@ -38,7 +38,8 @@ type Screen =
   | { name: 'credits' };
 
 export function App() {
-  const [data, setData] = useState<AppData>(loadData);
+  const [loaded] = useState(() => loadData());
+  const [data, setData] = useState<AppData>(loaded.data);
   const [screen, setScreen] = useState<Screen>({ name: 'profiles' });
   const [profileId, setProfileId] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -146,6 +147,11 @@ export function App() {
           profiles: d.profiles.map((p) => (p.id === id ? { ...p, startIsland } : p)),
         }))}
         onCredits={() => go({ name: 'credits' })}
+        onImport={(text) => {
+          const merged = importMerge(data, text);
+          if (merged) setData(merged);
+          return merged !== null;
+        }}
       />
     );
   } else if (screen.name === 'credits') {
@@ -154,6 +160,13 @@ export function App() {
 
   return (
     <div className="app" style={artVars()}>
+      {loaded.issue && (
+        <div className="save-warning" role="alert">
+          {loaded.issue === 'restored'
+            ? 'Сохранение было повреждено: восстановлена резервная копия. Повреждённая запись сохранена отдельно.'
+            : 'Сохранение не удалось прочитать. Оно сохранено отдельно и не удалено; можно восстановить копию в разделе для взрослых.'}
+        </div>
+      )}
       {saveFailed && (
         <div className="save-warning" role="alert">
           Браузер не даёт сохранить прогресс (возможно, включён приватный режим). Игра работает, но история не сохранится.
