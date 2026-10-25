@@ -60,6 +60,17 @@ npm run build     # сборка в dist/
 npm run preview   # проверка собранной версии (включая офлайн)
 ```
 
+## Android
+
+Та же сборка в приложении Capacitor 8 (`android/`), полностью офлайн, без разрешений. Нужны JDK 21 и Android SDK 36.
+
+```bash
+npm run build && npx cap sync android
+cd android && ./gradlew assembleDebug   # app/build/outputs/apk/debug/app-debug.apk
+```
+
+Проверка всех миссий на эмуляторе — `docs/android-qa.md`, подпись релиза — `docs/release-signing.md`.
+
 После слияния в `main` GitHub Actions прогоняет тесты, собирает приложение и кладёт сборку в ветку `gh-pages`, откуда её публикует GitHub Pages.
 
 ## Структура

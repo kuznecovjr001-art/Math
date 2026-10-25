@@ -6,10 +6,7 @@ const config: CapacitorConfig = {
   appName: 'Считалочка',
   webDir: 'dist',
   backgroundColor: '#ffe8b3',
-  android: {
-    // Отладка WebView через adb только в debug-сборке.
-    webContentsDebuggingEnabled: false,
-  },
+  // webContentsDebuggingEnabled не задан: Capacitor включает отладку WebView только в debug-сборке (нужна для QA-скрипта).
   plugins: {
     SystemBars: { insetsHandling: 'css', initialViewportFitValueHint: 'cover', style: 'LIGHT' },
   },

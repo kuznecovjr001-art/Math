@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <!-- Приложение полностью офлайн: сеть не нужна, даже если её запросит библиотека. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
@@ -32,6 +35,4 @@
         </provider>
     </application>
 
-    <!-- Приложение полностью офлайн: сеть не нужна, даже если её запросит библиотека. -->
-    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
 </manifest>

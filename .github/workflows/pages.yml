@@ -39,3 +39,31 @@ jobs:
           git add -A
           git commit -qm "Сборка ${GITHUB_SHA::7}"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+
+  android:
+    # Debug APK на каждый PR: проверка, что нативная сборка не сломана. Подпись релиза — только у владельца.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - run: ./gradlew assembleDebug lintDebug
+        working-directory: android
+      - name: Разрешения в итоговом манифесте
+        run: |
+          m=android/app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml
+          grep -o 'uses-permission[^>]*' "$m" | tee /dev/stderr | grep -v DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION && { echo "Новое разрешение — проверьте"; exit 1; } || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schitalochka-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
