@@ -18,7 +18,7 @@
   /* Цвет острова по ТЗ на графику: светлый тон под текст, главный цвет на рамках. */
   --isl: #95d5b2;
   --isl-tint: #d8f3dc;
-  font-family: 'Nunito', 'Baloo 2', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Nunito Variable', 'Nunito', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
   color: var(--ink);
   background: var(--bg);
   -webkit-tap-highlight-color: transparent;
