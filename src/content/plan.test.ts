@@ -36,7 +36,7 @@ describe('stepToward', () => {
 
 describe('planStatus', () => {
   it('marks a mission done only when finished after the plan was set', () => {
-    const p = kid({ mode: 'assigned', plan: ['A01', 'A02'], planSince: T0 });
+    const p = kid({ mode: 'assigned', plan: ['A01', 'A02'], planAt: { A01: T0, A02: T0 } });
     const s = [finished('A01', T0 - DAY), finished('A02', T0 + 1)];
     expect(planStatus(p, [reached('A01')], s)).toEqual([
       { id: 'A01', done: false, next: 'A01' },
@@ -45,21 +45,28 @@ describe('planStatus', () => {
   });
 
   it('names the open step that leads to a locked assigned mission', () => {
-    const p = kid({ mode: 'assigned', plan: ['N01'], planSince: T0 });
+    const p = kid({ mode: 'assigned', plan: ['N01'], planAt: { N01: T0 } });
     expect(planStatus(p, [], [])).toEqual([{ id: 'N01', done: false, next: 'A01' }]);
+  });
+
+  it('counts each mission from the moment it was added and skips unknown ids', () => {
+    const p = kid({ mode: 'assigned', plan: ['A01', 'X99', 'N09'], planAt: { A01: T0, N09: T0 + 2 * DAY } });
+    const s = [finished('A01', T0 + DAY), finished('N09', T0 + DAY)];
+    expect(planStatus(p, [], s).map((x) => [x.id, x.done])).toEqual([['A01', true], ['N09', false]]);
+    expect(todaySuggestions(p, [], s, [], T0 + 3 * DAY)).toEqual([{ id: 'N09', reason: 'assigned' }]);
   });
 });
 
 describe('todaySuggestions', () => {
   it('offers the next assigned steps first, without duplicates', () => {
-    const p = kid({ mode: 'assigned', plan: ['N01', 'A02'], planSince: T0 });
+    const p = kid({ mode: 'assigned', plan: ['N01', 'A02'], planAt: { N01: T0, A02: T0 } });
     expect(todaySuggestions(p, [], [], [], T0)).toEqual([{ id: 'A01', reason: 'assigned' }]);
     const att = [reached('A01')];
     expect(todaySuggestions(p, att, [], [], T0)).toEqual([{ id: 'A02', reason: 'assigned' }]);
   });
 
   it('falls back to free choice when the plan is done', () => {
-    const p = kid({ mode: 'assigned', plan: ['A01'], planSince: T0 });
+    const p = kid({ mode: 'assigned', plan: ['A01'], planAt: { A01: T0 } });
     const s = todaySuggestions(p, [reached('A01')], [finished('A01', T0 + 1)], ['A01'], T0 + 2);
     expect(s.map((x) => x.reason)).not.toContain('assigned');
     expect(s.length).toBeGreaterThan(0);

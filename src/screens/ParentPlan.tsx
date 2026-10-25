@@ -24,7 +24,8 @@ export function ParentPlan({ profile, attempts, sessions, onPlan }: Props) {
   const [mode, setMode] = useState<Mode>(profile.mode ?? 'free');
   const [plan, setPlan] = useState<string[]>(profile.plan ?? []);
   const [saved, setSaved] = useState(false);
-  const status = planStatus({ ...profile, plan }, attempts, sessions);
+  // В черновике только что отмеченные миссии ещё не сделаны.
+  const status = planStatus({ ...profile, plan, planAt: profile.mode === 'assigned' ? profile.planAt : {} }, attempts, sessions);
   const toggle = (id: string) => {
     setSaved(false);
     setPlan((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
@@ -75,11 +76,14 @@ export function ParentPlan({ profile, attempts, sessions, onPlan }: Props) {
         <button
           className="btn primary"
           disabled={mode === 'assigned' && plan.length === 0}
+          aria-describedby="plan-save-note"
           onClick={() => { onPlan(profile.id, mode, mode === 'assigned' ? plan : []); setSaved(true); }}
         >
           Сохранить
         </button>
-        {saved && <span role="status">Сохранено.</span>}
+        <span id="plan-save-note" role="status">
+          {saved ? 'Сохранено.' : mode === 'assigned' && plan.length === 0 ? 'Отметьте хотя бы одну миссию.' : ''}
+        </span>
       </div>
     </section>
   );

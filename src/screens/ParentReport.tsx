@@ -33,14 +33,14 @@ export function ParentReport({ attempts, sessions, stickers, now }: Props) {
     <>
       <section className="card" aria-labelledby="sum-h">
         <h2 id="sum-h">Итоги</h2>
-        <div className="row wrap" role="radiogroup" aria-label="Период">
+        <div className="row wrap" role="group" aria-label="Период">
           {([7, 30] as const).map((d) => (
-            <button key={d} role="radio" aria-checked={days === d} className={`btn ${days === d ? 'primary' : ''}`} onClick={() => setDays(d)}>
+            <button key={d} aria-pressed={days === d} className={`btn ${days === d ? 'primary' : ''}`} onClick={() => setDays(d)}>
               {d} дней
             </button>
           ))}
         </div>
-        {s.tried === 0 && s.sessionsStarted === 0 ? (
+        {s.tried === 0 && s.sessionsStarted === 0 && s.activeDays === 0 ? (
           <p>За {days} дней занятий не было.</p>
         ) : (
           <>

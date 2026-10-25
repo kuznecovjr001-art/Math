@@ -68,8 +68,8 @@ export interface Profile {
   mode?: 'free' | 'assigned' | 'review';
   /** Миссии задания взрослого по порядку. */
   plan?: string[];
-  /** Когда задание назначено: сделанным считается заход, завершённый после этого. */
-  planSince?: number;
+  /** Когда каждая миссия попала в задание: сделанным считается заход, завершённый после этого. */
+  planAt?: Record<string, number>;
 }
 
 export interface AppData {

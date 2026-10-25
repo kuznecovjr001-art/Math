@@ -181,10 +181,10 @@ export function App() {
         }}
         onPlan={(id, mode, plan) => setData((d) => ({
           ...d,
-          // Срок «сделано после назначения» сдвигается, только когда задание назначается заново.
+          // «Сделано» считается от момента, когда миссия попала в задание: у оставшихся в задании время сохраняется.
           profiles: d.profiles.map((p) => (p.id !== id ? p : {
             ...p, mode, plan,
-            planSince: p.mode === 'assigned' && (p.plan ?? []).length > 0 && p.planSince ? p.planSince : Date.now(),
+            planAt: Object.fromEntries(plan.map((m) => [m, (p.mode === 'assigned' && p.planAt?.[m]) || Date.now()])),
           })),
         }))}
         onStartIsland={(id, startIsland) => setData((d) => ({

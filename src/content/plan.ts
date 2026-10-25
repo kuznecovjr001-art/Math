@@ -22,10 +22,10 @@ export function stepToward(attempts: Attempt[], id: string, startIsland: number)
 
 /** Задание взрослого: что сделано после назначения и какая миссия ведёт к остальным. */
 export function planStatus(p: Profile, attempts: Attempt[], sessions: MissionSession[]) {
-  const since = p.planSince ?? 0;
-  return (p.plan ?? []).map((id) => ({
+  // Миссии, которых нет в этой версии (старая копия, переименование), пропускаем, а не падаем.
+  return (p.plan ?? []).filter((id) => getMission(id)).map((id) => ({
     id,
-    done: sessions.some((s) => s.missionId === id && s.finishedAt !== undefined && s.finishedAt >= since),
+    done: sessions.some((s) => s.missionId === id && s.finishedAt !== undefined && s.finishedAt >= (p.planAt?.[id] ?? Infinity)),
     next: stepToward(attempts, id, p.startIsland ?? 0),
   }));
 }

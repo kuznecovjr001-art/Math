@@ -31,6 +31,7 @@ function isProfile(p: unknown): p is Profile {
   return !!x && typeof x === 'object' && str(x.id) && str(x.name) && str(x.avatar) && num(x.createdAt)
     && (x.startIsland === undefined || num(x.startIsland))
     && (x.plan === undefined || (Array.isArray(x.plan) && x.plan.every(str)))
+    && (x.planAt === undefined || (!!x.planAt && typeof x.planAt === 'object' && Object.values(x.planAt).every(num)))
     && (x.mode === undefined || ['free', 'assigned', 'review'].includes(x.mode));
 }
 
