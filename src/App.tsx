@@ -1,12 +1,13 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { PHRASE } from './audio/phrases';
-import { setVoiceEnabled, speak } from './audio/voice';
+import { setVoiceEnabled, speak, stopSpeaking } from './audio/voice';
 import { getMission } from './content/missions';
 import { importMerge, loadData, newId, saveData } from './engine/storage';
 import type { AppData, Attempt, MissionSession } from './engine/types';
 import { MapScreen } from './screens/MapScreen';
 import type { PlayMode } from './screens/MissionPlayer';
 import { Profiles } from './screens/Profiles';
+import { onNativeLifecycle } from './platform/native';
 import { artVars } from './ui/art';
 
 // Первый экран — профили и карта; миссия с играми и разделы для взрослых грузятся отдельно.
@@ -58,6 +59,27 @@ export function App() {
     setNow(Date.now());
     setScreen(s);
   };
+
+  // «Назад» на Android ведёт туда же, куда кнопки на экране; на первом экране приложение сворачивается.
+  const backRef = useRef<() => boolean>(() => false);
+  backRef.current = () => {
+    const to: Record<Screen['name'], Screen | null> = {
+      profiles: null,
+      map: { name: 'profiles' },
+      mission: { name: 'map' },
+      album: { name: 'map' },
+      gate: screen.name === 'gate' ? { name: screen.back } : null,
+      parent: { name: 'profiles' },
+      credits: { name: 'parent' },
+    };
+    const next = to[screen.name];
+    if (next) go(next);
+    return next !== null;
+  };
+  useEffect(() => {
+    const off = onNativeLifecycle(() => backRef.current(), stopSpeaking, () => setNow(Date.now()));
+    return () => { void off.then((f) => f()); };
+  }, []);
 
   const profile = data.profiles.find((p) => p.id === profileId) ?? null;
   const stickers = profile ? data.stickers[profile.id] ?? [] : [];

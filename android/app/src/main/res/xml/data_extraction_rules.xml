@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Данные детей не уходят в облачную копию Google (Android 12+; на 8–11 то же делает allowBackup=false).
+     Перенос на новый телефон: на Android 12+ системным переносом устройство-устройство, на любом — файлом копии
+     из раздела для взрослых. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+</data-extraction-rules>
