@@ -1,9 +1,11 @@
-/** Картинки OpenMoji (CC BY-SA 4.0) и простые нарисованные предметы. */
+import { artSrc } from '../content/art';
+
+/** Картинки OpenMoji (CC BY-SA 4.0) или свои рисунки из src/assets/art, и простые нарисованные предметы. */
 
 export function Emoji({ code, size = 56, label }: { code: string; size?: number; label?: string }) {
   return (
     <img
-      src={`${import.meta.env.BASE_URL}img/openmoji/${code}.svg`}
+      src={artSrc(code)}
       width={size}
       height={size}
       alt={label ?? ''}

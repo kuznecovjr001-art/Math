@@ -10,6 +10,14 @@ import { CompareGame } from '../games/CompareGame';
 import { CountGame } from '../games/CountGame';
 import { CupsGame } from '../games/CupsGame';
 import { FactsGame } from '../games/FactsGame';
+import { FingersGame } from '../games/FingersGame';
+import { FlashGame } from '../games/FlashGame';
+import { MeasureGame } from '../games/MeasureGame';
+import { OrderGame } from '../games/OrderGame';
+import { PatternGame } from '../games/PatternGame';
+import { PositionGame } from '../games/PositionGame';
+import { SortGame } from '../games/SortGame';
+import { ZeroGame } from '../games/ZeroGame';
 import { HiddenGame } from '../games/HiddenGame';
 import { ParcelsGame } from '../games/ParcelsGame';
 import { RecordGame } from '../games/RecordGame';
@@ -196,6 +204,14 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       {p.kind === 'array' && <ArrayGame key={key} params={p} {...gameProps} />}
       {p.kind === 'facts' && <FactsGame key={key} params={p} {...gameProps} />}
       {p.kind === 'story' && <StoryGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'position' && <PositionGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'sort' && <SortGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'pattern' && <PatternGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'flash' && <FlashGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'zero' && <ZeroGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'fingers' && <FingersGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'measure' && <MeasureGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'order' && <OrderGame key={key} params={p} {...gameProps} />}
     </div>
   );
 }
