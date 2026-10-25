@@ -19,9 +19,12 @@ export function dayKey(ts: number): string {
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 }
 
-/** Самостоятельный успех: верно, без помощи, не в режиме обучения. */
+/**
+ * Самостоятельный успех: верный ответ на карточку с первого раза, без помощи, не в режиме обучения.
+ * Промежуточный шаг и верный ответ после ошибки (возможен перебор трёх вариантов) не считаются.
+ */
 export function isIndependentSuccess(a: Attempt): boolean {
-  return a.correct && a.helpLevel === 0 && a.mode !== 'learn';
+  return a.correct && a.helpLevel === 0 && a.mode !== 'learn' && !a.partial && !a.errorsBefore;
 }
 
 export function skillStatus(attempts: Attempt[], skill: SkillId): SkillStatus {
@@ -52,8 +55,11 @@ export function statusAtLeast(s: SkillStatus, min: SkillStatus): boolean {
   return STATUS_ORDER.indexOf(s) >= STATUS_ORDER.indexOf(min);
 }
 
-/** Миссия пройдена, если ребёнок дошёл до самостоятельной пробы. */
-export function missionCompleted(attempts: Attempt[], missionId: string): boolean {
+/**
+ * Ребёнок дошёл до самостоятельной пробы. По авторской методике этого достаточно, чтобы открыть
+ * следующие миссии, но это не завершение миссии (завершение — наклейка) и не освоение навыка.
+ */
+export function probeReached(attempts: Attempt[], missionId: string): boolean {
   return attempts.some((a) => a.missionId === missionId && a.variant !== 'A');
 }
 
@@ -82,12 +88,12 @@ export interface MissionRef {
 }
 
 export function missionUnlocked(attempts: Attempt[], m: MissionRef): boolean {
-  return m.requires.every((r) => missionCompleted(attempts, r));
+  return m.requires.every((r) => probeReached(attempts, r));
 }
 
 /**
  * Предлагаем ребёнку две миссии: сначала то, что пора повторить,
- * затем новые открытые, затем любые пройденные.
+ * затем открытые незавершённые, затем любые завершённые (finished — миссии с наклейкой).
  */
 export function suggestMissions(
   attempts: Attempt[],
@@ -95,6 +101,7 @@ export function suggestMissions(
   isOpen: (id: string) => boolean,
   now: number,
   count = 2,
+  finished: string[] = [],
 ): { id: string; reason: 'review' | 'new' | 'again' }[] {
   const out: { id: string; reason: 'review' | 'new' | 'again' }[] = [];
   const push = (id: string, reason: 'review' | 'new' | 'again') => {
@@ -102,8 +109,8 @@ export function suggestMissions(
   };
   for (const m of missions) if (isReviewDue(attempts, m.id, now)) push(m.id, 'review');
   for (const m of missions) {
-    if (isOpen(m.id) && !missionCompleted(attempts, m.id)) push(m.id, 'new');
+    if (isOpen(m.id) && !finished.includes(m.id)) push(m.id, 'new');
   }
-  for (const m of missions) if (missionCompleted(attempts, m.id)) push(m.id, 'again');
+  for (const m of missions) if (finished.includes(m.id)) push(m.id, 'again');
   return out;
 }

@@ -3,7 +3,7 @@ import { PHRASE } from './audio/phrases';
 import { setVoiceEnabled, speak } from './audio/voice';
 import { getMission } from './content/missions';
 import { importMerge, loadData, newId, saveData } from './engine/storage';
-import type { AppData, Attempt } from './engine/types';
+import type { AppData, Attempt, MissionSession } from './engine/types';
 import { MapScreen } from './screens/MapScreen';
 import type { PlayMode } from './screens/MissionPlayer';
 import { Profiles } from './screens/Profiles';
@@ -68,6 +68,16 @@ export function App() {
     setData((d) => ({ ...d, attempts: [...d.attempts, full] }));
   };
 
+  const trackSession = (sn: Omit<MissionSession, 'profileId'>) => {
+    if (!profile) return;
+    const full: MissionSession = { ...sn, profileId: profile.id };
+    setData((d) => {
+      const list = d.sessions ?? [];
+      const i = list.findIndex((x) => x.id === sn.id);
+      return { ...d, sessions: i < 0 ? [...list, full] : list.map((x, j) => (j === i ? { ...x, ...full } : x)) };
+    });
+  };
+
   const giveSticker = (missionId: string) => {
     if (!profile) return;
     setData((d) => {
@@ -115,6 +125,7 @@ export function App() {
           mission={mission}
           mode={screen.mode}
           onAttempt={addAttempt}
+          onSession={trackSession}
           onFinish={() => giveSticker(mission.id)}
           onExit={() => go({ name: 'map' })}
         />
@@ -138,6 +149,7 @@ export function App() {
               ...d,
               profiles: d.profiles.filter((p) => p.id !== id),
               attempts: d.attempts.filter((a) => a.profileId !== id),
+              sessions: d.sessions?.filter((x) => x.profileId !== id),
               stickers: stickersLeft,
             };
           });

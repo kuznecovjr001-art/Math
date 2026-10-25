@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ISLANDS } from '../content/levels';
 import { getMission, MISSIONS } from '../content/missions';
 import { SKILLS, STATUS_TEXT } from '../content/skills';
-import { missionCompleted, skillStatus } from '../engine/progress';
+import { skillStatus } from '../engine/progress';
 import { brokenRecords, exportJson } from '../engine/storage';
 import { saveTextFile } from '../platform/files';
 import type { AppData } from '../engine/types';
@@ -42,7 +42,7 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
     const list = isl.missions.map((id) => getMission(id)!.skill).filter((s) => !seen.has(s) && seen.add(s));
     return { isl, skills: [...new Set(list)] };
   });
-  const homeIdeas = MISSIONS.filter((m) => missionCompleted(own, m.id));
+  const homeIdeas = MISSIONS.filter((m) => (data.stickers[pid] ?? []).includes(m.id));
 
   return (
     <div className="screen parent">

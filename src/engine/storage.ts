@@ -1,5 +1,5 @@
 import { DAY } from './progress';
-import type { AppData, Attempt, Profile } from './types';
+import type { AppData, Attempt, MissionSession, Profile } from './types';
 
 export const KEY = 'mathkids:v1';
 /** Вчерашняя (или более ранняя) хорошая запись: ошибка в данных сегодня не затрёт её сразу. */
@@ -18,6 +18,12 @@ function isAttempt(a: unknown): a is Attempt {
   return !!x && typeof x === 'object' && str(x.id) && str(x.profileId) && str(x.missionId) && str(x.cardId)
     && str(x.skill) && str(x.mode) && str(x.answer) && num(x.at) && typeof x.correct === 'boolean'
     && ['A', 'B', 'C'].includes(x.variant) && [0, 1, 2, 3].includes(x.helpLevel);
+}
+
+function isSession(x: unknown): x is MissionSession {
+  const v = x as MissionSession | null;
+  return !!v && typeof v === 'object' && str(v.id) && str(v.profileId) && str(v.missionId)
+    && num(v.startedAt) && num(v.cards) && num(v.shown);
 }
 
 function isProfile(p: unknown): p is Profile {
@@ -47,6 +53,7 @@ export function parseData(raw: string | null): AppData | null {
       version: 1,
       profiles: d.profiles,
       attempts: d.attempts.filter(isAttempt),
+      ...(Array.isArray(d.sessions) ? { sessions: d.sessions.filter(isSession) } : {}),
       stickers: d.stickers ?? {},
       settings: { voice: d.settings?.voice !== false },
     };
@@ -153,6 +160,7 @@ export function importMerge(here: AppData, text: string): AppData | null {
     ...here,
     profiles: union(here.profiles, other.profiles, (p) => p.id),
     attempts: union(here.attempts, other.attempts, (a) => a.id),
+    ...(here.sessions || other.sessions ? { sessions: union(here.sessions ?? [], other.sessions ?? [], (x) => x.id) } : {}),
     stickers,
   };
 }
