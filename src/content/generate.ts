@@ -1,3 +1,6 @@
+import { varyMore, MORE_ICONS } from './generateMore';
+import { int, pick, shuffle, type Rng } from './rng';
+import { isMore } from './numbers';
 import { count, plural } from './words';
 import {
   ITEMS, type Bead, type CardParams, type DayEvent, type ItemId, type Shape, type SortBin, type SortItem, type Thing,
@@ -9,31 +12,7 @@ import {
  * из диапазона авторских карточек миссии — так сложность не растёт сама собой.
  */
 
-export type Rng = () => number;
-
-/** Простой генератор с зерном: в тестах результат повторяется. */
-export function seededRng(seed: number): Rng {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-export const int = (rng: Rng, lo: number, hi: number): number => lo + Math.floor(rng() * (hi - lo + 1));
-export const pick = <T>(rng: Rng, xs: readonly T[]): T => xs[Math.floor(rng() * xs.length)];
-
-export function shuffle<T>(rng: Rng, xs: readonly T[]): T[] {
-  const out = [...xs];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
+export { int, pick, seededRng, shuffle, type Rng } from './rng';
 
 /** Наименьшее и наибольшее значение поля среди карточек того же вида. */
 function span<K extends CardParams['kind']>(
@@ -157,6 +136,7 @@ function storyKind(p: Extract<CardParams, { kind: 'story' }>): 'add' | 'sub' | '
  * pool — все авторские карточки миссии: из них берутся диапазоны чисел.
  */
 export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParams {
+  if (isMore(t)) return varyMore(t, pool, rng);
   switch (t.kind) {
     case 'cups': {
       const [lo, hi] = span(pool, 'cups', (p) => p.receivers);
@@ -337,4 +317,5 @@ export const GENERATOR_ICONS = [
   ...WEIGHTS.map((w) => w.icon),
   ...DAY_PARTS.flat().map((e) => e.icon),
   ...COUNTABLE.map((id) => ITEMS[id].img),
+  ...MORE_ICONS,
 ];

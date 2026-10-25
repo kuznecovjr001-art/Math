@@ -145,6 +145,8 @@ describe('generated cards', () => {
       const authoredMax = Math.max(...pool.map(expectedAnswer));
       for (const { p } of ALL.filter((x) => x.id === m.id)) {
         if (p.kind === 'facts' || p.kind === 'story' || p.kind === 'tens' || p.kind === 'count') continue;
+        // Разрядные задания острова сотен берут числа из всего диапазона до 1000 (до 100 у прямой) — так задумано.
+        if (p.kind === 'placeValue' || p.kind === 'riddle' || p.kind === 'openLine') continue;
         expect(expectedAnswer(p), `${m.id}: ${JSON.stringify(p)}`).toBeLessThanOrEqual(Math.max(authoredMax, 10));
       }
     }

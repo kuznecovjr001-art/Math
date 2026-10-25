@@ -13,6 +13,10 @@ export const ART_NAMES: Record<string, string> = {
   sunrise: '1F305', sun: '2600', moon: '1F319', toothbrush: '1FAA5', school: '1F3EB',
   lunch: '1F37D', bed: '1F6CF', teddy: '1F9F8', car: '1F697', box: '1F4E6', shirt: '1F455',
   feather: '1FAB6', rock: '1FAA8', pencil: '270F',
+  wheel: '1F6DE', bicycle: '1F6B2', frog: '1F438', coin: '1FA99', purse: '1F45B', paperclip: '1F4CE',
+  flatbread: '1FAD3', chocolate: '1F36B', butterfly: '1F98B', clock: '1F570', rope: '1FAA2', bucket: '1FAA3',
+  watermelon: '1F349', ruler: '1F4CF', scales: '2696', milk: '1F95B', book: '1F4D6', abacus: '1F9EE',
+  calendar: '1F4C5', ribbon: '1F380', hundred: '1F4AF', brick: '1F9F1', thinking: '1F914',
 };
 
 /** Имя файла без расширения → код картинки. Неизвестные имена считаются кодами. */

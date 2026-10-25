@@ -21,6 +21,11 @@ export const SKILLS: Record<SkillId, { title: string; requires: SkillId[] }> = {
   M16: { title: 'Группировка и закономерности', requires: [] },
   M17: { title: 'Длина и масса: сравнение', requires: ['M04'] },
   M18: { title: 'Время: части суток и порядок', requires: [] },
+  M19: { title: 'Деньги: монеты и сдача', requires: ['M06'] },
+  M20: { title: 'Данные: сбор и сравнение', requires: ['M02', 'M04'] },
+  M21: { title: 'Числа до 1000: сотни, десятки, единицы', requires: ['M07'] },
+  M22: { title: 'Доли: половина и четверть', requires: ['M09'] },
+  M23: { title: 'Симметрия и узоры', requires: ['M08'] },
 };
 
 export const STATUS_TEXT: Record<SkillStatus, string> = {

@@ -31,6 +31,24 @@ import { ShapesGame } from '../games/ShapesGame';
 import { StoryGame } from '../games/StoryGame';
 import { TenFrameGame } from '../games/TenFrameGame';
 import { TensGame } from '../games/TensGame';
+import { Beads100Game } from '../games/Beads100Game';
+import { Chart100Game } from '../games/Chart100Game';
+import { CoinsGame } from '../games/CoinsGame';
+import { TallyGame } from '../games/TallyGame';
+import { GroupsOfGame } from '../games/GroupsOfGame';
+import { JumpsGame } from '../games/JumpsGame';
+import { FractionGame } from '../games/FractionGame';
+import { UnitsGame } from '../games/UnitsGame';
+import { Complete100Game } from '../games/Complete100Game';
+import { PlaceValueGame } from '../games/PlaceValueGame';
+import { RiddleGame } from '../games/RiddleGame';
+import { Compare3Game } from '../games/Compare3Game';
+import { OpenLineGame } from '../games/OpenLineGame';
+import { BarGame } from '../games/BarGame';
+import { SymmetryGame } from '../games/SymmetryGame';
+import { ClockGame } from '../games/ClockGame';
+import { WeekGame } from '../games/WeekGame';
+import { UnitPickGame } from '../games/UnitPickGame';
 import type { GameResult } from '../games/types';
 import { Emoji, Guide, Icon, SceneBg, type GuidePose } from '../ui/art';
 
@@ -237,6 +255,24 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       {p.kind === 'fingers' && <FingersGame key={key} params={p} {...gameProps} />}
       {p.kind === 'measure' && <MeasureGame key={key} params={p} {...gameProps} />}
       {p.kind === 'order' && <OrderGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'beads100' && <Beads100Game key={key} params={p} {...gameProps} />}
+      {p.kind === 'chart100' && <Chart100Game key={key} params={p} {...gameProps} />}
+      {p.kind === 'coins' && <CoinsGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'tally' && <TallyGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'groupsOf' && <GroupsOfGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'jumps' && <JumpsGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'fraction' && <FractionGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'units' && <UnitsGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'complete100' && <Complete100Game key={key} params={p} {...gameProps} />}
+      {p.kind === 'placeValue' && <PlaceValueGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'riddle' && <RiddleGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'compare3' && <Compare3Game key={key} params={p} {...gameProps} />}
+      {p.kind === 'openLine' && <OpenLineGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'bar' && <BarGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'symmetry' && <SymmetryGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'clock' && <ClockGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'week' && <WeekGame key={key} params={p} {...gameProps} />}
+      {p.kind === 'unitPick' && <UnitPickGame key={key} params={p} {...gameProps} />}
     </div>
   );
 }
