@@ -20,11 +20,11 @@ export function HiddenGame({ params, help, locked, onSubmit }: GameProps<P>) {
         </div>
         <div className="plate-wrap">
           <Plate size={170} />
-          <div className="napkin" aria-label="Салфетка">?</div>
+          <div className="napkin" role="img" aria-label="Салфетка">?</div>
         </div>
       </div>
       {help >= 2 && (
-        <div className="slots-row" aria-label={`Всего ${params.total}`}>
+        <div className="slots-row" role="group" aria-label={`Всего ${params.total}`}>
           {Array.from({ length: params.total }, (_, i) =>
             i < params.visible
               ? <Emoji key={i} code={item.img} size={36} />

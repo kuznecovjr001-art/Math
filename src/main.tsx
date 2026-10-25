@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App';
+import { App, preloadScreens } from './App';
 import { FIXED_PHRASES } from './audio/phrases';
 import { phraseKey } from './audio/phraseKey';
 import { allArtUrls } from './content/art';
@@ -17,8 +17,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register(`${import.meta.env.BASE_URL}sw.js`)
-      .then(() => navigator.serviceWorker.ready)
-      .then((reg) => {
+      .then(() => Promise.all([navigator.serviceWorker.ready, preloadScreens()]))
+      .then(([reg]) => {
         const loaded = performance.getEntriesByType('resource').map((e) => e.name);
         reg.active?.postMessage({ type: 'cache-urls', urls: loaded });
         // Рисунки остальных островов и сцен докачиваются в фоне, чтобы игра работала без сети.

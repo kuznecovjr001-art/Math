@@ -3,6 +3,10 @@ import type { Profile } from '../engine/types';
 import { Emoji, Guide, Icon, SceneBg } from '../ui/art';
 
 export const AVATARS = ['1F431', '1F436', '1F430', '1F43B', '1F98A', '1F994', '1F43C', '1F427', '1F989', '1F42D'];
+const AVATAR_NAMES: Record<string, string> = {
+  '1F431': 'Котёнок', '1F436': 'Щенок', '1F430': 'Зайчик', '1F43B': 'Медвежонок', '1F98A': 'Лисёнок',
+  '1F994': 'Ёжик', '1F43C': 'Панда', '1F427': 'Пингвин', '1F989': 'Совёнок', '1F42D': 'Мышонок',
+};
 
 interface Props {
   profiles: Profile[];
@@ -29,6 +33,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
               className={`tap avatar ${a === avatar ? 'selected' : ''}`}
               onClick={() => setAvatar(a)}
               aria-pressed={a === avatar}
+              aria-label={AVATAR_NAMES[a]}
             >
               <Emoji code={a} size={72} />
             </button>
@@ -65,7 +70,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
       </div>
       <div className="avatar-grid">
         {profiles.map((p) => (
-          <button key={p.id} className="tap avatar big" onClick={() => onPick(p.id)}>
+          <button key={p.id} className="tap avatar big" onClick={() => onPick(p.id)} aria-label={p.name || AVATAR_NAMES[p.avatar] || 'Игрок'}>
             <Emoji code={p.avatar} size={96} />
             {p.name && <span className="avatar-name">{p.name}</span>}
           </button>

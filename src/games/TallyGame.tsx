@@ -10,7 +10,7 @@ function Marks({ n }: { n: number }) {
   // Палочки группами по пять, пятая перечёркивает четыре.
   const groups = Array.from({ length: Math.ceil(n / 5) }, (_, g) => Math.min(5, n - g * 5));
   return (
-    <span className="marks" aria-label={String(n)}>
+    <span className="marks" role="img" aria-label={String(n)}>
       {groups.map((k, g) => <span key={g} className={`mark-group ${k === 5 ? 'five' : ''}`}>{'|'.repeat(Math.min(k, 4))}</span>)}
     </span>
   );

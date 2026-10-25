@@ -29,7 +29,7 @@ export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
   return (
     <div className="game">
       {params.cue === 'digit' && (
-        <div className="digit-cue" aria-label={`Цифра ${params.target}`}>
+        <div className="digit-cue" role="img" aria-label={`Цифра ${params.target}`}>
           <NumberTile n={params.target} dots={help >= 2} />
         </div>
       )}
@@ -40,7 +40,7 @@ export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
           </button>
         ))}
       </div>
-      <div className="basket" aria-label={`В корзине ${inBasket}`}>
+      <div className="basket" role="group" aria-label={`В корзине ${inBasket}`}>
         <div className="basket-items">
           {Array.from({ length: slots }, (_, i) =>
             i < inBasket ? (

@@ -35,7 +35,7 @@ export function SeatsGame({ params, help, locked, onSubmit }: GameProps<P>) {
           {seated.map((on, i) => {
             if (i < params.taken) {
               return (
-                <div key={i} className="seat taken" aria-label="Место занято">
+                <div key={i} className="seat taken" role="img" aria-label="Место занято">
                   <Person color="red" />
                 </div>
               );

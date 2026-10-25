@@ -210,7 +210,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       <SceneBg name={MISSION_SCENE[mission.id] ?? 'meadow'} />
       <header className="mission-bar">
         <button className="btn icon" onClick={onExit} aria-label="Домой"><Icon name="home" /></button>
-        <div className="progress" aria-label={`Задание ${pos + 1} из ${steps.length}`}>
+        <div className="progress" role="img" aria-label={`Задание ${pos + 1} из ${steps.length}`}>
           {steps.map((s, i) => (
             <span key={i} className={`dot ${i < pos ? 'past' : i === pos ? 'now' : ''}`} title={STEP_TITLE[s.variant]} />
           ))}

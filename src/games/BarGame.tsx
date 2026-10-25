@@ -16,7 +16,7 @@ export function BarGame({ params, help, locked, onSubmit }: GameProps<P>) {
     <div className="game">
       <div className="more-scene bar-scene">
         <Emoji code={s.icon} size={56} />
-        <div className="bar-model" aria-label="Схема задачи">
+        <div className="bar-model" role="img" aria-label="Схема задачи">
           <div className="bar whole">{known ? whole : '?'}</div>
           <div className="bar-parts">
             <div className="bar part a" style={{ flex: params.a }}>{params.a}</div>
