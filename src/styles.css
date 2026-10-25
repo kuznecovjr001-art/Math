@@ -187,6 +187,7 @@ h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; }
 .today-text { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
 .today-card:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--line); }
 .today-card.new { border-color: var(--primary); box-shadow: 0 6px 0 #1f7a6f; }
+.today-card.assigned { border-color: var(--primary); box-shadow: 0 6px 0 #1f7a6f; }
 .today-card.review { border-color: var(--accent); box-shadow: 0 6px 0 #c9773a; }
 .today-title { font-size: 24px; font-weight: 800; line-height: 1.15; }
 .today-reason { display: inline-flex; align-items: center; gap: 4px; font-size: 16px; color: var(--ink); font-weight: 800; background: var(--bg-2); border-radius: 999px; padding: 2px 12px; }
@@ -761,3 +762,14 @@ body:has(.screen.map) { background: var(--sea); }
 }
 
 .license { white-space: pre-wrap; font-size: 13px; max-height: 50vh; overflow: auto; }
+/* Отчёт взрослому */
+.report-label { text-align: left; font-weight: 600; }
+.bar-cell { width: 40%; }
+.bar { display: block; height: 14px; border-radius: 7px; background: var(--primary); min-width: 2px; }
+.bar.afterError { background: #6fb3a9; }
+.bar.withHelp { background: var(--accent); }
+.bar.unsolved { background: #b9a88f; }
+.plan-list li { margin: 6px 0; }
+fieldset.plain { border: 0; padding: 0; margin: 0 0 8px; }
+.btn.small { min-height: 44px; padding: 4px 14px; font-size: 15px; }
+details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }

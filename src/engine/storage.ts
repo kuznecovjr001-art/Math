@@ -29,7 +29,9 @@ function isSession(x: unknown): x is MissionSession {
 function isProfile(p: unknown): p is Profile {
   const x = p as Profile | null;
   return !!x && typeof x === 'object' && str(x.id) && str(x.name) && str(x.avatar) && num(x.createdAt)
-    && (x.startIsland === undefined || num(x.startIsland));
+    && (x.startIsland === undefined || num(x.startIsland))
+    && (x.plan === undefined || (Array.isArray(x.plan) && x.plan.every(str)))
+    && (x.mode === undefined || ['free', 'assigned', 'review'].includes(x.mode));
 }
 
 function isStickers(s: unknown): s is Record<string, string[]> {
