@@ -16,7 +16,7 @@ const OUTCOME_ROWS = [
   ['independent', 'с первого раза без помощи'],
   ['afterError', 'без помощи, но после ошибки'],
   ['withHelp', 'с помощью'],
-  ['unsolved', 'не дошёл до ответа'],
+  ['unsolved', 'без верного ответа (ушли с карточки)'],
 ] as const;
 
 const day = (ts: number) => new Date(ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
@@ -45,7 +45,7 @@ export function ParentReport({ attempts, sessions, stickers, now }: Props) {
         ) : (
           <>
             <p>
-              Занимался {s.activeDays} {s.activeDays === 1 ? 'день' : s.activeDays < 5 ? 'дня' : 'дней'} из {days}.
+              Дней с занятиями: {s.activeDays} из {days}.
               Начато миссий: {s.sessionsStarted}, пройдено до конца: {s.sessionsFinished}.
               Показано карточек: {s.shown}, с ответом (без обучения): {s.tried}.
             </p>
@@ -99,6 +99,7 @@ export function ParentReport({ attempts, sessions, stickers, now }: Props) {
 
       <section className="card" aria-labelledby="mis-h">
         <h2 id="mis-h">Миссии подробно</h2>
+        {attempts.length === 0 && <p>Ни одна миссия ещё не начата.</p>}
         {ISLANDS.map((isl) => {
           const rows = isl.missions.filter((id) => attempts.some((a) => a.missionId === id));
           if (rows.length === 0) return null;
@@ -114,7 +115,7 @@ export function ParentReport({ attempts, sessions, stickers, now }: Props) {
                     const own = attempts.filter((a) => a.missionId === id);
                     const cards = cardOutcomes(own.filter((a) => a.sessionId !== undefined)).filter((c) => c.outcome !== 'learning');
                     const first = cards.filter((c) => c.outcome === 'independent').length;
-                    const where = missionDone(own, stickers, id) ? 'пройдена' : probeReached(own, id) ? 'дошёл до пробы' : 'обучение';
+                    const where = missionDone(own, stickers, id) ? 'пройдена' : probeReached(own, id) ? 'самостоятельная проба' : 'обучение';
                     const next = reviewDueAt(own, id);
                     return (
                       <tr key={id}>
