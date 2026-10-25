@@ -1,21 +1,30 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
+import { customArt } from '../content/art';
 import { placeChoices } from '../content/numbers';
 import { NumberChoices } from './NumberChoices';
 import type { GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'placeValue' }>;
 
-/** Блоки Дьенеша: квадрат — сотня, полоска — десяток, кубик — единица. */
+const BLOCK = { flat: ['item/block-hundred', 80, 80], rod: ['item/block-ten', 9, 80], unit: ['item/block-one', 9, 9] } as const;
+
+/** Блоки Дьенеша: квадрат — сотня, полоска — десяток, кубик — единица. Свои рисунки item/block-* заменяют нарисованные блоки. */
 export function PlaceValueGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const answer = expectedAnswer(params);
-  const group = (n: number, cls: string, name: string) => (
+  const group = (n: number, cls: keyof typeof BLOCK, name: string) => {
+    const [path, w, h] = BLOCK[cls];
+    const own = customArt(path);
+    return (
     <div className="pv-col">
       <div className={`pv-group ${cls}`}>
-        {Array.from({ length: n }, (_, i) => <span key={i} className={`pv ${cls}`} />)}
+        {Array.from({ length: n }, (_, i) => own
+          ? <img key={i} src={own} width={w} height={h} alt="" aria-hidden="true" draggable={false} />
+          : <span key={i} className={`pv ${cls}`} />)}
       </div>
       {help >= 2 && <span className={`pv-cap ${cls}`}>{name}</span>}
     </div>
-  );
+    );
+  };
   return (
     <div className="game">
       <div className="more-scene pv-scene" role="img" aria-label="Блоки: сотни, десятки и единицы">

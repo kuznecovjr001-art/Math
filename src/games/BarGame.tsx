@@ -1,5 +1,6 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { BAR_STORY, tenChoices } from '../content/numbers';
+import { customArt } from '../content/art';
 import { Emoji } from '../ui/art';
 import { NumberChoices } from './NumberChoices';
 import type { GameProps } from './types';
@@ -12,10 +13,11 @@ export function BarGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const whole = params.a + params.b;
   const s = BAR_STORY[params.story];
   const known = params.find === 'part';
+  const art = customArt(`item/story-${params.story}`);
   return (
     <div className="game">
       <div className="more-scene bar-scene">
-        <Emoji code={s.icon} size={56} />
+        {art ? <img src={art} width={168} height={112} alt="" aria-hidden="true" /> : <Emoji code={s.icon} size={56} />}
         <div className="bar-model" role="img" aria-label="Схема задачи">
           <div className="bar whole">{known ? whole : '?'}</div>
           <div className="bar-parts">
