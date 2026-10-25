@@ -17,5 +17,5 @@ export const MISSION_SCENE: Record<string, string> = {
   N30: 'library', N31: 'workshop', N32: 'classroom', N33: 'shop',
 };
 
-/** Запасной фон, если своего у сцены ещё нет (shop и workshop пока не нарисованы). */
+/** Запасной фон, если своего у сцены ещё нет: лавка и мастерская уже нарисованы, запас нужен только без файла. */
 export const SCENE_FALLBACK: Record<string, string> = { shop: 'bakery', workshop: 'classroom' };

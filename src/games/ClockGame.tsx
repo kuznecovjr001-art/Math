@@ -1,4 +1,5 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
+import { customArt } from '../content/art';
 import { clockChoices } from '../content/numbers';
 import { Choices } from './Choices';
 import type { GameProps } from './types';
@@ -15,9 +16,10 @@ export function ClockFace({ h, m, help }: { h: number; m: number; help: number }
   };
   const [hx, hy] = hand(hourAngle, 48);
   const [mx, my] = hand(minAngle, 72);
+  const face = customArt('item/clock-face');
   return (
     <svg viewBox="0 0 200 200" width={220} height={220} role="img" aria-label="Часы">
-      <circle cx={100} cy={100} r={94} className="clock-face" />
+      {face ? <image href={face} x={4} y={4} width={192} height={192} /> : <circle cx={100} cy={100} r={94} className="clock-face" />}
       {help >= 3 && m === 30 && <path d="M100 100 L100 14 A86 86 0 0 1 100 186 Z" className="clock-half" />}
       {Array.from({ length: 12 }, (_, i) => {
         const [x, y] = hand((i + 1) * 30, 76);

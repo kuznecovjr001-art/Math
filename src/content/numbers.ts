@@ -63,7 +63,7 @@ export const BAR_STORY: Record<BarStory, { icon: string; whole: (n: number) => s
 export const MEASURE_THINGS: Record<Measurable, { icon: string; text: string; unit: MeasureUnit }> = {
   rope: { icon: '1FAA2', text: 'какой длины верёвка', unit: 'm' },
   ribbon: { icon: '1F380', text: 'какой длины лента', unit: 'm' },
-  milk: { icon: '1F95B', text: 'сколько молока в кувшине', unit: 'l' },
+  milk: { icon: '1F95B', text: 'сколько сока в бутылке', unit: 'l' },
   bucket: { icon: '1FAA3', text: 'сколько воды в ведре', unit: 'l' },
   watermelon: { icon: '1F349', text: 'сколько весит арбуз', unit: 'kg' },
   apples: { icon: '1F34E', text: 'сколько весит пакет яблок', unit: 'kg' },

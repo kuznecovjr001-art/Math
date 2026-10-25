@@ -20,3 +20,10 @@
 - `ui/mission-<id>` — эмблема миссии на карте. `sticker/<id>` — наклейка в альбоме и на финише.
 - `item/cup`, `item/spoon`, `item/plate`, `item/parcel`, `char/passenger-seated`, `char/passenger-new` заменяют предметы, нарисованные в коде.
 - `ui/icon-*` — иконки кнопок. `bg/` — фоны карты.
+
+## Дополнение (N09–N33 и «Остров сотен»)
+
+- `ui/mission-n09`…`n33` и `sticker/n09`…`n33`, `ui/island-hundreds`, `bg/map-hundreds-*`, `bg/shop-*`, `bg/workshop-*`.
+- Предметы в `item/`. Те, у кого есть имя в `ART_NAMES`, сами заменяют OpenMoji. Это teddy, lunch, car, elephant, feather, rock, pencil, sunrise, school, bed, toothbrush, moon, wheel, bicycle, rope, bucket, watermelon, ruler, scales и bottle. То же для `char/frog`.
+- Игры берут по пути: `item/coin-*` (монеты), `item/block-*` (блоки сотен), `item/clock-face` (циферблат), `item/story-shelf|aquarium|garden` (задача на полоске).
+- Пока не используются: `item/purse`, `item/tricycle`, `item/flatbread`, `item/chocolate`, `item/butterfly`.

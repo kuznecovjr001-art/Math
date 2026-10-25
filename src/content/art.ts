@@ -17,7 +17,7 @@ export const ART_NAMES: Record<string, string> = {
   flatbread: '1FAD3', chocolate: '1F36B', butterfly: '1F98B', clock: '1F570', rope: '1FAA2', bucket: '1FAA3',
   watermelon: '1F349', ruler: '1F4CF', scales: '2696', milk: '1F95B', book: '1F4D6', abacus: '1F9EE',
   calendar: '1F4C5', ribbon: '1F380', hundred: '1F4AF', brick: '1F9F1', thinking: '1F914',
-  scarf: '1F9E3', bath: '1F6C1', potatoes: '1F954',
+  scarf: '1F9E3', bath: '1F6C1', potatoes: '1F954', bottle: '1F95B',
 };
 
 /** Имя файла без расширения → код картинки. Неизвестные имена считаются кодами. */
@@ -33,8 +33,8 @@ export function buildArtMap(files: Record<string, string>): Record<string, strin
   for (const [path, url] of Object.entries(files)) {
     const code = artCodeFromFile(path);
     map[code] = url;
-    // Предметы из ТЗ лежат в item/<имя>: item/feather заменяет картинку пера и там, где её ищут по коду.
-    const item = /^item\/(.+)$/.exec(code);
+    // Предметы и персонажи из ТЗ лежат в item/<имя> и char/<имя>: item/feather заменяет картинку пера и там, где её ищут по коду.
+    const item = /^(?:item|char)\/(.+)$/.exec(code);
     if (item && ART_NAMES[item[1]]) map[ART_NAMES[item[1]]] ??= url;
   }
   return map;
