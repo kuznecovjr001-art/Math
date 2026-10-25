@@ -5,7 +5,7 @@ import { ISLANDS, islandOpen, missionOpen, orderedMissions } from '../content/le
 import { customArt, missionArt } from '../content/art';
 import { MAP_STOPS, snakeStops, type Stop } from '../content/mapLayout';
 import { getMission } from '../content/missions';
-import { isReviewDue, suggestMissions } from '../engine/progress';
+import { isReviewDue, missionDone, suggestMissions } from '../engine/progress';
 import type { Attempt, Profile } from '../engine/types';
 import { bgVars, Emoji, Guide, Icon, SceneBg } from '../ui/art';
 import type { PlayMode } from './MissionPlayer';
@@ -39,7 +39,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
   const stone = (id: string, at?: Stop) => {
     const m = getMission(id)!;
     const open = isOpen(id);
-    const done = stickers.includes(id);
+    const done = missionDone(own, stickers, id);
     const due = isReviewDue(own, id, now);
     const pos = at && ({
       '--lx': `${at.land[0]}%`, '--ly': `${at.land[1]}%`, '--px': `${at.port[0]}%`, '--py': `${at.port[1]}%`,

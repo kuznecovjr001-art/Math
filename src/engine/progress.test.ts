@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DAY, isIndependentSuccess, isReviewDue, probeReached, missionUnlocked, reviewDueAt, skillStatus, suggestMissions,
+  DAY, isIndependentSuccess, missionDone, isReviewDue, probeReached, missionUnlocked, reviewDueAt, skillStatus, suggestMissions,
 } from './progress';
 import type { Attempt } from './types';
 
@@ -72,8 +72,15 @@ describe('missions', () => {
 
   it('does not suggest a reached but unfinished mission as done', () => {
     const missions = [{ id: 'A01', requires: [] }];
-    expect(suggestMissions([att({})], missions, () => true, T0, 2, [])).toEqual([{ id: 'A01', reason: 'new' }]);
-    expect(suggestMissions([att({})], missions, () => true, T0, 2, ['A01'])).toEqual([{ id: 'A01', reason: 'again' }]);
+    const now = att({ sessionId: 's1' });
+    expect(suggestMissions([now], missions, () => true, T0, 2, [])).toEqual([{ id: 'A01', reason: 'new' }]);
+    expect(suggestMissions([now], missions, () => true, T0, 2, ['A01'])).toEqual([{ id: 'A01', reason: 'again' }]);
+  });
+
+  it('keeps legacy stars: a probe reached before sessions existed still counts as done', () => {
+    expect(missionDone([att({})], [], 'A01')).toBe(true);
+    expect(missionDone([att({ sessionId: 's1' })], [], 'A01')).toBe(false);
+    expect(missionDone([], ['A01'], 'A01')).toBe(true);
   });
 
   it('unlocks a mission after its prerequisites', () => {

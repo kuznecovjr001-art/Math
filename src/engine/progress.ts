@@ -64,6 +64,15 @@ export function probeReached(attempts: Attempt[], missionId: string): boolean {
 }
 
 /**
+ * Миссия завершена: есть наклейка. Для истории до 2026-10 (без заходов) — как раньше, по дошедшей пробе,
+ * чтобы у ребёнка не пропали звёзды на карте.
+ */
+export function missionDone(attempts: Attempt[], stickers: string[], missionId: string): boolean {
+  return stickers.includes(missionId)
+    || attempts.some((a) => a.missionId === missionId && a.variant !== 'A' && a.sessionId === undefined);
+}
+
+/**
  * Когда миссию пора повторить. null — миссия ещё не пройдена
  * или пока нет самостоятельного успеха, от которого считать паузу.
  */
@@ -93,7 +102,7 @@ export function missionUnlocked(attempts: Attempt[], m: MissionRef): boolean {
 
 /**
  * Предлагаем ребёнку две миссии: сначала то, что пора повторить,
- * затем открытые незавершённые, затем любые завершённые (finished — миссии с наклейкой).
+ * затем открытые незавершённые, затем любые завершённые (missionDone).
  */
 export function suggestMissions(
   attempts: Attempt[],
@@ -101,7 +110,7 @@ export function suggestMissions(
   isOpen: (id: string) => boolean,
   now: number,
   count = 2,
-  finished: string[] = [],
+  stickers: string[] = [],
 ): { id: string; reason: 'review' | 'new' | 'again' }[] {
   const out: { id: string; reason: 'review' | 'new' | 'again' }[] = [];
   const push = (id: string, reason: 'review' | 'new' | 'again') => {
@@ -109,8 +118,8 @@ export function suggestMissions(
   };
   for (const m of missions) if (isReviewDue(attempts, m.id, now)) push(m.id, 'review');
   for (const m of missions) {
-    if (isOpen(m.id) && !finished.includes(m.id)) push(m.id, 'new');
+    if (isOpen(m.id) && !missionDone(attempts, stickers, m.id)) push(m.id, 'new');
   }
-  for (const m of missions) if (finished.includes(m.id)) push(m.id, 'again');
+  for (const m of missions) if (missionDone(attempts, stickers, m.id)) push(m.id, 'again');
   return out;
 }

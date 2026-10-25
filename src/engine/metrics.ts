@@ -37,6 +37,8 @@ export interface PeriodSummary {
   activeDays: number;
   /** Показанные карточки (по заходам; у записей до 2026-10 не известны). */
   shown: number;
+  /** Ответы из истории до 2026-10: в доли не входят, экземпляр карточки у них неизвестен. */
+  legacyAnswers: number;
   /** Карточки с хотя бы одним ответом, без обучения. Знаменатель долей ниже. */
   tried: number;
   independent: number;
@@ -53,12 +55,14 @@ export const MIN_SAMPLE = 10;
 
 export function summarize(attempts: Attempt[], sessions: MissionSession[], from: number, to: number): PeriodSummary {
   const inRange = (t: number) => t >= from && t < to;
-  const cards = cardOutcomes(attempts.filter((a) => inRange(a.at)));
+  // Карточка попадает в период по первому ответу целиком, даже если ответы перешли через полночь.
+  const cards = cardOutcomes(attempts.filter((a) => a.sessionId !== undefined)).filter((c) => inRange(c.at));
   const count = (o: CardOutcome) => cards.filter((c) => c.outcome === o).length;
   const ss = sessions.filter((s) => inRange(s.startedAt));
   return {
     activeDays: new Set(attempts.filter((a) => inRange(a.at)).map((a) => dayKey(a.at))).size,
     shown: ss.reduce((n, s) => n + s.shown, 0),
+    legacyAnswers: attempts.filter((a) => a.sessionId === undefined && inRange(a.at)).length,
     tried: cards.length - count('learning'),
     independent: count('independent'),
     afterError: count('afterError'),

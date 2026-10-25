@@ -1,0 +1,16 @@
+{
+	"appId": "io.github.kuznecovjr001_art.schitalochka",
+	"appName": "Считалочка",
+	"webDir": "dist",
+	"backgroundColor": "#ffe8b3",
+	"android": {
+		"webContentsDebuggingEnabled": false
+	},
+	"plugins": {
+		"SystemBars": {
+			"insetsHandling": "css",
+			"initialViewportFitValueHint": "cover",
+			"style": "LIGHT"
+		}
+	}
+}

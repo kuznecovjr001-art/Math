@@ -47,12 +47,22 @@ describe('summarize', () => {
       att({ step: 0 }), att({ step: 1, helpLevel: 2 }), att({ step: 2, mode: 'learn', variant: 'A' }),
       att({ sessionId: 's2', step: 0, at: T0 + DAY, correct: false }),
       att({ sessionId: 'old', at: T0 - 40 * DAY }),
+      att({ sessionId: undefined, step: undefined, at: T0 + 2 }),
     ];
     const [from, to] = lastDays(T0 + DAY, 7);
     expect(summarize(list, sessions, from, to)).toEqual({
-      activeDays: 2, shown: 9, tried: 3, independent: 1, afterError: 0, withHelp: 1, unsolved: 1, learning: 1,
+      activeDays: 2, shown: 9, legacyAnswers: 1, tried: 3, independent: 1, afterError: 0, withHelp: 1, unsolved: 1, learning: 1,
       sessionsStarted: 2, sessionsFinished: 1,
     });
+  });
+
+  it('keeps a card that crosses midnight in the day of its first answer', () => {
+    const late = new Date(2026, 9, 20, 23, 59, 50).getTime();
+    const list = [att({ sessionId: 'n', at: late, correct: false }), att({ sessionId: 'n', at: late + 20_000, errorsBefore: 1 })];
+    const [from, to] = lastDays(late, 1);
+    expect(summarize(list, [], from, to)).toMatchObject({ tried: 1, afterError: 1, unsolved: 0 });
+    const [from2, to2] = lastDays(late + 20_000, 1);
+    expect(summarize(list, [], from2, to2).tried).toBe(0);
   });
 
   it('is all zeros without data', () => {
