@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PHRASE } from '../audio/phrases';
 import { sfx } from '../audio/sfx';
 import { ITEMS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
@@ -52,7 +53,7 @@ export function ArrayGame({ params, help, locked, onSubmit }: GameProps<P>) {
             disabled={locked}
             onPick={(o) => {
               const correct = o === 'same';
-              onSubmit({ correct, answer: CMP_LABEL[o], final: false, next: 'Верно! А сколько всего деревьев?' });
+              onSubmit({ correct, answer: CMP_LABEL[o], final: false, next: PHRASE.nextTrees });
               if (correct) setStep('total');
             }}
           />

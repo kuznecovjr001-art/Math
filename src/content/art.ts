@@ -45,6 +45,11 @@ const files = import.meta.glob<string>('../assets/art/**/*.{png,webp,svg,jpg,jpe
 
 const CUSTOM = buildArtMap(files);
 
+/** Все свои рисунки: их service worker докачивает для работы без сети. */
+export function allArtUrls(): string[] {
+  return [...new Set(Object.values(files))];
+}
+
 export function artSrc(code: string): string {
   return CUSTOM[code] ?? `${import.meta.env.BASE_URL}img/openmoji/${code}.svg`;
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PHRASE } from '../audio/phrases';
 import { ITEMS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
@@ -39,7 +40,7 @@ export function RecordGame({ params, help, locked, onSubmit }: GameProps<P>) {
           disabled={locked}
           onPick={(r) => {
             const correct = r === right;
-            onSubmit({ correct, answer: r, final: false, next: 'Верно! А сколько всего?' });
+            onSubmit({ correct, answer: r, final: false, next: PHRASE.nextTotal });
             if (correct) setStep('total');
           }}
         />

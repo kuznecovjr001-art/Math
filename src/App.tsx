@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PHRASE } from './audio/phrases';
 import { setVoiceEnabled, speak } from './audio/voice';
 import { getMission } from './content/missions';
 import { loadData, newId, saveData } from './engine/storage';
@@ -66,7 +67,7 @@ export function App() {
         profiles={data.profiles}
         onPick={(id) => {
           setProfileId(id);
-          speak('Привет! Поиграем?');
+          speak(PHRASE.hello);
           go({ name: 'map' });
         }}
         onCreate={(name, avatar) => {
