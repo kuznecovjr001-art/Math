@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '../audio/sfx';
 import { speak, stopSpeaking } from '../audio/voice';
 import { stickerArt } from '../content/art';
+import { MISSION_SCENE } from '../content/scenes';
 import { seededRng } from '../content/generate';
 import { missionLength } from '../content/levels';
 import { cardId, instruction, voiceText, type Mission } from '../content/missions';
@@ -31,7 +32,7 @@ import { StoryGame } from '../games/StoryGame';
 import { TenFrameGame } from '../games/TenFrameGame';
 import { TensGame } from '../games/TensGame';
 import type { GameResult } from '../games/types';
-import { Emoji, Icon } from '../ui/art';
+import { Emoji, Guide, Icon, SceneBg, type GuidePose } from '../ui/art';
 
 type NewAttempt = Omit<Attempt, 'id' | 'profileId' | 'at'>;
 
@@ -65,6 +66,8 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
   const [locked, setLocked] = useState(false);
   const [errors, setErrors] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
+  // Поза Счётика рядом с облачком: подсказывает, радуется или предлагает проверить.
+  const [mood, setMood] = useState<GuidePose>('talk');
   const [done, setDone] = useState(false);
   const busy = useRef(false);
   const step = steps[pos];
@@ -83,6 +86,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
     setHelp(next);
     speak(voiceText(helpTexts[next - 1]));
     setMessage(helpTexts[next - 1]);
+    setMood('help');
   };
 
   const submit = (r: GameResult) => {
@@ -112,6 +116,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       const next = r.next ?? 'Верно! А теперь: сколько всего?';
       speak(next);
       setMessage(next);
+      setMood('happy');
       release(600);
       return;
     }
@@ -121,6 +126,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       const praise = steps[pos + 1] ? 'Получилось!' : mission.praise;
       speak(praise);
       setMessage(praise);
+      setMood('happy');
       release(1600, () => {
         setMessage(null);
         setErrors(0);
@@ -143,6 +149,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
     } else {
       speak('Давай проверим ещё раз.');
       setMessage('Давай проверим ещё раз.');
+      setMood('think');
       release(900);
     }
   };
@@ -159,7 +166,11 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
   if (done) {
     return (
       <div className="screen finish">
-        <div className="sticker-burst"><Emoji code={stickerArt(mission)} size={140} /></div>
+        <SceneBg name="finish" />
+        <div className="finish-hero">
+          <div className="sticker-burst"><Emoji code={stickerArt(mission)} size={140} /></div>
+          <Guide pose="happy" size={140} className="finish-guide" />
+        </div>
         <h1>{mission.praise}</h1>
         <p className="lead">{mission.finish}</p>
         <p className="home-idea"><b>Для взрослых.</b> Игра дома: {mission.home}</p>
@@ -177,6 +188,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
 
   return (
     <div className="screen mission">
+      <SceneBg name={MISSION_SCENE[mission.id] ?? 'meadow'} />
       <header className="mission-bar">
         <button className="btn icon" onClick={onExit} aria-label="Домой"><Icon name="home" /></button>
         <div className="progress" aria-label={`Задание ${pos + 1} из ${steps.length}`}>
@@ -194,9 +206,12 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
           <Icon name="help" size={40} />
         </button>
       </header>
-      <div className="task-text">
-        <span className="step-tag">{STEP_TITLE[step.variant]}</span>
-        {text}
+      <div className="task-row">
+        <Guide pose={message ? mood : 'talk'} size={84} className="task-guide" />
+        <div className="task-text">
+          <span className="step-tag">{step.variant === 'C' && <Icon name="review" size={16} />}{STEP_TITLE[step.variant]}</span>
+          {text}
+        </div>
       </div>
       {message && <div className="bubble" role="status">{message}</div>}
       {p.kind === 'cups' && <CupsGame key={key} params={p} {...gameProps} />}

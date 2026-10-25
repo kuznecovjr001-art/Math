@@ -1,11 +1,17 @@
 import { ISLANDS } from '../content/levels';
 import { getMission } from '../content/missions';
-import { stickerArt } from '../content/art';
-import { Emoji, Icon } from '../ui/art';
+import { customArt, stickerArt } from '../content/art';
+import { Emoji, Icon, SceneBg } from '../ui/art';
+
+function EmptySlot() {
+  const empty = customArt('sticker/empty');
+  return empty ? <img src={empty} width={88} height={88} alt="" className="emoji album-empty-art" /> : <span className="album-empty">?</span>;
+}
 
 export function Album({ stickers, onBack }: { stickers: string[]; onBack: () => void }) {
   return (
     <div className="screen album">
+      <SceneBg name="album" />
       <header className="mission-bar">
         <button className="btn icon" onClick={onBack} aria-label="Назад"><Icon name="home" /></button>
         <h1>Мои наклейки</h1>
@@ -19,7 +25,7 @@ export function Album({ stickers, onBack }: { stickers: string[]; onBack: () => 
               const has = stickers.includes(id);
               return (
                 <div key={id} className={`album-slot ${has ? 'has' : ''}`}>
-                  {has ? <Emoji code={stickerArt(m)} size={88} label={m.title} /> : <span className="album-empty">?</span>}
+                  {has ? <Emoji code={stickerArt(m)} size={88} label={m.title} /> : <EmptySlot />}
                   <span>{m.title}</span>
                 </div>
               );

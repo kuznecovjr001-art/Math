@@ -4,7 +4,7 @@ import { getMission, MISSIONS } from '../content/missions';
 import { SKILLS, STATUS_TEXT } from '../content/skills';
 import { missionCompleted, skillStatus } from '../engine/progress';
 import type { AppData } from '../engine/types';
-import { Emoji } from '../ui/art';
+import { Emoji, Icon, SceneBg } from '../ui/art';
 
 interface Props {
   data: AppData;
@@ -37,8 +37,9 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
 
   return (
     <div className="screen parent">
+      <SceneBg name="parent" />
       <header className="parent-bar">
-        <button className="btn" onClick={onBack}>← К игре</button>
+        <button className="btn" onClick={onBack}><Icon name="back" size={28} />К игре</button>
         <h1>Для взрослых</h1>
       </header>
 

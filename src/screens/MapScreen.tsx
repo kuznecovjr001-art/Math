@@ -2,10 +2,11 @@ import { useEffect, type CSSProperties } from 'react';
 import { speak } from '../audio/voice';
 import { ISLANDS, islandOpen, missionOpen, orderedMissions } from '../content/levels';
 import { customArt, missionArt } from '../content/art';
+import { MAP_STOPS, snakeStops, type Stop } from '../content/mapLayout';
 import { getMission } from '../content/missions';
 import { isReviewDue, missionCompleted, suggestMissions } from '../engine/progress';
 import type { Attempt, Profile } from '../engine/types';
-import { Emoji, Icon } from '../ui/art';
+import { bgVars, Emoji, Guide, Icon, SceneBg } from '../ui/art';
 import type { PlayMode } from './MissionPlayer';
 
 interface Props {
@@ -16,14 +17,6 @@ interface Props {
   onStart: (missionId: string, mode: PlayMode) => void;
   onAlbum: () => void;
   onSwitch: () => void;
-}
-
-/** Фон из src/assets/art/bg/<name>-land и -port, если он уже нарисован; CSS выбирает по ориентации. */
-function bgVars(name: string): CSSProperties | undefined {
-  const land = customArt(`bg/${name}-land`);
-  const port = customArt(`bg/${name}-port`) ?? land;
-  if (!land && !port) return undefined;
-  return { '--bg-land': `url(${land ?? port})`, '--bg-port': `url(${port})` } as CSSProperties;
 }
 
 const REASON = { review: 'Вспомним', new: 'Новое', again: 'Ещё раз' };
@@ -41,26 +34,62 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
 
   const start = (id: string) => onStart(id, isReviewDue(own, id, now) ? 'review' : 'play');
 
+  /** Камень миссии: на площадке карты (at) или в полосе под картой. */
+  const stone = (id: string, at?: Stop) => {
+    const m = getMission(id)!;
+    const open = isOpen(id);
+    const done = missionCompleted(own, id);
+    const due = isReviewDue(own, id, now);
+    const pos = at && ({
+      '--lx': `${at.land[0]}%`, '--ly': `${at.land[1]}%`, '--px': `${at.port[0]}%`, '--py': `${at.port[1]}%`,
+    } as CSSProperties);
+    return (
+      <li key={id} className={`stone ${open ? 'open' : 'locked'} ${done ? 'done' : ''} ${at ? 'on-map' : ''}`} style={pos}>
+        <button
+          className="tap stone-btn"
+          disabled={!open}
+          onClick={() => start(id)}
+          aria-label={`${m.title}${done ? ', пройдено' : ''}${due ? ', пора вспомнить' : ''}${open ? '' : ', пока закрыто'}`}
+        >
+          <Emoji code={missionArt(m)} size={64} />
+          {done && <span className="stone-star"><Icon name="star" size={28} /></span>}
+          {due && <span className="stone-due"><Icon name="review" size={18} /><span>Вспомним</span></span>}
+          {!open && <span className="stone-lock"><Icon name="lock" size={24} /></span>}
+        </button>
+        <span className="stone-title" aria-hidden="true">{m.title}</span>
+      </li>
+    );
+  };
+
+  const stoneArt = ['open', 'done', 'locked'].map((k) => customArt(`ui/stone-${k}`));
+  const stoneVars = stoneArt.every(Boolean)
+    ? ({ '--stone-open': `url(${stoneArt[0]})`, '--stone-done': `url(${stoneArt[1]})`, '--stone-locked': `url(${stoneArt[2]})` } as CSSProperties)
+    : undefined;
+
   return (
-    <div className="screen map" style={bgVars('world')}>
+    <div className={`screen map ${stoneVars ? 'has-stone-art' : ''}`} style={stoneVars}>
+      <SceneBg name="world" />
       <header className="map-bar">
         <button className="tap avatar mini" onClick={onSwitch} aria-label="Сменить игрока">
           <Emoji code={profile.avatar} size={48} />
         </button>
         <span className="map-name">{profile.name || 'Привет!'}</span>
-        <button className="btn album-btn" onClick={onAlbum} aria-label="Альбом наклеек">
-          <Emoji code="2B50" size={32} /> {stickers.length}
+        <button className="btn album-btn" onClick={onAlbum} aria-label={`Альбом наклеек: ${stickers.length}`}>
+          <Icon name="star" size={32} /> {stickers.length}
         </button>
       </header>
 
       <section className="today" aria-label="Сегодня">
+        <Guide pose="idle" size={112} className="today-guide" />
         {suggestions.map((s) => {
           const m = getMission(s.id)!;
           return (
             <button key={s.id} className={`today-card ${s.reason}`} onClick={() => start(s.id)}>
               <Emoji code={missionArt(m)} size={88} />
-              <span className="today-title">{m.title}</span>
-              <span className="today-reason">{REASON[s.reason]}</span>
+              <span className="today-text">
+                <span className="today-title">{m.title}</span>
+                <span className="today-reason">{s.reason === 'review' && <Icon name="review" size={18} />}{REASON[s.reason]}</span>
+              </span>
             </button>
           );
         })}
@@ -68,39 +97,33 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
 
       {ISLANDS.map((isl, index) => {
         const islOpen = islandOpen(own, index, start0);
+        const bg = bgVars(isl.id === 'count' ? 'map' : `map-${isl.id}`);
+        // На нарисованной карте камни стоят на площадках; без рисунка идут змейкой по цветному острову.
+        const stops = bg ? MAP_STOPS[isl.id] ?? snakeStops(isl.missions) : snakeStops(isl.missions);
+        const onMap = new Set(stops.map((s) => s.id));
+        const extra = isl.missions.filter((id) => !onMap.has(id));
+        const emblem = customArt(`ui/island-${isl.id}`);
         return (
           <section
             key={isl.id}
             className={`island ${islOpen ? '' : 'locked'}`}
             data-island={isl.id}
-            style={bgVars(isl.id === 'count' ? 'map' : `map-${isl.id}`)}
             aria-label={isl.title}
           >
-            <h2>{!islOpen && <Icon name="lock" size={28} />}{isl.title}</h2>
-            <ol className="path">
-              {isl.missions.map((id) => {
-                const m = getMission(id)!;
-                const open = isOpen(id);
-                const done = missionCompleted(own, id);
-                const due = isReviewDue(own, id, now);
-                return (
-                  <li key={id} className={`stone ${open ? 'open' : 'locked'} ${done ? 'done' : ''}`}>
-                    <button
-                      className="tap stone-btn"
-                      disabled={!open}
-                      onClick={() => start(id)}
-                      aria-label={`${m.title}${open ? '' : ', пока закрыто'}`}
-                    >
-                      <Emoji code={missionArt(m)} size={56} />
-                      {done && <span className="stone-star"><Emoji code="2B50" size={26} /></span>}
-                      {due && <span className="stone-due">Вспомним</span>}
-                      {!open && <span className="stone-lock"><Icon name="lock" size={28} /></span>}
-                    </button>
-                    <span className="stone-title">{m.title}</span>
-                  </li>
-                );
-              })}
+            <h2>
+              {emblem && <img src={emblem} width={40} height={40} alt="" className="island-emblem" />}
+              {!islOpen && <Icon name="lock" size={28} />}
+              {isl.title}
+            </h2>
+            <ol className={`island-map ${bg ? 'drawn' : 'plain'}`} style={bg}>
+              {stops.map((st) => stone(st.id, st))}
             </ol>
+            {extra.length > 0 && (
+              <div className="island-extra">
+                <h3>Ещё задания</h3>
+                <ol className="path">{extra.map((id) => stone(id))}</ol>
+              </div>
+            )}
           </section>
         );
       })}
