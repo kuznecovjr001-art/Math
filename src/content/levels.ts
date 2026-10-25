@@ -12,7 +12,16 @@ export interface Island {
   missions: string[];
   /** Миссии, после которых открывается следующий остров. Параллельные ветки сюда не входят. */
   core: string[];
+  /** Сколько карточек в заходе: обучение, самостоятельная проба, повтор. */
+  length: MissionLength;
 }
+
+export interface MissionLength { learn: number; probe: number; review: number }
+
+/** 4–6 лет: около 7 карточек, 6–8 лет: 8, 7–9 лет: 9. Повтор короче. */
+const YOUNG: MissionLength = { learn: 2, probe: 5, review: 4 };
+const MIDDLE: MissionLength = { learn: 2, probe: 6, review: 4 };
+const OLDER: MissionLength = { learn: 2, probe: 7, review: 5 };
 
 /**
  * Уровни собраны по карте навыков M01–M14 и возрастной карте проекта:
@@ -27,6 +36,7 @@ export const ISLANDS: Island[] = [
     goal: 'Один предмет — одно место, счёт и итоговое количество, цифра и количество, ноль, сравнение групп; расположение, группировка и узоры.',
     missions: ['A01', 'A02', 'N01', 'N02', 'N09', 'N10', 'N11', 'N12', 'N13'],
     core: ['A01', 'A02', 'N01', 'N02'],
+    length: YOUNG,
   },
   {
     id: 'compose',
@@ -35,6 +45,7 @@ export const ISLANDS: Island[] = [
     goal: 'Состав числа, пары до 5 и 10, спрятанная часть, первые сложение и вычитание; фигуры, длина, масса и время — параллельно.',
     missions: ['A03', 'N03', 'A04', 'N04', 'N14', 'N15', 'N16'],
     core: ['A03', 'N03', 'A04'],
+    length: YOUNG,
   },
   {
     id: 'ten',
@@ -43,6 +54,7 @@ export const ISLANDS: Island[] = [
     goal: 'Состав десяти, сложение с переходом через десяток, десятки и единицы.',
     missions: ['N05', 'N06', 'N07'],
     core: ['N05', 'N06', 'N07'],
+    length: MIDDLE,
   },
   {
     id: 'groups',
@@ -51,6 +63,7 @@ export const ISLANDS: Island[] = [
     goal: 'Равные группы, смысл записи умножения, перестановка на массиве, деление поровну.',
     missions: ['A05', 'A06', 'A11', 'N08'],
     core: ['A05', 'A06', 'A11', 'N08'],
+    length: MIDDLE,
   },
   {
     id: 'table',
@@ -59,8 +72,13 @@ export const ISLANDS: Island[] = [
     goal: 'Таблица 1–10 через связи: удвоение, по пять и десять, известный факт и ещё группа; задачи.',
     missions: ['T02', 'T05', 'T01', 'T04', 'T03', 'T09', 'T06', 'T78', 'S01'],
     core: ['T02', 'T05', 'T01', 'T04', 'T03', 'T09', 'T06', 'T78', 'S01'],
+    length: OLDER,
   },
 ];
+
+export function missionLength(missionId: string): MissionLength {
+  return ISLANDS[islandOf(missionId)]?.length ?? YOUNG;
+}
 
 export function islandOf(missionId: string): number {
   return ISLANDS.findIndex((i) => i.missions.includes(missionId));

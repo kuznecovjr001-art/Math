@@ -102,8 +102,9 @@ export interface Mission {
 
 export const VERSION = 'v1';
 
-export function cardId(m: Mission, v: Variant, index: number): string {
-  return `${m.skill}-${m.id}-${v}${index > 0 ? index + 1 : ''}-${VERSION}`;
+/** Сгенерированные карточки помечены буквой g: их содержание меняется от захода к заходу. */
+export function cardId(m: Mission, v: Variant, index: number, generated = false): string {
+  return `${m.skill}-${m.id}-${v}${index > 0 ? index + 1 : ''}${generated ? 'g' : ''}-${VERSION}`;
 }
 
 export function itemCount(n: number, f: ItemId): string {

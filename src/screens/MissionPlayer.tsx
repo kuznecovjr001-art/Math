@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '../audio/sfx';
 import { speak, stopSpeaking } from '../audio/voice';
-import { cardId, instruction, voiceText, type CardParams, type Mission } from '../content/missions';
+import { seededRng } from '../content/generate';
+import { missionLength } from '../content/levels';
+import { cardId, instruction, voiceText, type Mission } from '../content/missions';
+import { buildSteps, type PlayMode } from '../content/steps';
 import type { Attempt, HelpLevel, Mode, Variant } from '../engine/types';
 import { ArrayGame } from '../games/ArrayGame';
 import { BasketGame } from '../games/BasketGame';
@@ -29,15 +32,7 @@ import { TensGame } from '../games/TensGame';
 import type { GameResult } from '../games/types';
 import { Emoji } from '../ui/art';
 
-export type PlayMode = 'play' | 'review';
-
 type NewAttempt = Omit<Attempt, 'id' | 'profileId' | 'at'>;
-
-interface Step {
-  variant: Variant;
-  index: number;
-  params: CardParams;
-}
 
 const MODE_OF: Record<Variant, Mode> = { A: 'learn', B: 'probe', C: 'review' };
 
@@ -47,10 +42,7 @@ const STEP_TITLE: Record<Variant, string> = {
   C: 'Вспомним',
 };
 
-export function buildSteps(m: Mission, mode: PlayMode): Step[] {
-  const variants: Variant[] = mode === 'review' ? ['C'] : ['A', 'B'];
-  return variants.flatMap((v) => m.cards[v].map((params, index) => ({ variant: v, index, params })));
-}
+export type { PlayMode };
 
 interface Props {
   mission: Mission;
@@ -61,7 +53,12 @@ interface Props {
 }
 
 export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Props) {
-  const steps = useMemo(() => buildSteps(mission, mode), [mission, mode]);
+  // «Ещё разок» начинает новый заход: новые числа и только самостоятельные карточки.
+  const [round, setRound] = useState({ mode, seed: Date.now() });
+  const steps = useMemo(
+    () => buildSteps(mission, round.mode, missionLength(mission.id), seededRng(round.seed)),
+    [mission, round],
+  );
   const [pos, setPos] = useState(0);
   const [help, setHelp] = useState<HelpLevel>(0);
   const [locked, setLocked] = useState(false);
@@ -93,7 +90,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
     setLocked(true);
     onAttempt({
       missionId: mission.id,
-      cardId: cardId(mission, step.variant, step.index),
+      cardId: cardId(mission, step.variant, step.index, step.generated),
       variant: step.variant,
       skill: mission.skill,
       mode: MODE_OF[step.variant],
@@ -149,6 +146,15 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
     }
   };
 
+  const again = () => {
+    setRound({ mode: 'again', seed: Date.now() });
+    setPos(0);
+    setHelp(0);
+    setErrors(0);
+    setMessage(null);
+    setDone(false);
+  };
+
   if (done) {
     return (
       <div className="screen finish">
@@ -156,13 +162,16 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
         <h1>{mission.praise}</h1>
         <p className="lead">{mission.finish}</p>
         <p className="home-idea"><b>Для взрослых.</b> Игра дома: {mission.home}</p>
-        <button className="btn primary big" onClick={onExit}>На карту</button>
+        <div className="finish-actions">
+          <button className="btn big" onClick={again}>Ещё разок</button>
+          <button className="btn primary big" onClick={onExit}>На карту</button>
+        </div>
       </div>
     );
   }
 
   const gameProps = { help, locked, onSubmit: submit };
-  const key = `${pos}`;
+  const key = `${round.seed}-${pos}`;
   const p = step.params;
 
   return (
