@@ -240,6 +240,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
           <Icon name="help" size={40} />
         </button>
       </header>
+      <h1 className="sr-only">{mission.title}</h1>
       <div className="task-row">
         <Guide pose={message ? mood : 'talk'} size={84} className="task-guide" />
         <div className="task-text">

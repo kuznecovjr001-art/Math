@@ -19,6 +19,7 @@ interface Props {
   onStartIsland: (id: string, island: number) => void;
   onPlan: (id: string, mode: NonNullable<Profile['mode']>, plan: string[]) => void;
   onCredits: () => void;
+  onPrivacy: () => void;
   /** false — файл не похож на резервную копию. */
   onImport: (text: string) => boolean;
 }
@@ -30,7 +31,7 @@ function fmt(ts: number) {
   return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onPlan, onCredits, onImport }: Props) {
+export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onPlan, onCredits, onPrivacy, onImport }: Props) {
   const [now] = useState(Date.now);
   const [pid, setPid] = useState(data.profiles[0]?.id ?? '');
   const [backupNote, setBackupNote] = useState<string | null>(null);
@@ -211,7 +212,10 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
           </button>
         )}
         {backupNote && <p className="note" role="status">{backupNote}</p>}
-        <button className="btn ghost" onClick={onCredits}>Авторство картинок и лицензии</button>
+        <div className="row wrap">
+          <button className="btn ghost" onClick={onCredits}>Авторство картинок и лицензии</button>
+          <button className="btn ghost" onClick={onPrivacy}>Политика конфиденциальности</button>
+        </div>
       </section>
     </div>
   );
