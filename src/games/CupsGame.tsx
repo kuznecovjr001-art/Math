@@ -39,7 +39,7 @@ export function CupsGame({ params, help, locked, onSubmit }: GameProps<P>) {
 
   return (
     <div className="game">
-      <div className="stock" aria-label={`Осталось ${stock}`}>
+      <div className="stock" role="group" aria-label={`Осталось ${stock}`}>
         {Array.from({ length: stock }, (_, i) => <Item key={i} />)}
         {stock === 0 && <span className="stock-empty">Всё раздали</span>}
       </div>

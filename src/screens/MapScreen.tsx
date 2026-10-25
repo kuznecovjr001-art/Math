@@ -1,4 +1,5 @@
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { PHRASE } from '../audio/phrases';
 import { speak } from '../audio/voice';
 import { ISLANDS, islandOpen, missionOpen, orderedMissions } from '../content/levels';
 import { customArt, missionArt } from '../content/art';
@@ -28,7 +29,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
   const suggestions = suggestMissions(own, orderedMissions(), isOpen, now);
 
   useEffect(() => {
-    speak(suggestions.length > 1 ? 'Выбери, во что поиграем.' : 'Нажми на картинку, чтобы начать.');
+    speak(suggestions.length > 1 ? PHRASE.pick : PHRASE.tap);
     // Озвучиваем только при входе на карту.
   }, []);
 
@@ -115,9 +116,9 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
               {!islOpen && <Icon name="lock" size={28} />}
               {isl.title}
             </h2>
-            <ol className={`island-map ${bg ? 'drawn' : 'plain'}`} style={bg}>
+            <LazyMap className={`island-map ${bg ? 'drawn' : 'plain'}`} bg={bg}>
               {stops.map((st) => stone(st.id, st))}
-            </ol>
+            </LazyMap>
             {extra.length > 0 && (
               <div className="island-extra">
                 <h3>Ещё задания</h3>
@@ -129,4 +130,21 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
       })}
     </div>
   );
+}
+
+/**
+ * Карта острова грузит свой рисунок, только когда подходит к экрану:
+ * на слабом телефоне первый экран не ждёт картинок всех шести островов.
+ */
+function LazyMap({ className, bg, children }: { className: string; bg?: CSSProperties; children: ReactNode }) {
+  const ref = useRef<HTMLOListElement>(null);
+  const [near, setNear] = useState(typeof IntersectionObserver === 'undefined');
+  useEffect(() => {
+    const el = ref.current;
+    if (near || !el) return;
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) setNear(true); }, { rootMargin: '400px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near]);
+  return <ol ref={ref} className={className} style={near ? bg : undefined}>{children}</ol>;
 }

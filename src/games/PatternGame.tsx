@@ -17,7 +17,7 @@ export function PatternGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const beads = Array.from({ length: params.shown }, (_, i) => params.unit[i % params.unit.length]);
   return (
     <div className="game">
-      <div className="string" aria-label={beads.map((b) => BEAD_NAME[b]).join(', ')}>
+      <div className="string" role="img" aria-label={beads.map((b) => BEAD_NAME[b]).join(', ')}>
         {beads.map((b, i) => (
           <span key={i} className={`bead ${b} ${help >= 2 && i > 0 && i % params.unit.length === 0 ? 'gap' : ''}`} />
         ))}

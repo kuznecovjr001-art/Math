@@ -11,12 +11,12 @@ export function ZeroGame({ params, help, locked, onSubmit }: GameProps<P>) {
   return (
     <div className="game">
       <div className="shirt-scene">
-        <div className="shirt" aria-label="Рубашка">
+        <div className="shirt" role="img" aria-label="Рубашка">
           {Array.from({ length: params.start }, (_, i) => (
             <span key={i} className={`shirt-button ${i >= left ? 'lost' : ''}`} />
           ))}
         </div>
-        <div className="floor-buttons" aria-label={`Оторвались: ${params.lose}`}>
+        <div className="floor-buttons" role="img" aria-label={`Оторвались: ${params.lose}`}>
           {Array.from({ length: params.lose }, (_, i) => (
             <span key={i} className={`shirt-button fallen ${help >= 2 ? 'crossed' : ''}`} style={{ animationDelay: `${0.3 + i * 0.35}s` }} />
           ))}

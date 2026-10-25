@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PHRASE } from '../audio/phrases';
 import type { CardParams } from '../content/missions';
 import { storyArt } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
@@ -23,7 +24,7 @@ export function StoryGame({ params, locked, onSubmit }: GameProps<P>) {
             disabled={locked}
             onPick={(o) => {
               const correct = o === params.ops[params.op];
-              onSubmit({ correct, answer: o, final: false, next: 'Верно! Сколько получится?' });
+              onSubmit({ correct, answer: o, final: false, next: PHRASE.nextResult });
               if (correct) setStep('answer');
             }}
           />

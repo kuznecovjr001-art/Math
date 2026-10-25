@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { PHRASE } from '../audio/phrases';
 import { sfx } from '../audio/sfx';
 import { speak, stopSpeaking } from '../audio/voice';
 import { stickerArt } from '../content/art';
@@ -131,7 +132,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
 
     if (r.correct && r.final === false) {
       sfx.good();
-      const next = r.next ?? 'Верно! А теперь: сколько всего?';
+      const next = r.next ?? PHRASE.nextDefault;
       speak(next);
       setMessage(next);
       setMood('happy');
@@ -141,7 +142,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
 
     if (r.correct) {
       sfx.good();
-      const praise = steps[pos + 1] ? 'Получилось!' : mission.praise;
+      const praise = steps[pos + 1] ? PHRASE.good : mission.praise;
       speak(praise);
       setMessage(praise);
       setMood('happy');
@@ -165,8 +166,8 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
     if (nextErrors >= 2 && help < 3) {
       release(900, raiseHelp);
     } else {
-      speak('Давай проверим ещё раз.');
-      setMessage('Давай проверим ещё раз.');
+      speak(PHRASE.again);
+      setMessage(PHRASE.again);
       setMood('think');
       release(900);
     }
@@ -209,7 +210,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       <SceneBg name={MISSION_SCENE[mission.id] ?? 'meadow'} />
       <header className="mission-bar">
         <button className="btn icon" onClick={onExit} aria-label="Домой"><Icon name="home" /></button>
-        <div className="progress" aria-label={`Задание ${pos + 1} из ${steps.length}`}>
+        <div className="progress" role="img" aria-label={`Задание ${pos + 1} из ${steps.length}`}>
           {steps.map((s, i) => (
             <span key={i} className={`dot ${i < pos ? 'past' : i === pos ? 'now' : ''}`} title={STEP_TITLE[s.variant]} />
           ))}

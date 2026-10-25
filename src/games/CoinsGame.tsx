@@ -33,7 +33,7 @@ export function CoinsGame({ params, help, locked, onSubmit }: GameProps<P>) {
           <Emoji code={params.toy} size={84} label={params.name} />
           <span className="price">{params.price} ₽</span>
         </div>
-        <div className="tray" aria-label={`На блюдце ${sum} ₽`}>
+        <div className="tray" role="group" aria-label={`На блюдце ${sum} ₽`}>
           {tray.length === 0 && <span className="tray-empty">Блюдце</span>}
           {tray.map((v, i) => (
             <button key={i} className="coin-btn" disabled={locked} onClick={() => setTray(tray.filter((_, k) => k !== i))} aria-label={`Убрать монету ${v}`}>

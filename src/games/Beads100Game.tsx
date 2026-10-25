@@ -11,7 +11,7 @@ export function Beads100Game({ params, help, locked, onSubmit }: GameProps<P>) {
   const tens = Math.floor(n / 10);
   return (
     <div className="game">
-      <div className="more-scene beads100" aria-label="Сто бусин по десять в ряд">
+      <div className="more-scene beads100" role="img" aria-label="Сто бусин по десять в ряд">
         {Array.from({ length: 10 }, (_, r) => (
           <div key={r} className="bead-row">
             {help >= 2 && <span className="row-label">{r < tens ? (r + 1) * 10 : ''}</span>}

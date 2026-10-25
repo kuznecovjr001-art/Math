@@ -16,6 +16,7 @@ export function Credits({ onBack }: { onBack: () => void }) {
           {' '}<a href={`${import.meta.env.BASE_URL}licenses/openmoji-LICENSE.txt`} target="_blank" rel="noreferrer">Текст лицензии</a>.
         </p>
         <p>Фоны, черепашка Счётик, звери, предметы, эмблемы и наклейки — комплект рисунков «Остров счёта», сделанный для этого приложения. Где своего рисунка пока нет, показывается картинка OpenMoji или простой рисунок в коде (стол, руки, весы, бусы).</p>
+        <p>Голос заданий — синтезатор речи <a href="https://github.com/rhasspy/piper" target="_blank" rel="noreferrer">Piper</a> (голос Irina, обучен на данных <a href="https://github.com/RHVoice/RHVoice" target="_blank" rel="noreferrer">RHVoice</a>). Редкие задания с новыми числами читает голос устройства.</p>
       </section>
     </div>
   );

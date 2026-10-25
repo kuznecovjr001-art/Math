@@ -8,7 +8,7 @@ type P = Extract<CardParams, { kind: 'facts' }>;
 /** Модель «по a, b раз»: b групп по a точек. */
 function DotGroups({ a, b }: { a: number; b: number }) {
   return (
-    <div className="dot-groups" aria-label={`${b} ${b === 1 ? 'группа' : 'групп'} по ${a}`}>
+    <div className="dot-groups" role="img" aria-label={`${b} ${b === 1 ? 'группа' : 'групп'} по ${a}`}>
       {Array.from({ length: b }, (_, g) => (
         <span key={g} className="dot-group">
           {Array.from({ length: a }, (_, i) => <i key={i} />)}

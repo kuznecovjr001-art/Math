@@ -1,16 +1,32 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { PHRASE } from './audio/phrases';
 import { setVoiceEnabled, speak } from './audio/voice';
 import { getMission } from './content/missions';
 import { loadData, newId, saveData } from './engine/storage';
 import type { AppData, Attempt } from './engine/types';
-import { Album } from './screens/Album';
-import { Credits } from './screens/Credits';
 import { MapScreen } from './screens/MapScreen';
-import { MissionPlayer, type PlayMode } from './screens/MissionPlayer';
-import { ParentGate } from './screens/ParentGate';
-import { ParentScreen } from './screens/ParentScreen';
+import type { PlayMode } from './screens/MissionPlayer';
 import { Profiles } from './screens/Profiles';
 import { artVars } from './ui/art';
+
+// Первый экран — профили и карта; миссия с играми и разделы для взрослых грузятся отдельно.
+const load = {
+  mission: () => import('./screens/MissionPlayer'),
+  album: () => import('./screens/Album'),
+  credits: () => import('./screens/Credits'),
+  gate: () => import('./screens/ParentGate'),
+  parent: () => import('./screens/ParentScreen'),
+};
+const MissionPlayer = lazy(() => load.mission().then((m) => ({ default: m.MissionPlayer })));
+const Album = lazy(() => load.album().then((m) => ({ default: m.Album })));
+const Credits = lazy(() => load.credits().then((m) => ({ default: m.Credits })));
+const ParentGate = lazy(() => load.gate().then((m) => ({ default: m.ParentGate })));
+const ParentScreen = lazy(() => load.parent().then((m) => ({ default: m.ParentScreen })));
+
+/** Догружает остальные экраны после первого, чтобы они открывались сразу и работали без сети. */
+export function preloadScreens(): Promise<unknown> {
+  return Promise.all(Object.values(load).map((f) => f().catch(() => undefined)));
+}
 
 type Screen =
   | { name: 'profiles' }
@@ -66,7 +82,7 @@ export function App() {
         profiles={data.profiles}
         onPick={(id) => {
           setProfileId(id);
-          speak('Привет! Поиграем?');
+          speak(PHRASE.hello);
           go({ name: 'map' });
         }}
         onCreate={(name, avatar) => {
@@ -143,7 +159,7 @@ export function App() {
           Браузер не даёт сохранить прогресс (возможно, включён приватный режим). Игра работает, но история не сохранится.
         </div>
       )}
-      {body}
+      <main><Suspense fallback={<div className="screen loading" aria-busy="true" />}>{body}</Suspense></main>
     </div>
   );
 }
