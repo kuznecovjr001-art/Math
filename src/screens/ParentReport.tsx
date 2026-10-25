@@ -59,8 +59,8 @@ export function ParentReport({ attempts, sessions, stickers, now }: Props) {
                       <th scope="row" className="report-label">{label}</th>
                       <td>{s[k]}</td>
                       <td>{pct === null ? '' : `${pct}%`}</td>
-                      <td className="bar-cell" aria-hidden="true">
-                        {pct !== null && <span className={`bar ${k}`} style={{ width: `${pct}%` }} />}
+                      <td className="share-cell" aria-hidden="true">
+                        {pct !== null && pct > 0 && <span className={`share-bar ${k}`} style={{ width: `${pct}%` }} />}
                       </td>
                     </tr>
                   );
