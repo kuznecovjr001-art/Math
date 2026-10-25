@@ -1,6 +1,15 @@
+import { useState, type ReactNode } from 'react';
+import { isNative } from '../platform/native';
 import { Icon, SceneBg } from '../ui/art';
 
+/** В Android-приложении ссылок наружу нет (детское офлайн-приложение): адрес показывается текстом. */
+function Ext({ href, children }: { href: string; children: ReactNode }) {
+  if (isNative) return <>{children} ({href.replace(/^https:\/\//, '').replace(/\/$/, '')})</>;
+  return <a href={href} target="_blank" rel="noreferrer">{children}</a>;
+}
+
 export function Credits({ onBack }: { onBack: () => void }) {
+  const [license, setLicense] = useState<string | null>(null);
   return (
     <div className="screen parent">
       <SceneBg name="parent" />
@@ -10,13 +19,25 @@ export function Credits({ onBack }: { onBack: () => void }) {
       </header>
       <section className="card">
         <p>
-          Картинки животных, фруктов, игрушек, предметов и времени суток: <a href="https://openmoji.org/" target="_blank" rel="noreferrer">OpenMoji</a>,
+          Картинки животных, фруктов, игрушек, предметов и времени суток: <Ext href="https://openmoji.org/">OpenMoji</Ext>,
           HfG Schwäbisch Gmünd и участники проекта, лицензия{' '}
-          <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>, без изменений.
-          {' '}<a href={`${import.meta.env.BASE_URL}licenses/openmoji-LICENSE.txt`} target="_blank" rel="noreferrer">Текст лицензии</a>.
+          <Ext href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</Ext>, без изменений.
         </p>
+        <details
+          onToggle={(e) => {
+            if ((e.target as HTMLDetailsElement).open && license === null) {
+              fetch(`${import.meta.env.BASE_URL}licenses/openmoji-LICENSE.txt`)
+                .then((r) => r.text()).then(setLicense).catch(() => setLicense('Файл лицензии не найден.'));
+            }
+          }}
+        >
+          <summary>Текст лицензии OpenMoji</summary>
+          <pre className="license">{license ?? '…'}</pre>
+        </details>
         <p>Фоны, черепашка Счётик, звери, предметы, эмблемы и наклейки — комплект рисунков «Остров счёта», сделанный для этого приложения. Где своего рисунка пока нет, показывается картинка OpenMoji или простой рисунок в коде (стол, руки, весы, бусы).</p>
-        <p>Голос заданий — синтезатор речи <a href="https://github.com/rhasspy/piper" target="_blank" rel="noreferrer">Piper</a> (голос Irina, обучен на данных <a href="https://github.com/RHVoice/RHVoice" target="_blank" rel="noreferrer">RHVoice</a>). Редкие задания с новыми числами читает голос устройства.</p>
+        <p>Шрифт Nunito — The Nunito Project Authors, лицензия SIL Open Font License 1.1 (файл licenses/nunito-OFL.txt в приложении).
+          Программные библиотеки React и Capacitor — лицензия MIT.</p>
+        <p>Голос заданий — синтезатор речи <Ext href="https://github.com/rhasspy/piper">Piper</Ext> (голос Irina, обучен на данных <Ext href="https://github.com/RHVoice/RHVoice">RHVoice</Ext>). Редкие задания с новыми числами читает голос устройства.</p>
       </section>
     </div>
   );

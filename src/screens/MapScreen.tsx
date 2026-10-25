@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { PHRASE } from '../audio/phrases';
 import { speak } from '../audio/voice';
-import { ISLANDS, islandOpen, missionOpen, orderedMissions } from '../content/levels';
+import { ISLANDS, islandOpen, missionOpen } from '../content/levels';
 import { customArt, missionArt } from '../content/art';
 import { MAP_STOPS, snakeStops, type Stop } from '../content/mapLayout';
 import { getMission } from '../content/missions';
-import { isReviewDue, missionCompleted, suggestMissions } from '../engine/progress';
-import type { Attempt, Profile } from '../engine/types';
+import { todaySuggestions } from '../content/plan';
+import { isReviewDue, missionDone } from '../engine/progress';
+import type { Attempt, MissionSession, Profile } from '../engine/types';
 import { bgVars, Emoji, Guide, Icon, SceneBg } from '../ui/art';
 import type { PlayMode } from './MissionPlayer';
 
 interface Props {
   profile: Profile;
   attempts: Attempt[];
+  sessions: MissionSession[];
   stickers: string[];
   now: number;
   onStart: (missionId: string, mode: PlayMode) => void;
@@ -20,13 +22,13 @@ interface Props {
   onSwitch: () => void;
 }
 
-const REASON = { review: 'Вспомним', new: 'Новое', again: 'Ещё раз' };
+const REASON = { review: 'Вспомним', new: 'Новое', again: 'Ещё раз', assigned: 'Задание' };
 
-export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, onSwitch }: Props) {
+export function MapScreen({ profile, attempts, sessions, stickers, now, onStart, onAlbum, onSwitch }: Props) {
   const own = attempts.filter((a) => a.profileId === profile.id);
   const start0 = profile.startIsland ?? 0;
   const isOpen = (id: string) => missionOpen(own, getMission(id)!, start0);
-  const suggestions = suggestMissions(own, orderedMissions(), isOpen, now);
+  const suggestions = todaySuggestions(profile, own, sessions.filter((s) => s.profileId === profile.id), stickers, now);
 
   useEffect(() => {
     speak(suggestions.length > 1 ? PHRASE.pick : PHRASE.tap);
@@ -39,7 +41,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
   const stone = (id: string, at?: Stop) => {
     const m = getMission(id)!;
     const open = isOpen(id);
-    const done = missionCompleted(own, id);
+    const done = missionDone(own, stickers, id);
     const due = isReviewDue(own, id, now);
     const pos = at && ({
       '--lx': `${at.land[0]}%`, '--ly': `${at.land[1]}%`, '--px': `${at.port[0]}%`, '--py': `${at.port[1]}%`,
@@ -74,6 +76,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
         <button className="tap avatar mini" onClick={onSwitch} aria-label="Сменить игрока">
           <Emoji code={profile.avatar} size={48} />
         </button>
+        <h1 className="sr-only">Карта островов</h1>
         <span className="map-name">{profile.name || 'Привет!'}</span>
         <button className="btn album-btn" onClick={onAlbum} aria-label={`Альбом наклеек: ${stickers.length}`}>
           <Icon name="star" size={32} /> {stickers.length}

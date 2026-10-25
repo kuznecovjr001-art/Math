@@ -5,7 +5,7 @@ import { extendCards, seededRng } from './generate';
 import { ISLANDS } from './levels';
 import { expectedAnswer, instruction, MISSIONS, type CardParams } from './missions';
 import {
-  clockChoices, isMore, mirror, placeChoices, riddleChoices, symmetryOptions, tenChoices, UNITS, weekChoices,
+  clockChoices, clockText, isMore, mirror, placeChoices, riddleChoices, symmetryOptions, tenChoices, UNITS, weekChoices,
 } from './numbers';
 
 /** Все авторские и сгенерированные карточки новых механик. */
@@ -90,6 +90,24 @@ describe('islands 3–6 cards', () => {
           break;
         }
         case 'complete100': expect(p.n > 0 && p.n < 100, where).toBe(true); break;
+        // У пропущенной клетки есть соседи слева и справа в её ряду, как в авторских карточках.
+        case 'chart100': expect(p.missing % 10, where).toBeGreaterThanOrEqual(2); break;
+        case 'units': {
+          const authored = MISSIONS.flatMap((m) => [...m.cards.A, ...m.cards.B, ...m.cards.C])
+            .filter((x) => x.kind === 'units' && x.unit === p.unit).map((x) => (x as { len: number }).len);
+          expect(p.len, where).toBeLessThanOrEqual(Math.max(...authored));
+          break;
+        }
+      }
+    }
+  });
+
+  it('offers three different clock times with the right one among them', () => {
+    for (let h = 1; h <= 12; h++) {
+      for (const m of [0, 30] as const) {
+        const opts = clockChoices({ h, m });
+        expect(opts, `${h}:${m}`).toContain(clockText(h, m));
+        expect(new Set(opts).size, `${h}:${m} ${opts.join()}`).toBe(3);
       }
     }
   });

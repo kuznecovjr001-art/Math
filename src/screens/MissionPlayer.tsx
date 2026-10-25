@@ -8,7 +8,8 @@ import { seededRng } from '../content/generate';
 import { missionLength } from '../content/levels';
 import { cardId, instruction, voiceText, type Mission } from '../content/missions';
 import { buildSteps, type PlayMode } from '../content/steps';
-import type { Attempt, HelpLevel, Mode, Variant } from '../engine/types';
+import { newId } from '../engine/storage';
+import type { Attempt, HelpLevel, MissionSession, Mode, Variant } from '../engine/types';
 import { ArrayGame } from '../games/ArrayGame';
 import { BasketGame } from '../games/BasketGame';
 import { BoxesGame } from '../games/BoxesGame';
@@ -69,13 +70,15 @@ interface Props {
   mission: Mission;
   mode: PlayMode;
   onAttempt: (a: NewAttempt) => void;
+  /** Заход в миссию: создаётся при старте, обновляется на каждой карточке и в конце. */
+  onSession: (s: Omit<MissionSession, 'profileId'>) => void;
   onFinish: () => void;
   onExit: () => void;
 }
 
-export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Props) {
+export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, onExit }: Props) {
   // «Ещё разок» начинает новый заход: новые числа и только самостоятельные карточки.
-  const [round, setRound] = useState({ mode, seed: Date.now() });
+  const [round, setRound] = useState(() => ({ mode, seed: Date.now(), id: newId() }));
   const steps = useMemo(
     () => buildSteps(mission, round.mode, missionLength(mission.id), seededRng(round.seed)),
     [mission, round],
@@ -99,6 +102,14 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
 
   useEffect(() => () => stopSpeaking(), []);
 
+  useEffect(() => {
+    onSession({
+      id: round.id, missionId: mission.id, mode: round.mode, startedAt: round.seed,
+      cards: steps.length, shown: pos + 1, ...(done ? { finishedAt: Date.now() } : {}),
+    });
+    // Отчёт о заходе меняется только с карточкой и концом миссии.
+  }, [round, pos, done]);
+
   const raiseHelp = () => {
     if (help >= 3) return;
     const next = (help + 1) as HelpLevel;
@@ -121,6 +132,10 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
       correct: r.correct,
       helpLevel: help,
       answer: r.answer,
+      sessionId: round.id,
+      step: pos,
+      errorsBefore: errors,
+      ...(r.final === false ? { partial: true as const } : {}),
     });
 
     const release = (ms: number, then?: () => void) =>
@@ -174,7 +189,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
   };
 
   const again = () => {
-    setRound({ mode: 'again', seed: Date.now() });
+    setRound({ mode: 'again', seed: Date.now(), id: newId() });
     setPos(0);
     setHelp(0);
     setErrors(0);
@@ -225,6 +240,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
           <Icon name="help" size={40} />
         </button>
       </header>
+      <h1 className="sr-only">{mission.title}</h1>
       <div className="task-row">
         <Guide pose={message ? mood : 'talk'} size={84} className="task-guide" />
         <div className="task-text">

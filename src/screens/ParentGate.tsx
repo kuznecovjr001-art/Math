@@ -25,7 +25,7 @@ export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () 
       <h1>Для взрослых</h1>
       <p className="lead">Чтобы открыть отчёт и настройки, решите пример.</p>
       <div className="gate-q">{a} × {b} = <span className="gate-value">{value || '?'}</span></div>
-      {wrong && <p className="error">Не совсем. Попробуйте ещё раз.</p>}
+      {wrong && <p className="error" role="alert">Не совсем. Попробуйте ещё раз.</p>}
       <div className="keypad">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
           <button key={d} className="btn key" onClick={() => press(d)}>{d}</button>

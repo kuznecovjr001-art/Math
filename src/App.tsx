@@ -1,12 +1,13 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { PHRASE } from './audio/phrases';
-import { setVoiceEnabled, speak } from './audio/voice';
+import { setVoiceEnabled, speak, stopSpeaking } from './audio/voice';
 import { getMission } from './content/missions';
-import { loadData, newId, saveData } from './engine/storage';
-import type { AppData, Attempt } from './engine/types';
+import { importMerge, loadData, newId, saveData } from './engine/storage';
+import type { AppData, Attempt, MissionSession } from './engine/types';
 import { MapScreen } from './screens/MapScreen';
 import type { PlayMode } from './screens/MissionPlayer';
 import { Profiles } from './screens/Profiles';
+import { onNativeLifecycle } from './platform/native';
 import { artVars } from './ui/art';
 
 // Первый экран — профили и карта; миссия с играми и разделы для взрослых грузятся отдельно.
@@ -14,12 +15,14 @@ const load = {
   mission: () => import('./screens/MissionPlayer'),
   album: () => import('./screens/Album'),
   credits: () => import('./screens/Credits'),
+  privacy: () => import('./screens/Privacy'),
   gate: () => import('./screens/ParentGate'),
   parent: () => import('./screens/ParentScreen'),
 };
 const MissionPlayer = lazy(() => load.mission().then((m) => ({ default: m.MissionPlayer })));
 const Album = lazy(() => load.album().then((m) => ({ default: m.Album })));
 const Credits = lazy(() => load.credits().then((m) => ({ default: m.Credits })));
+const Privacy = lazy(() => load.privacy().then((m) => ({ default: m.Privacy })));
 const ParentGate = lazy(() => load.gate().then((m) => ({ default: m.ParentGate })));
 const ParentScreen = lazy(() => load.parent().then((m) => ({ default: m.ParentScreen })));
 
@@ -35,18 +38,21 @@ type Screen =
   | { name: 'album' }
   | { name: 'gate'; back: 'profiles' | 'map' }
   | { name: 'parent' }
-  | { name: 'credits' };
+  | { name: 'credits' }
+  | { name: 'privacy' };
 
 export function App() {
-  const [data, setData] = useState<AppData>(loadData);
+  const [loaded] = useState(() => loadData());
+  const [data, setData] = useState<AppData>(loaded.data);
   const [screen, setScreen] = useState<Screen>({ name: 'profiles' });
   const [profileId, setProfileId] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
   const [now, setNow] = useState(Date.now);
 
   useEffect(() => {
-    setSaveFailed(!saveData(data));
-  }, [data]);
+    // Нечитаемую запись не удалось отложить: не трогаем её, пока взрослый не сохранит её в файл.
+    setSaveFailed(loaded.issue === 'locked' || !saveData(data));
+  }, [data, loaded.issue]);
 
   useEffect(() => {
     setVoiceEnabled(data.settings.voice);
@@ -57,6 +63,28 @@ export function App() {
     setScreen(s);
   };
 
+  // «Назад» на Android ведёт туда же, куда кнопки на экране; на первом экране приложение сворачивается.
+  const backRef = useRef<() => boolean>(() => false);
+  backRef.current = () => {
+    const to: Record<Screen['name'], Screen | null> = {
+      profiles: null,
+      map: { name: 'profiles' },
+      mission: { name: 'map' },
+      album: { name: 'map' },
+      gate: screen.name === 'gate' ? { name: screen.back } : null,
+      parent: { name: 'profiles' },
+      credits: { name: 'parent' },
+      privacy: { name: 'parent' },
+    };
+    const next = to[screen.name];
+    if (next) go(next);
+    return next !== null;
+  };
+  useEffect(() => {
+    const off = onNativeLifecycle(() => backRef.current(), stopSpeaking, () => setNow(Date.now()));
+    return () => { void off.then((f) => f()); };
+  }, []);
+
   const profile = data.profiles.find((p) => p.id === profileId) ?? null;
   const stickers = profile ? data.stickers[profile.id] ?? [] : [];
 
@@ -64,6 +92,17 @@ export function App() {
     if (!profile) return;
     const full: Attempt = { ...a, id: newId(), profileId: profile.id, at: Date.now() };
     setData((d) => ({ ...d, attempts: [...d.attempts, full] }));
+  };
+
+  const trackSession = (sn: Omit<MissionSession, 'profileId'>) => {
+    if (!profile) return;
+    const assigned = profile.mode === 'assigned' && (profile.plan ?? []).includes(sn.missionId);
+    const full: MissionSession = { ...sn, profileId: profile.id, ...(assigned ? { assigned: true as const } : {}) };
+    setData((d) => {
+      const list = d.sessions ?? [];
+      const i = list.findIndex((x) => x.id === sn.id);
+      return { ...d, sessions: i < 0 ? [...list, full] : list.map((x, j) => (j === i ? { ...x, ...full } : x)) };
+    });
   };
 
   const giveSticker = (missionId: string) => {
@@ -97,6 +136,7 @@ export function App() {
       <MapScreen
         profile={profile}
         attempts={data.attempts}
+        sessions={data.sessions ?? []}
         stickers={stickers}
         now={now}
         onStart={(missionId, mode) => go({ name: 'mission', missionId, mode })}
@@ -113,6 +153,7 @@ export function App() {
           mission={mission}
           mode={screen.mode}
           onAttempt={addAttempt}
+          onSession={trackSession}
           onFinish={() => giveSticker(mission.id)}
           onExit={() => go({ name: 'map' })}
         />
@@ -136,24 +177,50 @@ export function App() {
               ...d,
               profiles: d.profiles.filter((p) => p.id !== id),
               attempts: d.attempts.filter((a) => a.profileId !== id),
+              sessions: d.sessions?.filter((x) => x.profileId !== id),
               stickers: stickersLeft,
             };
           });
           if (profileId === id) setProfileId(null);
         }}
+        onPlan={(id, mode, plan) => setData((d) => ({
+          ...d,
+          // «Сделано» считается от момента, когда миссия попала в задание: у оставшихся в задании время сохраняется.
+          profiles: d.profiles.map((p) => (p.id !== id ? p : {
+            ...p, mode, plan,
+            planAt: Object.fromEntries(plan.map((m) => [m, (p.mode === 'assigned' && p.planAt?.[m]) || Date.now()])),
+          })),
+        }))}
         onStartIsland={(id, startIsland) => setData((d) => ({
           ...d,
           profiles: d.profiles.map((p) => (p.id === id ? { ...p, startIsland } : p)),
         }))}
         onCredits={() => go({ name: 'credits' })}
+        onPrivacy={() => go({ name: 'privacy' })}
+        onImport={(text) => {
+          if (!importMerge(data, text)) return false;
+          setData((d) => importMerge(d, text) ?? d);
+          return true;
+        }}
       />
     );
   } else if (screen.name === 'credits') {
     body = <Credits onBack={() => go({ name: 'parent' })} />;
+  } else if (screen.name === 'privacy') {
+    body = <Privacy onBack={() => go({ name: 'parent' })} />;
   }
 
   return (
     <div className="app" style={artVars()}>
+      {loaded.issue && (
+        <div className="save-warning" role="alert">
+          {loaded.issue === 'restored'
+            ? 'Сохранение было повреждено: восстановлена резервная копия. Повреждённая запись сохранена отдельно.'
+            : loaded.issue === 'unreadable'
+              ? 'Сохранение не удалось прочитать. Оно отложено и не удалено: в разделе для взрослых его можно сохранить в файл.'
+              : 'Сохранение не удалось прочитать, а места, чтобы отложить его, нет. Новый прогресс не сохраняется, старая запись не тронута.'}
+        </div>
+      )}
       {saveFailed && (
         <div className="save-warning" role="alert">
           Браузер не даёт сохранить прогресс (возможно, включён приватный режим). Игра работает, но история не сохранится.

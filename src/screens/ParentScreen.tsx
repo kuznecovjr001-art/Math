@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ISLANDS } from '../content/levels';
 import { getMission, MISSIONS } from '../content/missions';
 import { SKILLS, STATUS_TEXT } from '../content/skills';
-import { missionCompleted, skillStatus } from '../engine/progress';
-import type { AppData } from '../engine/types';
+import { missionDone, skillStatus } from '../engine/progress';
+import { brokenRecords, exportJson } from '../engine/storage';
+import { saveTextFile } from '../platform/files';
+import { isNative } from '../platform/native';
+import type { AppData, Profile } from '../engine/types';
+import { ParentPlan } from './ParentPlan';
+import { ParentReport } from './ParentReport';
 import { Emoji, Icon, SceneBg } from '../ui/art';
 
 interface Props {
@@ -12,7 +17,11 @@ interface Props {
   onVoice: (on: boolean) => void;
   onDeleteProfile: (id: string) => void;
   onStartIsland: (id: string, island: number) => void;
+  onPlan: (id: string, mode: NonNullable<Profile['mode']>, plan: string[]) => void;
   onCredits: () => void;
+  onPrivacy: () => void;
+  /** false — файл не похож на резервную копию. */
+  onImport: (text: string) => boolean;
 }
 
 const VARIANT_TEXT = { A: 'обучение', B: 'самостоятельная проба', C: 'повтор после паузы' };
@@ -22,8 +31,14 @@ function fmt(ts: number) {
   return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onCredits }: Props) {
+export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onPlan, onCredits, onPrivacy, onImport }: Props) {
+  const [now] = useState(Date.now);
   const [pid, setPid] = useState(data.profiles[0]?.id ?? '');
+  const [backupNote, setBackupNote] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [broken] = useState(() => {
+    try { return brokenRecords(); } catch { return []; }
+  });
   const profile = data.profiles.find((p) => p.id === pid);
   const own = data.attempts.filter((a) => a.profileId === pid);
   const recent = [...own].sort((a, b) => b.at - a.at).slice(0, 15);
@@ -33,7 +48,7 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
     const list = isl.missions.map((id) => getMission(id)!.skill).filter((s) => !seen.has(s) && seen.add(s));
     return { isl, skills: [...new Set(list)] };
   });
-  const homeIdeas = MISSIONS.filter((m) => missionCompleted(own, m.id));
+  const homeIdeas = MISSIONS.filter((m) => missionDone(own, data.stickers[pid] ?? [], m.id));
 
   return (
     <div className="screen parent">
@@ -57,6 +72,9 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
 
       {profile && (
         <>
+          <ParentReport key={`r-${pid}`} attempts={own} sessions={(data.sessions ?? []).filter((s) => s.profileId === pid)} stickers={data.stickers[pid] ?? []} now={now} />
+          <ParentPlan key={`p-${pid}`} profile={profile} attempts={own} sessions={(data.sessions ?? []).filter((s) => s.profileId === pid)} onPlan={onPlan} />
+
           <section className="card">
             <h2>Навыки</h2>
             <p className="note">
@@ -134,7 +152,10 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
           Озвучивать задания
         </label>
         <p className="note">
-          Сейчас задания читает голос браузера. Перед запуском фразы будут записаны заранее и проверены на слух.
+          Задания, подсказки и похвала записаны заранее. Карточки с новыми числами читает голос устройства
+          {isNative
+            ? ': на Android — системный синтез речи. Чтобы он работал без интернета, скачайте русский голос: Настройки → Система → Язык → Синтез речи.'
+            : ' (синтез речи браузера).'}
         </p>
         {profile && (
           <button
@@ -149,7 +170,52 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
         <p className="note">
           Все данные хранятся только в этом браузере. Приложение не собирает фото, голос и настоящие имена.
         </p>
-        <button className="btn ghost" onClick={onCredits}>Авторство картинок и лицензии</button>
+        <h3>Резервная копия</h3>
+        <p className="note">
+          Файл со всеми профилями и историей. Восстановление добавляет недостающее и ничего не удаляет.
+        </p>
+        <div className="row wrap">
+          <button
+            className="btn"
+            onClick={() => {
+              const day = new Date().toISOString().slice(0, 10);
+              saveTextFile(`schitalochka-${day}.json`, exportJson(data))
+                .then(() => setBackupNote('Копия сохранена.'))
+                .catch(() => setBackupNote('Не удалось сохранить копию.'));
+            }}
+          >
+            Сохранить копию
+          </button>
+          <button className="btn" onClick={() => fileRef.current?.click()}>Восстановить из файла</button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              f?.text()
+                .then((t) => setBackupNote(onImport(t) ? 'Данные из файла добавлены.' : 'Это не файл копии «Считалочки».'))
+                .catch(() => setBackupNote('Не удалось прочитать файл.'));
+            }}
+          />
+        </div>
+        {broken.length > 0 && (
+          <button
+            className="btn"
+            onClick={() => saveTextFile('schitalochka-povrezhdennoe.json', JSON.stringify({ app: 'mathkids-broken', records: broken }))
+              .then(() => setBackupNote('Повреждённое сохранение записано в файл.'))
+              .catch(() => setBackupNote('Не удалось сохранить файл.'))}
+          >
+            Повреждённое сохранение в файл ({broken.length})
+          </button>
+        )}
+        {backupNote && <p className="note" role="status">{backupNote}</p>}
+        <div className="row wrap">
+          <button className="btn ghost" onClick={onCredits}>Авторство картинок и лицензии</button>
+          <button className="btn ghost" onClick={onPrivacy}>Политика конфиденциальности</button>
+        </div>
       </section>
     </div>
   );
