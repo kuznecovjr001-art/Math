@@ -76,6 +76,7 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
         <button className="tap avatar mini" onClick={onSwitch} aria-label="Сменить игрока">
           <Emoji code={profile.avatar} size={48} />
         </button>
+        <h1 className="sr-only">Карта островов</h1>
         <span className="map-name">{profile.name || 'Привет!'}</span>
         <button className="btn album-btn" onClick={onAlbum} aria-label={`Альбом наклеек: ${stickers.length}`}>
           <Icon name="star" size={32} /> {stickers.length}

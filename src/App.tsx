@@ -15,12 +15,14 @@ const load = {
   mission: () => import('./screens/MissionPlayer'),
   album: () => import('./screens/Album'),
   credits: () => import('./screens/Credits'),
+  privacy: () => import('./screens/Privacy'),
   gate: () => import('./screens/ParentGate'),
   parent: () => import('./screens/ParentScreen'),
 };
 const MissionPlayer = lazy(() => load.mission().then((m) => ({ default: m.MissionPlayer })));
 const Album = lazy(() => load.album().then((m) => ({ default: m.Album })));
 const Credits = lazy(() => load.credits().then((m) => ({ default: m.Credits })));
+const Privacy = lazy(() => load.privacy().then((m) => ({ default: m.Privacy })));
 const ParentGate = lazy(() => load.gate().then((m) => ({ default: m.ParentGate })));
 const ParentScreen = lazy(() => load.parent().then((m) => ({ default: m.ParentScreen })));
 
@@ -36,7 +38,8 @@ type Screen =
   | { name: 'album' }
   | { name: 'gate'; back: 'profiles' | 'map' }
   | { name: 'parent' }
-  | { name: 'credits' };
+  | { name: 'credits' }
+  | { name: 'privacy' };
 
 export function App() {
   const [loaded] = useState(() => loadData());
@@ -71,6 +74,7 @@ export function App() {
       gate: screen.name === 'gate' ? { name: screen.back } : null,
       parent: { name: 'profiles' },
       credits: { name: 'parent' },
+      privacy: { name: 'parent' },
     };
     const next = to[screen.name];
     if (next) go(next);
@@ -192,6 +196,7 @@ export function App() {
           profiles: d.profiles.map((p) => (p.id === id ? { ...p, startIsland } : p)),
         }))}
         onCredits={() => go({ name: 'credits' })}
+        onPrivacy={() => go({ name: 'privacy' })}
         onImport={(text) => {
           if (!importMerge(data, text)) return false;
           setData((d) => importMerge(d, text) ?? d);
@@ -201,6 +206,8 @@ export function App() {
     );
   } else if (screen.name === 'credits') {
     body = <Credits onBack={() => go({ name: 'parent' })} />;
+  } else if (screen.name === 'privacy') {
+    body = <Privacy onBack={() => go({ name: 'parent' })} />;
   }
 
   return (
