@@ -1,4 +1,6 @@
 import type { SkillId, Variant } from '../engine/types';
+import { MORE_MISSIONS } from './missionsMore';
+import { answerMore, instructionMore, isMore, type MoreParams } from './numbers';
 import { count, plural } from './words';
 
 export interface Item {
@@ -60,7 +62,8 @@ export type CardParams =
   | { kind: 'zero'; start: number; lose: number }
   | { kind: 'fingers'; total: 5 | 10; up: number }
   | { kind: 'measure'; attr: MeasureAttr; a: Thing; b: Thing }
-  | { kind: 'order'; events: DayEvent[] };
+  | { kind: 'order'; events: DayEvent[] }
+  | MoreParams;
 
 /** Где посадить котёнка: на стол, под стол, в коробку, рядом с коробкой. */
 export type Where = 'on' | 'under' | 'in' | 'next';
@@ -127,6 +130,7 @@ export function voiceText(text: string): string {
 
 /** Озвучиваемая инструкция к карточке. */
 export function instruction(p: CardParams): string {
+  if (isMore(p)) return instructionMore(p);
   switch (p.kind) {
     case 'cups':
       return p.scene === 'tea'
@@ -210,6 +214,7 @@ export function measureAnswer(p: Extract<CardParams, { kind: 'measure' }>): numb
 
 /** Правильный числовой ответ карточки (для отчёта и проверки). */
 export function expectedAnswer(p: CardParams): number {
+  if (isMore(p)) return answerMore(p);
   switch (p.kind) {
     case 'cups': return p.receivers;
     case 'basket': return p.target;
@@ -797,6 +802,7 @@ export const MISSIONS: Mission[] = [
     finish: 'День расписан.',
     home: 'Вечером вспомните вместе, что было утром, днём и вечером.',
   },
+  ...MORE_MISSIONS,
 ];
 
 export function getMission(id: string): Mission | undefined {

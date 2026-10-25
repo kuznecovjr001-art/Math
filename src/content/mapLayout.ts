@@ -43,16 +43,16 @@ export const MAP_STOPS: Record<string, Stop[]> = {
   ],
 };
 
-/** Карта, на которой площадок нет: камни идут змейкой по всему острову. */
+/** Карта, на которой площадок нет: камни идут зигзагом по всему острову, не налезая друг на друга. */
 export function snakeStops(ids: string[]): Stop[] {
   const n = ids.length;
   return ids.map((id, i) => {
     const t = n === 1 ? 0.5 : i / (n - 1);
-    const wave = Math.sin(t * Math.PI * 3);
+    const side = i % 2 === 0;
     return {
       id,
-      land: [Math.round(12 + t * 76), Math.round(52 + wave * 26)],
-      port: [Math.round(50 + wave * 30), Math.round(88 - t * 76)],
+      land: [Math.round(12 + t * 76), side ? 64 : 36],
+      port: [side ? 34 : 66, Math.round(90 - t * 80)],
     };
   });
 }
