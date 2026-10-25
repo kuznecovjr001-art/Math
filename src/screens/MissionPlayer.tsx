@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { sfx } from '../audio/sfx';
 import { speak, stopSpeaking } from '../audio/voice';
+import { stickerArt } from '../content/art';
 import { seededRng } from '../content/generate';
 import { missionLength } from '../content/levels';
 import { cardId, instruction, voiceText, type Mission } from '../content/missions';
@@ -158,7 +159,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onFinish, onExit }: Pr
   if (done) {
     return (
       <div className="screen finish">
-        <div className="sticker-burst"><Emoji code={mission.icon} size={140} /></div>
+        <div className="sticker-burst"><Emoji code={stickerArt(mission)} size={140} /></div>
         <h1>{mission.praise}</h1>
         <p className="lead">{mission.finish}</p>
         <p className="home-idea"><b>Для взрослых.</b> Игра дома: {mission.home}</p>

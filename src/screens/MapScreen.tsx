@@ -1,7 +1,7 @@
 import { useEffect, type CSSProperties } from 'react';
 import { speak } from '../audio/voice';
 import { ISLANDS, islandOpen, missionOpen, orderedMissions } from '../content/levels';
-import { customArt } from '../content/art';
+import { customArt, missionArt } from '../content/art';
 import { getMission } from '../content/missions';
 import { isReviewDue, missionCompleted, suggestMissions } from '../engine/progress';
 import type { Attempt, Profile } from '../engine/types';
@@ -58,7 +58,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
           const m = getMission(s.id)!;
           return (
             <button key={s.id} className={`today-card ${s.reason}`} onClick={() => start(s.id)}>
-              <Emoji code={m.icon} size={88} />
+              <Emoji code={missionArt(m)} size={88} />
               <span className="today-title">{m.title}</span>
               <span className="today-reason">{REASON[s.reason]}</span>
             </button>
@@ -91,7 +91,7 @@ export function MapScreen({ profile, attempts, stickers, now, onStart, onAlbum, 
                       onClick={() => start(id)}
                       aria-label={`${m.title}${open ? '' : ', пока закрыто'}`}
                     >
-                      <Emoji code={m.icon} size={56} />
+                      <Emoji code={missionArt(m)} size={56} />
                       {done && <span className="stone-star"><Emoji code="2B50" size={26} /></span>}
                       {due && <span className="stone-due">Вспомним</span>}
                       {!open && <span className="stone-lock"><Icon name="lock" size={28} /></span>}

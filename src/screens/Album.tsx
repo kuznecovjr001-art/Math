@@ -1,5 +1,6 @@
 import { ISLANDS } from '../content/levels';
 import { getMission } from '../content/missions';
+import { stickerArt } from '../content/art';
 import { Emoji, Icon } from '../ui/art';
 
 export function Album({ stickers, onBack }: { stickers: string[]; onBack: () => void }) {
@@ -18,7 +19,7 @@ export function Album({ stickers, onBack }: { stickers: string[]; onBack: () => 
               const has = stickers.includes(id);
               return (
                 <div key={id} className={`album-slot ${has ? 'has' : ''}`}>
-                  {has ? <Emoji code={m.icon} size={88} label={m.title} /> : <span className="album-empty">?</span>}
+                  {has ? <Emoji code={stickerArt(m)} size={88} label={m.title} /> : <span className="album-empty">?</span>}
                   <span>{m.title}</span>
                 </div>
               );

@@ -47,3 +47,15 @@ export function hasCustomArt(code: string): boolean {
 export function customArt(path: string): string | undefined {
   return CUSTOM[path];
 }
+
+/** Эмблема миссии ui/mission-a01, если нарисована, иначе общая картинка миссии. */
+export function missionArt(m: { id: string; icon: string }): string {
+  const own = `ui/mission-${m.id.toLowerCase()}`;
+  return own in CUSTOM ? own : m.icon;
+}
+
+/** Наклейка за миссию sticker/a01, иначе эмблема. */
+export function stickerArt(m: { id: string; icon: string }): string {
+  const own = `sticker/${m.id.toLowerCase()}`;
+  return own in CUSTOM ? own : missionArt(m);
+}
