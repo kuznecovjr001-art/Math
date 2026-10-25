@@ -31,6 +31,7 @@ describe('missions content', () => {
         if (p.kind === 'hidden') expect(p.visible).toBeLessThan(p.total);
         if (p.kind === 'tenframe') expect(p.a).toBeLessThan(10);
         if (p.kind === 'shapes') expect(p.options).toContain(p.target);
+        if (p.kind === 'shapes' && p.target === 'rectangle') expect(p.options).not.toContain('square');
         if (p.kind === 'story') expect(p.ops[p.op]).toBeDefined();
       }
     }

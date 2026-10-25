@@ -456,7 +456,7 @@ export const MISSIONS: Mission[] = [
         { kind: 'shapes', target: 'square', options: ['square', 'rectangle', 'circle'], turn: 30 },
       ],
       B: [
-        { kind: 'shapes', target: 'rectangle', options: ['square', 'triangle', 'rectangle'], turn: 90 },
+        { kind: 'shapes', target: 'rectangle', options: ['oval', 'triangle', 'rectangle'], turn: 90 },
         { kind: 'shapes', target: 'circle', options: ['oval', 'circle', 'pentagon'], turn: 0 },
       ],
       C: [

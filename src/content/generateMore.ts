@@ -50,7 +50,9 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
     }
     case 'chart100': {
       const [lo, hi] = span(pool, 'chart100', (p) => p.missing);
-      return { ...t, missing: int(rng, lo, hi) };
+      // У пропущенной клетки должны быть соседи слева и справа в ряду, как у автора.
+      const cells = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).filter((x) => x % 10 >= 2);
+      return { ...t, missing: pick(rng, cells) };
     }
     case 'coins': {
       const [lo, hi] = span(pool, 'coins', (p) => p.price);
@@ -78,7 +80,8 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
       return { ...t, ask, options: fractionOptions(ask, rng) };
     }
     case 'units': {
-      const [lo, hi] = span(pool, 'units', (p) => p.len);
+      // Диапазон — по той же мерке: у карандаша авторские длины меньше, чем у скрепки.
+      const [lo, hi] = span(pool.filter((p) => p.kind !== 'units' || p.unit === t.unit), 'units', (p) => p.len);
       return { ...t, len: int(rng, lo, hi) };
     }
     case 'complete100': {
