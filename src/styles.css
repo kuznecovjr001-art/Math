@@ -12,7 +12,13 @@
   --good: #2a9d8f;
   --radius: 24px;
   --tap: 72px;
-  font-family: 'Nunito', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  --sea: #dff1f2;
+  --sea-wave: #c4e6e8;
+  --sand: #ffe8b3;
+  /* Цвет острова по ТЗ на графику: светлый тон под текст, главный цвет на рамках. */
+  --isl: #95d5b2;
+  --isl-tint: #d8f3dc;
+  font-family: 'Nunito Variable', 'Nunito', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
   color: var(--ink);
   background: var(--bg);
   -webkit-tap-highlight-color: transparent;
@@ -44,8 +50,8 @@ body {
   gap: 16px;
 }
 
-h1 { font-size: clamp(26px, 5vw, 40px); margin: 8px 0 0; text-align: center; }
-h2 { font-size: 22px; margin: 0 0 8px; }
+h1 { font-size: clamp(28px, 5.5vw, 44px); font-weight: 900; line-height: 1.1; margin: 8px 0 0; text-align: center; }
+h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; }
 .lead { font-size: 20px; text-align: center; margin: 0; color: var(--ink-soft); }
 .note { font-size: 15px; color: var(--ink-soft); }
 .muted { color: var(--ink-soft); font-size: 14px; }
@@ -71,16 +77,20 @@ h2 { font-size: 22px; margin: 0 0 8px; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: transform 0.1s;
+  /* Бортик снизу проседает при нажатии: кнопка выглядит как настоящая. */
+  --ledge: var(--line);
+  box-shadow: 0 5px 0 var(--ledge);
+  margin-bottom: 5px;
+  transition: transform 0.08s, box-shadow 0.08s;
 }
-.btn:active:not(:disabled) { transform: scale(0.96); }
+.btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--ledge); }
 .btn:disabled { opacity: 0.45; cursor: default; }
-.btn.primary { background: var(--primary); border-color: #1f7a6f; color: var(--primary-ink); }
-.btn.big { font-size: 26px; min-height: var(--tap); padding: 14px 44px; align-self: center; }
-.btn.ghost { background: transparent; border-color: transparent; text-decoration: underline; }
-.btn.danger { border-color: var(--attention); color: #9c3d24; }
-.btn.icon { width: 64px; height: 64px; padding: 0; font-size: 28px; flex: none; }
-.btn.help { background: #fff3c4; border-color: var(--accent); font-size: 32px; }
+.btn.primary { background: var(--primary); border-color: #1f7a6f; --ledge: #1f7a6f; color: var(--primary-ink); }
+.btn.big { font-size: 26px; font-weight: 900; min-height: var(--tap); padding: 14px 44px; align-self: center; }
+.btn.ghost { background: transparent; border-color: transparent; box-shadow: none; text-decoration: underline; }
+.btn.danger { border-color: var(--attention); --ledge: #f2b8a6; color: #9c3d24; }
+.btn.icon { width: 64px; height: 64px; padding: 0; font-size: 28px; flex: none; border-radius: 22px; }
+.btn.help { background: #fff3c4; border-color: var(--accent); --ledge: #c9773a; font-size: 32px; }
 .btn.help.pulse { animation: pulse 1.2s ease-in-out infinite; }
 .btn:focus-visible, .tap:focus-visible { outline: 4px solid #118ab2; outline-offset: 3px; }
 
@@ -170,29 +180,86 @@ h2 { font-size: 22px; margin: 0 0 8px; }
 .today-card.new { border-color: var(--primary); box-shadow: 0 6px 0 #1f7a6f; }
 .today-card.review { border-color: var(--accent); box-shadow: 0 6px 0 #c9773a; }
 .today-title { font-size: 26px; font-weight: 800; }
-.today-reason { font-size: 18px; color: var(--ink-soft); font-weight: 700; }
+.today-reason { font-size: 17px; color: var(--ink); font-weight: 800; background: var(--bg-2); border-radius: 999px; padding: 2px 14px; }
 
-.island { background: #d8f3dc; border-radius: 40px; padding: 20px 16px 24px; border: 4px solid #b7e4c7; }
-.island h2 { text-align: center; color: #2d6a4f; }
-.path { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 20px; }
-.stone { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 120px; text-align: center; }
-.stone-btn { width: 100px; height: 100px; border-radius: 50%; background: var(--card); border: 4px solid #95d5b2; }
-.stone.done .stone-btn { border-color: var(--primary); }
-.stone.locked .stone-btn { background: #eef4ef; border-style: dashed; }
+/* Карта: острова в море. */
+body:has(.screen.map) {
+  background: var(--sea) radial-gradient(ellipse 36px 8px at 50% 50%, var(--sea-wave) 60%, transparent 64%);
+  background-size: 160px 90px;
+}
+.screen.map, .island { background-size: cover; background-position: center; }
+.screen.map[style], .island[style] { background-image: var(--bg-land); }
+@media (orientation: portrait) {
+  .screen.map[style], .island[style] { background-image: var(--bg-port); }
+}
+.island[data-island='compose'] { --isl: #a8dadc; --isl-tint: #e4f4f4; }
+.island[data-island='ten'] { --isl: #ffd166; --isl-tint: #fff3cf; }
+.island[data-island='groups'] { --isl: #f4a261; --isl-tint: #fde4d0; }
+.island[data-island='table'] { --isl: #118ab2; --isl-tint: #d9eef6; }
+
+.island {
+  position: relative;
+  background-color: var(--isl-tint);
+  border: 5px solid var(--isl);
+  border-radius: 64px 88px 72px 96px / 72px 64px 96px 80px;
+  padding: 48px 16px 44px;
+  margin: 30px 8px 22px;
+  box-shadow: 0 0 0 10px var(--sand), 0 16px 0 10px rgba(17, 138, 178, 0.16);
+}
+.island h2 {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1.5deg);
+  margin: 0;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  color: var(--ink);
+  border: 4px solid var(--isl);
+  border-radius: 18px;
+  padding: 6px 20px;
+  box-shadow: 0 4px 0 var(--isl);
+}
+.path { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 30px 28px; }
+.stone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 116px; text-align: center; }
+/* Тропинка: камни идут зигзагом, между ними пунктир шагов. */
+.stone:nth-child(even) { transform: translateY(26px); }
+.stone:not(:last-child)::after { content: ''; position: absolute; top: 48px; right: -36px; width: 44px; border-top: 6px dotted var(--isl); }
+.stone:nth-child(odd):not(:last-child)::after { transform: rotate(20deg); }
+.stone:nth-child(even):not(:last-child)::after { transform: rotate(-20deg); }
+.stone-btn { width: 100px; height: 100px; border-radius: 50%; background: var(--card); border: 5px solid var(--isl); box-shadow: 0 6px 0 var(--isl); }
+.stone-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 var(--isl); }
+.stone.done .stone-btn { border-color: var(--good); box-shadow: 0 6px 0 #1f7a6f, 0 0 0 6px #ffd166; }
+.stone.locked .stone-btn { background: #f3f1ea; border-style: dashed; box-shadow: none; }
 .stone.locked .emoji { opacity: 0.35; filter: grayscale(1); }
-.stone-title { font-size: 16px; font-weight: 700; color: #2d6a4f; }
-.stone-star { position: absolute; top: -6px; right: -6px; }
-.stone-lock { position: absolute; bottom: -4px; right: -4px; font-size: 24px; }
+.stone-title { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.2; }
+.stone-star { position: absolute; top: -8px; right: -8px; }
+.stone-lock { position: absolute; bottom: -6px; right: -6px; background: var(--card); border-radius: 50%; padding: 2px; display: flex; }
 .stone-due { position: absolute; bottom: -10px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
 
 /* Миссия */
 .mission-bar { display: flex; align-items: center; gap: 10px; }
 .mission-bar h1 { margin: 0; flex: 1; text-align: left; font-size: 28px; }
-.progress { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 6px; }
-.dot { width: 14px; height: 14px; flex-shrink: 0; border-radius: 50%; background: var(--line); }
-.dot.past { background: var(--primary); }
-.dot.now { background: var(--accent); transform: scale(1.3); }
-.task-text { font-size: clamp(20px, 3.4vw, 28px); font-weight: 700; text-align: center; line-height: 1.35; }
+.progress { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 6px; }
+/* Миссии длинные, точек много: держим их мелкими, но с контуром, как камни на карте. */
+.dot { width: 16px; height: 16px; flex-shrink: 0; border-radius: 50%; background: var(--card); border: 2px solid var(--line); }
+.dot.past { background: var(--primary); border-color: #1f7a6f; }
+.dot.now { background: var(--accent); border-color: #c9773a; transform: scale(1.35); box-shadow: 0 0 0 3px var(--card); }
+.task-text {
+  font-size: clamp(21px, 3.4vw, 30px);
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.35;
+  background: var(--card);
+  border: 3px solid var(--line);
+  border-radius: 28px;
+  padding: 14px 20px;
+  width: min(760px, 100%);
+  align-self: center;
+}
 .step-tag { display: inline-block; font-size: 15px; background: var(--bg-2); border-radius: 10px; padding: 2px 10px; margin-right: 10px; vertical-align: middle; color: var(--ink-soft); }
 .bubble {
   align-self: center;
@@ -204,8 +271,10 @@ h2 { font-size: 22px; margin: 0 0 8px; }
   font-weight: 700;
   max-width: 600px;
   text-align: center;
+  position: relative;
   animation: pop 0.25s ease-out;
 }
+.bubble::before { content: ''; position: absolute; top: -14px; left: 50%; margin-left: -11px; border: 11px solid transparent; border-top: 0; border-bottom: 13px solid var(--accent); }
 @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 .game { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
@@ -283,7 +352,15 @@ h2 { font-size: 22px; margin: 0 0 8px; }
 /* Финал и альбом */
 .finish { align-items: center; text-align: center; padding-top: 40px; }
 .finish-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.sticker-burst { animation: pop 0.5s ease-out; background: #fff; border-radius: 50%; padding: 24px; border: 6px solid var(--accent); }
+.sticker-burst {
+  animation: pop 0.5s ease-out;
+  background: #fff;
+  border-radius: 50%;
+  padding: 24px;
+  border: 4px solid var(--ink);
+  box-shadow: 0 0 0 16px var(--bg-2), 0 0 0 21px var(--accent);
+  margin: 28px 0 12px;
+}
 .home-idea { font-size: 16px; color: var(--ink-soft); max-width: 560px; background: rgba(255, 255, 255, 0.7); padding: 12px 16px; border-radius: 16px; }
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
 .album-slot { background: var(--card); border: 4px dashed var(--line); border-radius: 24px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; font-weight: 700; text-align: center; }
@@ -316,7 +393,8 @@ h2 { font-size: 22px; margin: 0 0 8px; }
 .save-warning { background: #ffe5d9; color: #9c3d24; padding: 10px 16px; text-align: center; font-weight: 700; }
 
 /* Острова и новые задания */
-.island.locked { opacity: 0.55; }
+.island.locked { filter: saturate(0.5); }
+.island.locked .path { opacity: 0.6; }
 .choice-text { font-size: 22px; font-weight: 800; }
 .choice-text.expr { font-size: 34px; white-space: nowrap; }
 .digit-cue { display: flex; justify-content: center; }
@@ -447,6 +525,10 @@ h2 { font-size: 22px; margin: 0 0 8px; }
   .group-add { width: 132px; min-height: 120px; }
   .group-items { width: 116px; }
   .today-card { min-height: 160px; }
+  .stone { width: 96px; }
+  .stone-btn { width: 84px; height: 84px; }
+  .stone:not(:last-child)::after { top: 40px; right: -30px; width: 34px; }
+  .stone:nth-child(even)::after { display: none; }
   .tenframe { grid-template-columns: repeat(5, 40px); }
   .tf-cell { width: 40px; height: 40px; }
   .counter { width: 30px; height: 30px; }

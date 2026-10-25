@@ -1,12 +1,13 @@
 import { ISLANDS } from '../content/levels';
 import { getMission } from '../content/missions';
-import { Emoji } from '../ui/art';
+import { stickerArt } from '../content/art';
+import { Emoji, Icon } from '../ui/art';
 
 export function Album({ stickers, onBack }: { stickers: string[]; onBack: () => void }) {
   return (
     <div className="screen album">
       <header className="mission-bar">
-        <button className="btn icon" onClick={onBack} aria-label="Назад">⌂</button>
+        <button className="btn icon" onClick={onBack} aria-label="Назад"><Icon name="home" /></button>
         <h1>Мои наклейки</h1>
       </header>
       {ISLANDS.map((isl) => (
@@ -18,7 +19,7 @@ export function Album({ stickers, onBack }: { stickers: string[]; onBack: () => 
               const has = stickers.includes(id);
               return (
                 <div key={id} className={`album-slot ${has ? 'has' : ''}`}>
-                  {has ? <Emoji code={m.icon} size={88} label={m.title} /> : <span className="album-empty">?</span>}
+                  {has ? <Emoji code={stickerArt(m)} size={88} label={m.title} /> : <span className="album-empty">?</span>}
                   <span>{m.title}</span>
                 </div>
               );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Profile } from '../engine/types';
-import { Emoji } from '../ui/art';
+import { Emoji, Icon } from '../ui/art';
 
 export const AVATARS = ['1F431', '1F436', '1F430', '1F43B', '1F98A', '1F994', '1F43C', '1F427', '1F989', '1F42D'];
 
@@ -66,7 +66,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
           </button>
         ))}
         {profiles.length < 6 && (
-          <button className="tap avatar add" onClick={() => setAdding(true)} aria-label="Добавить ребёнка">+</button>
+          <button className="tap avatar add" onClick={() => setAdding(true)} aria-label="Добавить ребёнка"><Icon name="plus" size={56} /></button>
         )}
       </div>
     </div>

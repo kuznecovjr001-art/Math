@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Icon } from '../ui/art';
 
 /** Простой барьер от случайного входа ребёнка. Это не защита данных. */
 export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () => void }) {
@@ -28,7 +29,7 @@ export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () 
         {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
           <button key={d} className="btn key" onClick={() => press(d)}>{d}</button>
         ))}
-        <button className="btn key" onClick={() => setValue('')} aria-label="Стереть">⌫</button>
+        <button className="btn key" onClick={() => setValue('')} aria-label="Стереть"><Icon name="erase" size={32} /></button>
         <button className="btn key" onClick={() => press('0')}>0</button>
         <button className="btn key primary" onClick={check} aria-label="Проверить">OK</button>
       </div>
