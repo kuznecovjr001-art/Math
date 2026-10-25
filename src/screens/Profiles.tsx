@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Profile } from '../engine/types';
-import { Emoji, Icon } from '../ui/art';
+import { Emoji, Guide, Icon, SceneBg } from '../ui/art';
 
 export const AVATARS = ['1F431', '1F436', '1F430', '1F43B', '1F98A', '1F994', '1F43C', '1F427', '1F989', '1F42D'];
 
@@ -19,6 +19,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
   if (adding) {
     return (
       <div className="screen profiles">
+        <SceneBg name="profiles" />
         <h1>Кто будет играть?</h1>
         <p className="lead">Выберите картинку. Её ребёнок будет нажимать, чтобы войти: пароль не нужен.</p>
         <div className="avatar-grid">
@@ -38,7 +39,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
           <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="Например, Маша" />
         </label>
         <div className="row">
-          {profiles.length > 0 && <button className="btn" onClick={() => setAdding(false)}>Назад</button>}
+          {profiles.length > 0 && <button className="btn" onClick={() => setAdding(false)}><Icon name="back" size={28} />Назад</button>}
           <button
             className="btn primary big"
             onClick={() => {
@@ -47,7 +48,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
               setName('');
             }}
           >
-            Готово
+            <Icon name="check" size={32} />Готово
           </button>
         </div>
       </div>
@@ -56,8 +57,12 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
 
   return (
     <div className="screen profiles">
-      <button className="btn ghost corner" onClick={onParent}>Для взрослых</button>
-      <h1>Кто играет?</h1>
+      <SceneBg name="profiles" />
+      <button className="btn corner adult-btn" onClick={onParent}><Icon name="adult" size={28} />Для взрослых</button>
+      <div className="profiles-head">
+        <Guide pose="idle" size={120} />
+        <h1>Кто играет?</h1>
+      </div>
       <div className="avatar-grid">
         {profiles.map((p) => (
           <button key={p.id} className="tap avatar big" onClick={() => onPick(p.id)}>

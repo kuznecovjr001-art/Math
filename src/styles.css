@@ -39,7 +39,7 @@ body {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-.app { min-height: 100vh; min-height: 100dvh; }
+.app { min-height: 100vh; min-height: 100dvh; position: relative; isolation: isolate; }
 
 .screen {
   max-width: 1100px;
@@ -142,6 +142,11 @@ h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; }
 }
 
 /* Профили */
+.profiles-head { display: flex; align-items: flex-end; gap: 8px; }
+.profiles-head h1 { background: rgba(255, 255, 255, 0.88); border-radius: 20px; padding: 6px 18px; }
+.adult-btn { font-size: 16px; min-height: 48px; padding: 6px 14px; }
+.album-empty-art { opacity: 0.8; }
+.album-island { display: inline-block; background: rgba(255, 255, 255, 0.9); border-radius: 14px; padding: 2px 14px; }
 .profiles { align-items: center; padding-top: 48px; }
 .corner { position: absolute; top: 12px; right: 12px; font-size: 16px; }
 .avatar-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; max-width: 720px; }
@@ -159,86 +164,155 @@ h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; }
 .map-name { font-size: 24px; font-weight: 800; flex: 1; }
 .album-btn { font-size: 22px; }
 
-.today { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.today { display: flex; gap: 14px; align-items: stretch; }
+.today-guide { align-self: flex-end; flex: none; pointer-events: none; }
 .today-card {
   font: inherit;
+  flex: 1;
+  min-width: 0;
   border: 4px solid var(--line);
   background: var(--card);
-  border-radius: 32px;
-  padding: 20px;
+  border-radius: 28px;
+  padding: 14px 18px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
   cursor: pointer;
-  min-height: 200px;
-  justify-content: center;
+  min-height: 112px;
   box-shadow: 0 6px 0 var(--line);
   transition: transform 0.1s;
+  text-align: left;
 }
+.today-card .emoji { flex: none; }
+.today-text { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
 .today-card:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--line); }
 .today-card.new { border-color: var(--primary); box-shadow: 0 6px 0 #1f7a6f; }
 .today-card.review { border-color: var(--accent); box-shadow: 0 6px 0 #c9773a; }
-.today-title { font-size: 26px; font-weight: 800; }
-.today-reason { font-size: 17px; color: var(--ink); font-weight: 800; background: var(--bg-2); border-radius: 999px; padding: 2px 14px; }
+.today-title { font-size: 24px; font-weight: 800; line-height: 1.15; }
+.today-reason { display: inline-flex; align-items: center; gap: 4px; font-size: 16px; color: var(--ink); font-weight: 800; background: var(--bg-2); border-radius: 999px; padding: 2px 12px; }
+@media (max-width: 700px) {
+  .today { flex-direction: column; position: relative; }
+  .today-guide { position: absolute; right: 100px; top: -70px; width: 64px; height: 64px; }
+  .today-card { min-height: 92px; padding: 10px 14px; }
+  .today-card .emoji { width: 64px; height: 64px; }
+  .today-title { font-size: 21px; }
+}
+
+/* Фон сцены: на весь экран под содержимым, со светлой вуалью для читаемости текста. */
+.scene-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--bg);
+  background-image: linear-gradient(rgba(255, 247, 230, 0.35), rgba(255, 247, 230, 0.55)), var(--bg-land);
+  background-size: cover;
+  background-position: center;
+}
+@media (orientation: portrait) {
+  .scene-bg { background-image: linear-gradient(rgba(255, 247, 230, 0.35), rgba(255, 247, 230, 0.55)), var(--bg-port); }
+}
+.screen.map .scene-bg { background-image: var(--bg-land); }
+@media (orientation: portrait) { .screen.map .scene-bg { background-image: var(--bg-port); } }
 
 /* Карта: острова в море. */
-body:has(.screen.map) {
-  background: var(--sea) radial-gradient(ellipse 36px 8px at 50% 50%, var(--sea-wave) 60%, transparent 64%);
-  background-size: 160px 90px;
-}
-.screen.map, .island { background-size: cover; background-position: center; }
-.screen.map[style], .island[style] { background-image: var(--bg-land); }
-@media (orientation: portrait) {
-  .screen.map[style], .island[style] { background-image: var(--bg-port); }
-}
+body:has(.screen.map) { background: var(--sea); }
 .island[data-island='compose'] { --isl: #a8dadc; --isl-tint: #e4f4f4; }
 .island[data-island='ten'] { --isl: #ffd166; --isl-tint: #fff3cf; }
 .island[data-island='groups'] { --isl: #f4a261; --isl-tint: #fde4d0; }
 .island[data-island='table'] { --isl: #118ab2; --isl-tint: #d9eef6; }
+.island[data-island='hundreds'] { --isl: #b8a1e3; --isl-tint: #efe8fb; }
 
 .island {
   position: relative;
-  background-color: var(--isl-tint);
+  background: var(--card);
   border: 5px solid var(--isl);
-  border-radius: 64px 88px 72px 96px / 72px 64px 96px 80px;
-  padding: 48px 16px 44px;
-  margin: 30px 8px 22px;
-  box-shadow: 0 0 0 10px var(--sand), 0 16px 0 10px rgba(17, 138, 178, 0.16);
+  border-radius: 36px;
+  padding: 10px;
+  margin: 34px 0 10px;
+  box-shadow: 0 8px 0 var(--isl);
 }
 .island h2 {
   position: absolute;
-  top: -28px;
+  z-index: 2;
+  top: -30px;
   left: 50%;
   transform: translateX(-50%) rotate(-1.5deg);
   margin: 0;
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--card);
   color: var(--ink);
   border: 4px solid var(--isl);
   border-radius: 18px;
-  padding: 6px 20px;
+  padding: 4px 18px 4px 8px;
   box-shadow: 0 4px 0 var(--isl);
 }
-.path { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 30px 28px; }
-.stone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 116px; text-align: center; }
-/* Тропинка: камни идут зигзагом, между ними пунктир шагов. */
-.stone:nth-child(even) { transform: translateY(26px); }
-.stone:not(:last-child)::after { content: ''; position: absolute; top: 48px; right: -36px; width: 44px; border-top: 6px dotted var(--isl); }
-.stone:nth-child(odd):not(:last-child)::after { transform: rotate(20deg); }
-.stone:nth-child(even):not(:last-child)::after { transform: rotate(-20deg); }
-.stone-btn { width: 100px; height: 100px; border-radius: 50%; background: var(--card); border: 5px solid var(--isl); box-shadow: 0 6px 0 var(--isl); }
-.stone-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 var(--isl); }
-.stone.done .stone-btn { border-color: var(--good); box-shadow: 0 6px 0 #1f7a6f, 0 0 0 6px #ffd166; }
-.stone.locked .stone-btn { background: #f3f1ea; border-style: dashed; box-shadow: none; }
-.stone.locked .emoji { opacity: 0.35; filter: grayscale(1); }
-.stone-title { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.2; }
-.stone-star { position: absolute; top: -8px; right: -8px; }
-.stone-lock { position: absolute; bottom: -6px; right: -6px; background: var(--card); border-radius: 50%; padding: 2px; display: flex; }
-.stone-due { position: absolute; bottom: -10px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
+.island-emblem { border-radius: 50%; }
+
+/* Рисунок острова в своих пропорциях: камни стоят на площадках по координатам из mapLayout.ts. */
+.island-map {
+  --stone: 88px;
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  aspect-ratio: 3 / 2;
+  border-radius: 26px;
+  overflow: hidden;
+  background-color: var(--isl-tint);
+  background-size: 100% 100%;
+}
+.island-map.drawn { background-image: var(--bg-land); }
+.island-map.plain { background-image: radial-gradient(ellipse at 50% 50%, var(--isl-tint) 55%, var(--isl) 56%, var(--isl) 60%, var(--sea) 61%); }
+@media (orientation: portrait) {
+  .island-map { aspect-ratio: 2 / 3; }
+  .island-map.drawn { background-image: var(--bg-port); }
+}
+.stone.on-map { position: absolute; left: var(--lx); top: var(--ly); transform: translate(-50%, calc(var(--stone) / -2)); }
+@media (orientation: portrait) { .stone.on-map { left: var(--px); top: var(--py); } }
+
+.stone { display: flex; flex-direction: column; align-items: center; gap: 2px; width: calc(var(--stone) + 40px); text-align: center; }
+.stone-btn {
+  width: var(--stone);
+  height: var(--stone);
+  border-radius: 50%;
+  padding: 0;
+  background: var(--card) center / 100% 100% no-repeat;
+  border: 4px solid var(--isl);
+  box-shadow: 0 5px 0 rgba(61, 44, 0, 0.35);
+}
+.stone-btn > .emoji { width: 70%; height: 70%; }
+.stone-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 rgba(61, 44, 0, 0.35); }
+.stone.done .stone-btn { border-color: var(--good); box-shadow: 0 5px 0 #1f7a6f, 0 0 0 5px #ffd166; }
+.stone.locked .stone-btn { background-color: #f3f1ea; border-style: dashed; box-shadow: none; }
+.stone.locked .stone-btn .emoji { opacity: 0.45; filter: grayscale(1); }
+/* Рисованные камни из ТЗ, если они есть: класс ставит art.tsx через переменные. */
+.has-stone-art .stone-btn { border: none; background-color: transparent; background-image: var(--stone-open); box-shadow: none; filter: drop-shadow(0 4px 0 rgba(61, 44, 0, 0.3)); }
+.has-stone-art .stone.done .stone-btn { background-image: var(--stone-done); box-shadow: none; }
+.has-stone-art .stone.locked .stone-btn { background-image: var(--stone-locked); background-color: transparent; }
+.stone-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.15;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  padding: 2px 8px;
+  box-shadow: 0 2px 0 rgba(61, 44, 0, 0.15);
+  max-width: 100%;
+}
+.stone-star { position: absolute; top: -6px; right: -6px; }
+.stone-lock { position: absolute; bottom: -4px; right: -4px; background: var(--card); border-radius: 50%; padding: 3px; display: flex; }
+.stone-due { position: absolute; bottom: -10px; display: inline-flex; align-items: center; gap: 3px; background: var(--accent); color: #3d2c00; font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 10px; }
+.island.locked .island-map { filter: saturate(0.55); }
+
+/* Миссии без площадки на рисунке: полоса на песке под картой. */
+.island-extra { background: var(--sand); border-radius: 22px; margin-top: 10px; padding: 10px 8px 14px; }
+.island-extra h3 { margin: 0 0 8px; font-size: 17px; text-align: center; color: var(--ink-soft); }
+.island-extra .stone-title { background: transparent; box-shadow: none; }
+.path { --stone: 76px; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 6px; }
 
 /* Миссия */
 .mission-bar { display: flex; align-items: center; gap: 10px; }
@@ -260,7 +334,11 @@ body:has(.screen.map) {
   width: min(760px, 100%);
   align-self: center;
 }
-.step-tag { display: inline-block; font-size: 15px; background: var(--bg-2); border-radius: 10px; padding: 2px 10px; margin-right: 10px; vertical-align: middle; color: var(--ink-soft); }
+.task-row { display: flex; align-items: flex-end; gap: 8px; width: min(860px, 100%); align-self: center; }
+.task-row .task-text { flex: 1; }
+.task-guide { flex: none; margin-bottom: -6px; }
+@media (max-width: 520px) { .task-guide { width: 56px; height: 56px; } }
+.step-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; background: var(--bg-2); border-radius: 10px; padding: 2px 10px; margin-right: 10px; vertical-align: middle; color: var(--ink-soft); }
 .bubble {
   align-self: center;
   background: #fff;
@@ -351,6 +429,10 @@ body:has(.screen.map) {
 
 /* Финал и альбом */
 .finish { align-items: center; text-align: center; padding-top: 40px; }
+.finish-hero { display: flex; align-items: flex-end; justify-content: center; gap: 4px; }
+.finish-guide { margin-left: -28px; animation: pop 0.6s ease-out; }
+@media (max-width: 520px) { .finish-guide { width: 104px; height: 104px; } }
+.finish h1, .finish .lead { background: rgba(255, 255, 255, 0.85); border-radius: 18px; padding: 4px 16px; }
 .finish-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 .sticker-burst {
   animation: pop 0.5s ease-out;
@@ -393,8 +475,6 @@ body:has(.screen.map) {
 .save-warning { background: #ffe5d9; color: #9c3d24; padding: 10px 16px; text-align: center; font-weight: 700; }
 
 /* Острова и новые задания */
-.island.locked { filter: saturate(0.5); }
-.island.locked .path { opacity: 0.6; }
 .choice-text { font-size: 22px; font-weight: 800; }
 .choice-text.expr { font-size: 34px; white-space: nowrap; }
 .digit-cue { display: flex; justify-content: center; }
@@ -414,7 +494,7 @@ body:has(.screen.map) {
 .hidden-scene { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
 .plate-wrap { position: relative; width: 170px; height: 170px; }
 .plate-items { position: absolute; inset: 30px; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; }
-.napkin { position: absolute; inset: 22px; background: repeating-linear-gradient(45deg, #ffd6e0 0 14px, #ffc2d1 14px 28px); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: 800; color: #9c3d24; transform: rotate(-6deg); }
+.napkin { position: absolute; inset: 22px; background: var(--art-napkin, repeating-linear-gradient(45deg, #ffd6e0 0 14px, #ffc2d1 14px 28px)) center / contain no-repeat; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: 800; color: #9c3d24; transform: rotate(-6deg); }
 .slots-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; align-items: center; }
 .slot.small { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #b07d48; }
 
@@ -424,13 +504,13 @@ body:has(.screen.map) {
 .tenframe { display: grid; grid-template-columns: repeat(5, 54px); gap: 4px; background: #3d2c00; padding: 4px; border-radius: 10px; }
 .tf-cell { width: 54px; height: 54px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
 .counter { width: 40px; height: 40px; border-radius: 50%; display: block; }
-.counter.red { background: #e63946; }
-.counter.blue { background: #118ab2; }
+.counter.red { background: var(--art-counter-red, #e63946) center / contain no-repeat; }
+.counter.blue { background: var(--art-counter-blue, #118ab2) center / contain no-repeat; }
 
 .tens-scene { display: flex; gap: 18px; justify-content: center; align-items: flex-end; flex-wrap: wrap; background: var(--card); border: 3px solid var(--line); border-radius: var(--radius); padding: 16px; }
 .bundle, .loose { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
 .sticks { display: inline-flex; gap: 3px; }
-.stick { width: 7px; height: 90px; background: #e9c46a; border: 1px solid #a07a1f; border-radius: 3px; display: block; }
+.stick { width: 7px; height: 90px; background: var(--art-stick, #e9c46a) center / 100% 100% no-repeat; border: 1px solid #a07a1f; border-radius: 3px; display: block; }
 .bundle-band { position: absolute; top: 40px; left: -4px; right: -4px; height: 10px; background: #e76f51; border-radius: 4px; }
 .bundle .badge { top: -14px; right: -14px; }
 
@@ -448,7 +528,7 @@ body:has(.screen.map) {
 .dot-group { display: flex; flex-wrap: wrap; gap: 4px; width: 64px; min-height: 36px; padding: 6px; justify-content: center; align-content: center; border: 3px solid #90a4ae; border-radius: 14px; background: #fff; }
 .dot-group i { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); display: block; }
 
-.album-island { text-align: left; margin: 12px 0 4px; }
+.album-island { text-align: left; margin: 12px 0 8px; }
 .report-group th { text-align: left; padding: 14px 6px 6px; font-size: 17px; }
 .islands-choice { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .islands-choice .toggle { align-items: flex-start; font-size: 16px; }
@@ -520,17 +600,18 @@ body:has(.screen.map) {
 
 @media (max-width: 520px) {
   :root { --tap: 64px; }
+  .island-map { --stone: 58px; }
+  .path { --stone: 62px; }
+  .island-map .stone-title { display: none; }
+  .island { padding: 6px; border-radius: 28px; }
   .btn.icon { width: 56px; height: 56px; }
   .seat { width: 64px; height: 64px; }
   .group-add { width: 132px; min-height: 120px; }
   .group-items { width: 116px; }
-  .today-card { min-height: 160px; }
-  .stone { width: 96px; }
-  .stone-btn { width: 84px; height: 84px; }
-  .stone:not(:last-child)::after { top: 40px; right: -30px; width: 34px; }
-  .stone:nth-child(even)::after { display: none; }
   .tenframe { grid-template-columns: repeat(5, 40px); }
   .tf-cell { width: 40px; height: 40px; }
   .counter { width: 30px; height: 30px; }
   .choice-text.expr { font-size: 28px; }
 }
+
+.story-art { align-self: center; width: min(280px, 70vw); height: auto; border-radius: 18px; }

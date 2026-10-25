@@ -10,6 +10,7 @@ import { MissionPlayer, type PlayMode } from './screens/MissionPlayer';
 import { ParentGate } from './screens/ParentGate';
 import { ParentScreen } from './screens/ParentScreen';
 import { Profiles } from './screens/Profiles';
+import { artVars } from './ui/art';
 
 type Screen =
   | { name: 'profiles' }
@@ -136,7 +137,7 @@ export function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app" style={artVars()}>
       {saveFailed && (
         <div className="save-warning" role="alert">
           Браузер не даёт сохранить прогресс (возможно, включён приватный режим). Игра работает, но история не сохранится.

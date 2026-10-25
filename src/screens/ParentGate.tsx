@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Icon } from '../ui/art';
+import { Icon, SceneBg } from '../ui/art';
 
 /** Простой барьер от случайного входа ребёнка. Это не защита данных. */
 export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () => void }) {
@@ -21,6 +21,7 @@ export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () 
 
   return (
     <div className="screen gate">
+      <SceneBg name="parent" />
       <h1>Для взрослых</h1>
       <p className="lead">Чтобы открыть отчёт и настройки, решите пример.</p>
       <div className="gate-q">{a} × {b} = <span className="gate-value">{value || '?'}</span></div>
@@ -33,7 +34,7 @@ export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () 
         <button className="btn key" onClick={() => press('0')}>0</button>
         <button className="btn key primary" onClick={check} aria-label="Проверить">OK</button>
       </div>
-      <button className="btn ghost" onClick={onBack}>Назад</button>
+      <button className="btn" onClick={onBack}><Icon name="back" size={28} />Назад</button>
     </div>
   );
 }

@@ -25,7 +25,13 @@ export function artCodeFromFile(path: string): string {
 
 export function buildArtMap(files: Record<string, string>): Record<string, string> {
   const map: Record<string, string> = {};
-  for (const [path, url] of Object.entries(files)) map[artCodeFromFile(path)] = url;
+  for (const [path, url] of Object.entries(files)) {
+    const code = artCodeFromFile(path);
+    map[code] = url;
+    // Предметы из ТЗ лежат в item/<имя>: item/feather заменяет картинку пера и там, где её ищут по коду.
+    const item = /^item\/(.+)$/.exec(code);
+    if (item && ART_NAMES[item[1]]) map[ART_NAMES[item[1]]] ??= url;
+  }
   return map;
 }
 

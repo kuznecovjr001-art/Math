@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { artSrc, customArt } from '../content/art';
+import { SCENE_FALLBACK } from '../content/scenes';
 
 /** Картинки OpenMoji (CC BY-SA 4.0) или свои рисунки из src/assets/art, и простые нарисованные предметы. */
 
@@ -89,6 +90,11 @@ const ICONS = {
   lock: <><rect x="11" y="21" width="26" height="19" rx="5" fill="#ffd166" /><path d="M16 21v-5a8 8 0 0 1 16 0v5" /></>,
   plus: <path d="M24 10v28M10 24h28" />,
   erase: <><path d="M16 12h24v24H16L6 24z" fill="#ffd166" /><path d="m22 19 10 10M32 19 22 29" /></>,
+  star: <path d="m24 7 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#ffd166" />,
+  check: <path d="m10 25 9 9 19-20" />,
+  adult: <><circle cx="17" cy="13" r="6" fill="#f0d9a6" /><path d="M7 41a10 12 0 0 1 20 0z" fill="#f0d9a6" /><circle cx="34" cy="22" r="5" fill="#f0d9a6" /><path d="M26 41a8 9 0 0 1 16 0z" fill="#f0d9a6" /></>,
+  review: <><path d="M38 24a14 14 0 1 1-4-10" /><path d="M36 6v9h-9" /></>,
+  turn: <><path d="M12 22a13 13 0 0 1 22-7" /><path d="M35 8v8h-8" /><path d="M36 26a13 13 0 0 1-22 7" /><path d="M13 40v-8h8" /></>,
 };
 export type IconName = keyof typeof ICONS;
 
@@ -101,4 +107,48 @@ export function Icon({ name, size = 36 }: { name: IconName; size?: number }) {
       {ICONS[name]}
     </svg>
   );
+}
+
+/** Фон из src/assets/art/bg/<name>-land и -port, если он уже нарисован; CSS выбирает по ориентации. */
+export function bgVars(name: string): CSSProperties | undefined {
+  const land = customArt(`bg/${name}-land`);
+  const port = customArt(`bg/${name}-port`) ?? land;
+  if (!land && !port) return SCENE_FALLBACK[name] ? bgVars(SCENE_FALLBACK[name]) : undefined;
+  return { '--bg-land': `url(${land ?? port})`, '--bg-port': `url(${port})` } as CSSProperties;
+}
+
+/** Фон всего экрана под содержимым: картинка сцены и светлая вуаль, чтобы текст читался. */
+export function SceneBg({ name }: { name: string }) {
+  const vars = bgVars(name);
+  if (!vars) return null;
+  return <div className="scene-bg" style={vars} aria-hidden="true" />;
+}
+
+export type GuidePose = 'idle' | 'talk' | 'help' | 'happy' | 'think';
+
+/** Черепашка Счётик, проводник по островам. Без рисунка не показывается. */
+export function Guide({ pose, size = 96, className = '' }: { pose: GuidePose; size?: number; className?: string }) {
+  const src = customArt(`char/guide-${pose}`);
+  if (!src) return null;
+  return <img src={src} width={size} height={size} alt="" aria-hidden="true" draggable={false} className={`guide ${className}`} />;
+}
+
+/** Рисунки предметов, которые игры показывают через CSS (салфетка, фишки, палочки): переменные на корне приложения. */
+export function artVars(): CSSProperties {
+  const vars: Record<string, string> = {};
+  for (const name of ['napkin', 'counter-red', 'counter-blue', 'stick', 'band']) {
+    const src = customArt(`item/${name}`);
+    if (src) vars[`--art-${name}`] = `url(${src})`;
+  }
+  return vars as CSSProperties;
+}
+
+/** Картинка к задаче S01 по её сюжету: тюльпаны, карандаши, конфеты, автобус, пакеты. */
+const STORY_ART: [RegExp, string][] = [
+  [/тюльпан/, 'story-tulips'], [/карандаш/, 'story-pencils'], [/конфет/, 'story-candies'],
+  [/пассажир|автобус/, 'story-bus'], [/Маша.*пакет|пакет.*съела/, 'story-masha'], [/пакет/, 'story-bags'],
+];
+export function storyArt(text: string): string | undefined {
+  const hit = STORY_ART.find(([re]) => re.test(text));
+  return hit && customArt(`item/${hit[1]}`);
 }
