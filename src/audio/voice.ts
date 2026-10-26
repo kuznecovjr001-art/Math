@@ -1,90 +1,116 @@
 /**
- * Озвучка: сначала готовая запись из public/audio/<ключ>.mp3, иначе синтез речи браузера.
- * Список записанных фраз — public/audio/manifest.json. Чтобы заменить голос,
- * положите свои файлы с теми же именами (список фраз — public/audio/phrases.tsv).
+ * Голос Счётика — только заранее записанные фразы (public/voice, конвейер — docs/VOICE_PIPELINE.md).
+ *
+ * - Одна фраза за раз: новая останавливает предыдущую.
+ * - speak() завершается, когда запись действительно доиграла, её остановили или файл не открылся —
+ *   игра может ждать голос, но никогда не зависает из-за него.
+ * - Фраза без записи не подменяется синтезом речи: она пропускается (текст на экране) и попадает в missing().
+ * - VOICE_STARTED / VOICE_FINISHED уходят в общую шину событий: по ним говорит Счётик.
  */
-import { isNative } from '../platform/native';
+import manifest from '../../public/voice/manifest.json';
+import { emit, type VoiceEmotion } from '../motion/events';
 import { phraseKey } from './phraseKey';
 
-let enabled = true;
-let ruVoice: SpeechSynthesisVoice | null = null;
-let recorded: Set<string> | null = null;
-let current: HTMLAudioElement | null = null;
-
-const BASE = `${import.meta.env.BASE_URL}audio/`;
-
-function pickVoice() {
-  if (typeof speechSynthesis === 'undefined') return;
-  const voices = speechSynthesis.getVoices();
-  ruVoice = voices.find((v) => v.lang.toLowerCase().startsWith('ru')) ?? null;
+export interface Clip {
+  volume: number;
+  addEventListener(type: 'playing' | 'ended' | 'error', h: () => void): void;
+  play(): Promise<void>;
+  pause(): void;
 }
 
-if (typeof speechSynthesis !== 'undefined') {
-  pickVoice();
-  speechSynthesis.addEventListener?.('voiceschanged', pickVoice);
+interface Deps {
+  recorded: Set<string>;
+  url: (key: string) => string;
+  clip: (src: string) => Clip;
+  key: (text: string) => string;
 }
 
-if (typeof fetch !== 'undefined' && typeof Audio !== 'undefined') {
-  fetch(`${BASE}manifest.json`)
-    .then((r) => (r.ok ? r.json() : null))
-    .then((m: { files?: string[] } | null) => { recorded = new Set(m?.files ?? []); })
-    .catch(() => { recorded = new Set(); });
-}
+export function createVoice(d: Deps) {
+  let enabled = true;
+  let volume = 1;
+  let current: { clip: Clip; finish: () => void } | null = null;
+  let generation = 0;
+  const missing = new Set<string>();
 
-export function setVoiceEnabled(on: boolean) {
-  enabled = on;
-  if (!on) stopSpeaking();
-}
-
-export function canSpeak(): boolean {
-  return typeof speechSynthesis !== 'undefined' || typeof Audio !== 'undefined';
-}
-
-// В Android WebView нет speechSynthesis: фразы без записи (треть карточек — новые числа) читает системный синтез.
-const nativeTts = isNative && typeof speechSynthesis === 'undefined'
-  ? import('@capacitor-community/text-to-speech').then((m) => m.TextToSpeech)
-  : null;
-
-function synth(text: string) {
-  if (nativeTts) {
-    // Нет русского голоса в системе — промолчим; текст задания всё равно на экране.
-    void nativeTts.then((t) => t.speak({ text, lang: 'ru-RU', rate: 0.92, pitch: 1.05 })).catch(() => undefined);
-    return;
-  }
-  if (typeof speechSynthesis === 'undefined') return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'ru-RU';
-  if (ruVoice) u.voice = ruVoice;
-  u.rate = 0.92;
-  u.pitch = 1.05;
-  speechSynthesis.speak(u);
-}
-
-export function speak(text: string) {
-  if (!enabled) return;
-  stopSpeaking();
-  const key = phraseKey(text);
-  if (!recorded?.has(key)) {
-    synth(text);
-    return;
-  }
-  const a = new Audio(`${BASE}${key}.mp3`);
-  current = a;
-  // Нет файла или нет сети — читает синтез, ребёнок всё равно слышит задание.
-  const fallback = () => { if (current === a) { current = null; synth(text); } };
-  a.addEventListener('error', fallback, { once: true });
-  a.play().catch((e: unknown) => {
-    // Браузер запретил звук до первого касания — синтез тоже не сработает, молчим.
-    if (e instanceof DOMException && e.name === 'NotAllowedError') return;
-    fallback();
-  });
-}
-
-export function stopSpeaking() {
-  if (current) {
-    current.pause();
+  function stop() {
+    generation++;
+    const c = current;
     current = null;
+    if (c) {
+      c.clip.pause();
+      c.finish();
+    }
   }
-  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
-  void nativeTts?.then((t) => t.stop()).catch(() => undefined);
+
+  function speak(text: string, emotion: VoiceEmotion = 'explain'): Promise<void> {
+    stop();
+    const key = d.key(text);
+    if (!enabled) return Promise.resolve();
+    if (!d.recorded.has(key)) {
+      missing.add(text);
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
+      const clip = d.clip(d.url(key));
+      clip.volume = volume;
+      let started = false;
+      let over = false;
+      const finish = () => {
+        if (over) return;
+        over = true;
+        if (current?.clip === clip) current = null;
+        if (started) emit({ type: 'VOICE_FINISHED' });
+        resolve();
+      };
+      current = { clip, finish };
+      clip.addEventListener('playing', () => {
+        if (!started && !over) {
+          started = true;
+          emit({ type: 'VOICE_STARTED', emotion });
+        }
+      });
+      clip.addEventListener('ended', finish);
+      clip.addEventListener('error', finish);
+      // Браузер может запретить звук до первого касания — тогда просто молчим.
+      clip.play().catch(finish);
+    });
+  }
+
+  /** Несколько фраз подряд с паузой; любая новая фраза или остановка прерывает всю очередь. */
+  async function speakAll(texts: string[], gapMs = 250, emotion: VoiceEmotion = 'explain') {
+    for (const [i, t] of texts.entries()) {
+      const p = speak(t, emotion);
+      const mine = generation;
+      await p;
+      if (i === texts.length - 1) return;
+      await new Promise((r) => setTimeout(r, gapMs));
+      if (generation !== mine) return;
+    }
+  }
+
+  return {
+    speak,
+    speakAll,
+    stop,
+    setEnabled(on: boolean) { enabled = on; if (!on) stop(); },
+    setVolume(v: number) { volume = v; if (current) current.clip.volume = v; },
+    missing: () => [...missing],
+    has: (text: string) => d.recorded.has(d.key(text)),
+  };
 }
+
+const BASE = `${import.meta.env.BASE_URL}voice/`;
+const voice = createVoice({
+  recorded: new Set(Object.keys((manifest as { files: Record<string, string> }).files)),
+  url: (key) => `${BASE}${(manifest as { files: Record<string, string> }).files[key]}`,
+  clip: (src) => new Audio(src),
+  key: phraseKey,
+});
+
+export const speak = voice.speak;
+export const speakAll = voice.speakAll;
+export const stopSpeaking = voice.stop;
+export const setVoiceEnabled = voice.setEnabled;
+export const setVoiceVolume = voice.setVolume;
+export const hasRecording = voice.has;
+export const missingPhrases = voice.missing;

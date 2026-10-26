@@ -1,5 +1,10 @@
 /** Короткие мягкие звуки без файлов: работают офлайн. */
 let ctx: AudioContext | null = null;
+let enabled = true;
+
+export function setSfxEnabled(on: boolean) {
+  enabled = on;
+}
 
 function audio(): AudioContext | null {
   if (typeof window === 'undefined' || !('AudioContext' in window)) return null;
@@ -9,6 +14,7 @@ function audio(): AudioContext | null {
 }
 
 function tone(freq: number, start: number, dur: number, gain = 0.12) {
+  if (!enabled) return;
   const c = audio();
   if (!c) return;
   const o = c.createOscillator();

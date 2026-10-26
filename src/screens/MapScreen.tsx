@@ -24,6 +24,9 @@ interface Props {
 
 const REASON = { review: 'Вспомним', new: 'Новое', again: 'Ещё раз', assigned: 'Задание' };
 
+/** Что было открыто и пройдено при прошлом показе карты (в этой сессии): новое появляется плавно один раз. */
+const lastSeen = new Map<string, { open: Set<string>; done: Set<string> }>();
+
 export function MapScreen({ profile, attempts, sessions, stickers, now, onStart, onAlbum, onSwitch }: Props) {
   const own = attempts.filter((a) => a.profileId === profile.id);
   const start0 = profile.startIsland ?? 0;
@@ -37,6 +40,18 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
 
   const start = (id: string) => onStart(id, isReviewDue(own, id, now) ? 'review' : 'play');
 
+  const ids = ISLANDS.flatMap((i) => i.missions);
+  const [fresh] = useState(() => {
+    const open = new Set(ids.filter(isOpen));
+    const done = new Set(ids.filter((id) => missionDone(own, stickers, id)));
+    const prev = lastSeen.get(profile.id);
+    lastSeen.set(profile.id, { open, done });
+    return {
+      opened: new Set(prev ? [...open].filter((id) => !prev.open.has(id)) : []),
+      done: new Set(prev ? [...done].filter((id) => !prev.done.has(id)) : []),
+    };
+  });
+
   /** Камень миссии: на площадке карты (at) или в полосе под картой. */
   const stone = (id: string, at?: Stop) => {
     const m = getMission(id)!;
@@ -47,7 +62,11 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
       '--lx': `${at.land[0]}%`, '--ly': `${at.land[1]}%`, '--px': `${at.port[0]}%`, '--py': `${at.port[1]}%`,
     } as CSSProperties);
     return (
-      <li key={id} className={`stone ${open ? 'open' : 'locked'} ${done ? 'done' : ''} ${at ? 'on-map' : ''}`} style={pos}>
+      <li
+        key={id}
+        className={`stone ${open ? 'open' : 'locked'} ${done ? 'done' : ''} ${at ? 'on-map' : ''} ${fresh.opened.has(id) ? 'just-opened' : ''} ${fresh.done.has(id) ? 'just-done' : ''}`}
+        style={pos}
+      >
         <button
           className="tap stone-btn"
           disabled={!open}
@@ -72,6 +91,7 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
   return (
     <div className={`screen map ${stoneVars ? 'has-stone-art' : ''}`} style={stoneVars}>
       <SceneBg name="world" />
+      <div className="map-clouds" aria-hidden="true"><span /><span /></div>
       <header className="map-bar">
         <button className="tap avatar mini" onClick={onSwitch} aria-label="Сменить игрока">
           <Emoji code={profile.avatar} size={48} />

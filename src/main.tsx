@@ -7,6 +7,7 @@ import { allArtUrls } from './content/art';
 import { isNative } from './platform/native';
 import '@fontsource-variable/nunito';
 import './styles.css';
+import './motion/motion.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

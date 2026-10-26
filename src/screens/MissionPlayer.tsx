@@ -52,7 +52,9 @@ import { ClockGame } from '../games/ClockGame';
 import { WeekGame } from '../games/WeekGame';
 import { UnitPickGame } from '../games/UnitPickGame';
 import type { GameResult } from '../games/types';
-import { Emoji, Guide, Icon, SceneBg, type GuidePose } from '../ui/art';
+import { emit } from '../motion/events';
+import { Schetik } from '../motion/Schetik';
+import { Emoji, Icon, SceneBg } from '../ui/art';
 
 type NewAttempt = Omit<Attempt, 'id' | 'profileId' | 'at'>;
 
@@ -88,8 +90,6 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   const [locked, setLocked] = useState(false);
   const [errors, setErrors] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
-  // Поза Счётика рядом с облачком: подсказывает, радуется или предлагает проверить.
-  const [mood, setMood] = useState<GuidePose>('talk');
   const [done, setDone] = useState(false);
   const busy = useRef(false);
   const step = steps[pos];
@@ -97,7 +97,10 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   const helpTexts = mission.helpFor?.(step.params) ?? mission.help;
 
   useEffect(() => {
-    if (!done) speak(voiceText(text));
+    if (done) return;
+    // Счётик сам решает, как реагировать (motion/character): здоровается на первой карточке, потом слушает.
+    emit({ type: 'TASK_STARTED', first: pos === 0 });
+    void speak(voiceText(text), 'question');
   }, [text, pos, done]);
 
   useEffect(() => () => stopSpeaking(), []);
@@ -114,9 +117,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     if (help >= 3) return;
     const next = (help + 1) as HelpLevel;
     setHelp(next);
-    speak(voiceText(helpTexts[next - 1]));
+    emit({ type: 'HELP_REQUESTED', level: next });
+    void speak(voiceText(helpTexts[next - 1]), 'support');
     setMessage(helpTexts[next - 1]);
-    setMood('help');
   };
 
   const submit = (r: GameResult) => {
@@ -138,37 +141,43 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
       ...(r.final === false ? { partial: true as const } : {}),
     });
 
-    const release = (ms: number, then?: () => void) =>
-      setTimeout(() => {
+    /**
+     * Ответ разблокируется, когда договорена фраза, но не раньше min (видна реакция) и не позже max:
+     * без звука, без записи или при сбое игра идёт дальше сама.
+     */
+    const release = (min: number, said: Promise<void> = Promise.resolve(), then?: () => void, max = 2500) => {
+      const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      void Promise.all([wait(min), Promise.race([said, wait(max)])]).then(() => {
         then?.();
         busy.current = false;
         setLocked(false);
-      }, ms);
+      });
+    };
 
     if (r.correct && r.final === false) {
       sfx.good();
+      emit({ type: 'ANSWER_CORRECT', final: false });
       const next = r.next ?? PHRASE.nextDefault;
-      speak(next);
+      void speak(next, 'question');
       setMessage(next);
-      setMood('happy');
       release(600);
       return;
     }
 
     if (r.correct) {
       sfx.good();
+      emit({ type: 'ANSWER_CORRECT', final: true });
       const praise = steps[pos + 1] ? PHRASE.good : mission.praise;
-      speak(praise);
       setMessage(praise);
-      setMood('happy');
-      release(1600, () => {
+      release(700, speak(praise, 'praise'), () => {
         setMessage(null);
         setErrors(0);
         setHelp(0);
         if (pos + 1 < steps.length) setPos(pos + 1);
         else {
           setDone(true);
-          speak(`${mission.praise} ${mission.finish}`);
+          emit({ type: 'MISSION_COMPLETED' });
+          void speak(`${mission.praise} ${mission.finish}`, 'praise');
           onFinish();
         }
       });
@@ -176,15 +185,14 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     }
 
     sfx.soft();
+    emit({ type: 'ANSWER_INCORRECT' });
     const nextErrors = errors + 1;
     setErrors(nextErrors);
     if (nextErrors >= 2 && help < 3) {
-      release(900, raiseHelp);
+      release(900, undefined, raiseHelp);
     } else {
-      speak(PHRASE.again);
       setMessage(PHRASE.again);
-      setMood('think');
-      release(900);
+      release(900, speak(PHRASE.again, 'support'));
     }
   };
 
@@ -203,7 +211,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
         <SceneBg name="finish" />
         <div className="finish-hero">
           <div className="sticker-burst"><Emoji code={stickerArt(mission)} size={140} /></div>
-          <Guide pose="happy" size={140} className="finish-guide" />
+          <Schetik size={140} className="finish-guide" />
         </div>
         <h1>{mission.praise}</h1>
         <p className="lead">{mission.finish}</p>
@@ -230,7 +238,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
             <span key={i} className={`dot ${i < pos ? 'past' : i === pos ? 'now' : ''}`} title={STEP_TITLE[s.variant]} />
           ))}
         </div>
-        <button className="btn icon" onClick={() => speak(voiceText(text))} aria-label="Повторить задание"><Icon name="sound" /></button>
+        <button className="btn icon" onClick={() => void speak(voiceText(text), 'question')} aria-label="Повторить задание"><Icon name="sound" /></button>
         <button
           className={`btn icon help ${errors > 0 && help === 0 ? 'pulse' : ''}`}
           onClick={raiseHelp}
@@ -242,7 +250,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
       </header>
       <h1 className="sr-only">{mission.title}</h1>
       <div className="task-row">
-        <Guide pose={message ? mood : 'talk'} size={84} className="task-guide" />
+        <Schetik size={84} className="task-guide" />
         <div className="task-text">
           <span className="step-tag">{step.variant === 'C' && <Icon name="review" size={16} />}{STEP_TITLE[step.variant]}</span>
           {text}

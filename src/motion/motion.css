@@ -1,0 +1,74 @@
+/*
+ * Система движения «Считалочки». Временные токены — единый источник для CSS и WAAPI (tokens.ts повторяет их).
+ * Двигаем только transform и opacity. Уровни: html[data-motion=full|moderate|minimal];
+ * системное prefers-reduced-motion отключает всё (styles.css).
+ */
+:root {
+  --dur-press: 110ms;
+  --dur-appear: 240ms;
+  --dur-step: 350ms;
+  --dur-joy: 700ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Счётик: позы лежат друг на друге и сменяются прозрачностью. */
+.schetik { position: relative; flex: none; pointer-events: none; }
+.schetik-body { position: absolute; inset: 0; transform-origin: 50% 100%; }
+.schetik-body img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 180ms var(--ease-out); }
+.schetik-body img.on { opacity: 1; }
+
+/* Дыхание в покое и при слушании: едва заметно, 4 с. */
+.schetik[data-mood='idle'] .schetik-body,
+.schetik[data-mood='listening'] .schetik-body { animation: sch-breathe 4s ease-in-out infinite; }
+.schetik[data-mood='speaking'] .schetik-body { animation: sch-talk 0.9s ease-in-out infinite; }
+.schetik[data-mood='greeting'] .schetik-body { animation: sch-hop var(--dur-joy) var(--ease-spring) 1; }
+.schetik[data-mood='happy'] .schetik-body { animation: sch-hop var(--dur-joy) var(--ease-spring) 1; }
+.schetik[data-mood='celebrating'] .schetik-body { animation: sch-hop var(--dur-joy) var(--ease-spring) 2; }
+.schetik[data-mood='encourage'] .schetik-body { animation: sch-nod 1.2s var(--ease-out) 1; }
+.schetik[data-mood='thinking'] .schetik-body { transform: rotate(-4deg); transition: transform 600ms var(--ease-out); }
+.schetik[data-mood='helping'] .schetik-body,
+.schetik[data-mood='pointing'] .schetik-body { transform: translateX(6px) rotate(3deg); transition: transform var(--dur-step) var(--ease-out); }
+.schetik[data-mood='sleeping'] .schetik-body { transform: translateY(4px) scaleY(0.97); animation: sch-breathe 6s ease-in-out infinite; }
+.schetik-z { position: absolute; right: 4%; top: 2%; font-weight: 900; color: var(--ink-soft); animation: sch-z 3s ease-in-out infinite; }
+
+@keyframes sch-breathe { 50% { transform: scaleY(1.025) scaleX(0.99); } }
+@keyframes sch-talk { 50% { transform: translateY(-2px) rotate(-1deg); } }
+@keyframes sch-hop { 0% { transform: none; } 35% { transform: translateY(-14%) scaleY(1.04); } 65% { transform: translateY(0) scaleY(0.96); } 100% { transform: none; } }
+@keyframes sch-nod { 30% { transform: rotate(3deg); } 60% { transform: rotate(-2deg); } }
+@keyframes sch-z { 0% { opacity: 0; transform: translate(0, 4px); } 50% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -10px); } }
+
+/* Умеренно: без постоянных фоновых циклов. Минимально: только смена поз. */
+html[data-motion='moderate'] .schetik-body { animation-iteration-count: 1 !important; }
+html[data-motion='moderate'] .schetik[data-mood='idle'] .schetik-body,
+html[data-motion='moderate'] .schetik[data-mood='listening'] .schetik-body,
+html[data-motion='moderate'] .schetik[data-mood='sleeping'] .schetik-body { animation: none; }
+html[data-motion='minimal'] .schetik-body,
+html[data-motion='minimal'] .schetik-z { animation: none !important; transform: none !important; transition: none !important; }
+
+/* Карта. Камни миссий стоят на нарисованных площадках и не двигаются вместе с фоном. */
+.stone.just-opened .stone-btn { animation: stone-open 900ms var(--ease-spring) 300ms both; }
+.stone.just-done .stone-star { animation: star-pop var(--dur-joy) var(--ease-spring) 400ms both; }
+@keyframes stone-open { 0% { opacity: 0.4; transform: scale(0.85); } 100% { opacity: 1; transform: none; } }
+@keyframes star-pop { 0% { opacity: 0; transform: scale(0.2) rotate(-40deg); } 100% { opacity: 1; transform: none; } }
+
+/* Облака: две мягкие тени медленно плывут над морем (60–90 с), не над карточками и не быстро. */
+.map-clouds { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.map-clouds span { position: absolute; top: 12%; left: -30%; width: 34vmax; height: 12vmax; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)); animation: cloud 80s linear infinite; }
+.map-clouds span + span { top: 55%; width: 26vmax; height: 9vmax; animation-duration: 110s; animation-delay: -50s; opacity: 0.8; }
+@keyframes cloud { to { transform: translateX(160vw); } }
+
+/* Лёгкий параллакс морского фона при прокрутке карты (только фон экрана, не карты островов). */
+@supports (animation-timeline: scroll()) {
+  .screen.map .scene-bg { bottom: -8vh; animation: map-parallax linear both; animation-timeline: scroll(root); }
+  @keyframes map-parallax { from { transform: translateY(0); } to { transform: translateY(-6vh); } }
+}
+
+html[data-ambient='false'] .map-clouds,
+html[data-motion='moderate'] .map-clouds,
+html[data-motion='minimal'] .map-clouds { display: none; }
+html[data-parallax='false'] .screen.map .scene-bg,
+html[data-motion='minimal'] .screen.map .scene-bg { animation: none; }
+html[data-motion='minimal'] .stone.just-opened .stone-btn,
+html[data-motion='minimal'] .stone.just-done .stone-star { animation: none; }

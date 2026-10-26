@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { PHRASE } from './audio/phrases';
-import { setVoiceEnabled, speak, stopSpeaking } from './audio/voice';
+import { setSfxEnabled } from './audio/sfx';
+import { setVoiceEnabled, setVoiceVolume, speak, stopSpeaking } from './audio/voice';
+import { loadSettings, saveSettings, type Settings } from './settings';
 import { getMission } from './content/missions';
 import { importMerge, loadData, newId, saveData } from './engine/storage';
 import type { AppData, Attempt, MissionSession } from './engine/types';
@@ -48,6 +50,7 @@ export function App() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
   const [now, setNow] = useState(Date.now);
+  const [settings, setSettings] = useState<Settings>(() => loadSettings());
 
   useEffect(() => {
     // Нечитаемую запись не удалось отложить: не трогаем её, пока взрослый не сохранит её в файл.
@@ -55,8 +58,17 @@ export function App() {
   }, [data, loaded.issue]);
 
   useEffect(() => {
-    setVoiceEnabled(data.settings.voice);
-  }, [data.settings.voice]);
+    setVoiceEnabled(settings.voice);
+    setVoiceVolume(settings.voiceVolume);
+    setSfxEnabled(settings.sfx);
+    // Уровень движения и комфорт читает CSS (motion/motion.css).
+    const root = document.documentElement.dataset;
+    root.motion = settings.motion;
+    root.ambient = String(settings.ambient);
+    root.parallax = String(settings.parallax);
+    root.celebrations = settings.celebrations;
+    saveSettings(settings);
+  }, [settings]);
 
   const go = (s: Screen) => {
     setNow(Date.now());
@@ -169,7 +181,8 @@ export function App() {
       <ParentScreen
         data={data}
         onBack={() => go({ name: 'profiles' })}
-        onVoice={(voice) => setData((d) => ({ ...d, settings: { ...d.settings, voice } }))}
+        settings={settings}
+        onSettings={setSettings}
         onDeleteProfile={(id) => {
           setData((d) => {
             const { [id]: _removed, ...stickersLeft } = d.stickers;

@@ -306,6 +306,8 @@ const keyOf = (p: CardParams) => JSON.stringify(p);
 export function extendCards(
   authored: CardParams[], templates: CardParams[], pool: CardParams[], total: number, rng: Rng,
   seen: Set<string> = new Set(), avoid: Set<string> = new Set(),
+  /** Карточка озвучена записью (задание и подсказки). Неозвученная заменяется другой — голос не пропадает. */
+  voiced?: (p: CardParams) => boolean,
 ): CardParams[] {
   const out = [...authored];
   authored.forEach((p) => seen.add(keyOf(p)));
@@ -318,6 +320,11 @@ export function extendCards(
     // Если вариантов мало, повтор возможен, но не подряд.
     const last = out.length ? keyOf(out[out.length - 1]) : '';
     for (let tries = 0; tries < 20 && keyOf(card) === last; tries++) card = varyCard(t, pool, rng);
+    if (voiced && !voiced(card)) {
+      for (let tries = 0; tries < 100 && !voiced(card); tries++) card = varyCard(t, pool, rng);
+      // Совсем не нашлось — берём авторскую карточку: они озвучены всегда.
+      if (!voiced(card)) card = [t, ...pool].find(voiced) ?? card;
+    }
     seen.add(keyOf(card));
     out.push(card);
   }

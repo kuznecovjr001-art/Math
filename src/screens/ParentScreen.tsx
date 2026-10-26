@@ -5,8 +5,9 @@ import { SKILLS, STATUS_TEXT } from '../content/skills';
 import { missionDone, skillStatus } from '../engine/progress';
 import { brokenRecords, exportJson } from '../engine/storage';
 import { saveTextFile } from '../platform/files';
-import { isNative } from '../platform/native';
 import type { AppData, Profile } from '../engine/types';
+import type { Settings } from '../settings';
+import { ParentComfort } from './ParentComfort';
 import { ParentPlan } from './ParentPlan';
 import { ParentReport } from './ParentReport';
 import { Emoji, Icon, SceneBg } from '../ui/art';
@@ -14,7 +15,8 @@ import { Emoji, Icon, SceneBg } from '../ui/art';
 interface Props {
   data: AppData;
   onBack: () => void;
-  onVoice: (on: boolean) => void;
+  settings: Settings;
+  onSettings: (s: Settings) => void;
   onDeleteProfile: (id: string) => void;
   onStartIsland: (id: string, island: number) => void;
   onPlan: (id: string, mode: NonNullable<Profile['mode']>, plan: string[]) => void;
@@ -31,7 +33,7 @@ function fmt(ts: number) {
   return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIsland, onPlan, onCredits, onPrivacy, onImport }: Props) {
+export function ParentScreen({ data, onBack, settings, onSettings, onDeleteProfile, onStartIsland, onPlan, onCredits, onPrivacy, onImport }: Props) {
   const [now] = useState(Date.now);
   const [pid, setPid] = useState(data.profiles[0]?.id ?? '');
   const [backupNote, setBackupNote] = useState<string | null>(null);
@@ -145,18 +147,10 @@ export function ParentScreen({ data, onBack, onVoice, onDeleteProfile, onStartIs
         </>
       )}
 
+      <ParentComfort settings={settings} onChange={onSettings} />
+
       <section className="card">
-        <h2>Настройки</h2>
-        <label className="toggle">
-          <input type="checkbox" checked={data.settings.voice} onChange={(e) => onVoice(e.target.checked)} />
-          Озвучивать задания
-        </label>
-        <p className="note">
-          Задания, подсказки и похвала записаны заранее. Карточки с новыми числами читает голос устройства
-          {isNative
-            ? ': на Android — системный синтез речи. Чтобы он работал без интернета, скачайте русский голос: Настройки → Система → Язык → Синтез речи.'
-            : ' (синтез речи браузера).'}
-        </p>
+        <h2>Данные</h2>
         {profile && (
           <button
             className="btn danger"

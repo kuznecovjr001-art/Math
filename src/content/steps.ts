@@ -18,13 +18,15 @@ export interface Step {
  * Заход в миссию: сначала авторские карточки, потом сгенерированные по их образцу.
  * Авторские карточки обучения остаются первыми: на них построены подсказки.
  */
-export function buildSteps(m: Mission, mode: PlayMode, len: MissionLength, rng: Rng): Step[] {
+export function buildSteps(
+  m: Mission, mode: PlayMode, len: MissionLength, rng: Rng, voiced?: (p: CardParams) => boolean,
+): Step[] {
   const pool = [...m.cards.A, ...m.cards.B, ...m.cards.C];
   // Сгенерированная карточка не повторяет ни одну из этого захода и по возможности — авторские A и B.
   const own = new Set<string>([...m.cards.A, ...m.cards.B].map((p) => JSON.stringify(p)));
   const seen = new Set<string>(mode === 'play' ? own : []);
   const part = (v: Variant, authored: CardParams[], total: number): Step[] =>
-    extendCards(authored, m.cards[v], pool, total, rng, seen, own).map((params, index) => ({
+    extendCards(authored, m.cards[v], pool, total, rng, seen, own, voiced).map((params, index) => ({
       variant: v, index, params, generated: index >= authored.length,
     }));
 

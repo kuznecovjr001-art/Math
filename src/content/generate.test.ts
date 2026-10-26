@@ -206,3 +206,22 @@ describe('generated cards', () => {
     expect(varyCard(t, [t], seededRng(9)).kind).toBe('fingers');
   });
 });
+
+describe('voiced cards', () => {
+  it('never returns a generated card without a recording', async () => {
+    const { MISSIONS, instruction } = await import('./missions');
+    const { buildSteps } = await import('./steps');
+    const { missionLength } = await import('./levels');
+    const { seededRng } = await import('./generate');
+    for (const m of MISSIONS) {
+      const authored = new Set([...m.cards.A, ...m.cards.B, ...m.cards.C].map((p) => instruction(p)));
+      // Озвучены только авторские фразы и чётные варианты сгенерированных — генератор обязан обойтись ими.
+      const voiced = (p: Parameters<typeof instruction>[0]) => authored.has(instruction(p)) || instruction(p).length % 2 === 0;
+      for (let seed = 1; seed <= 20; seed++) {
+        for (const mode of ['play', 'review', 'again'] as const) {
+          for (const s of buildSteps(m, mode, missionLength(m.id), seededRng(seed), voiced)) expect(voiced(s.params), `${m.id} ${instruction(s.params)}`).toBe(true);
+        }
+      }
+    }
+  });
+});
