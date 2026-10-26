@@ -125,7 +125,10 @@ html[data-celebrations='calm'] .finish .sticker-burst { animation: fade-in 400ms
 html[data-celebrations='calm'] .finish .sticker-burst::after { display: none; }
 html[data-motion='minimal'] .finish .sticker-burst, html[data-motion='minimal'] .finish .finish-actions { animation: none; opacity: 1; }
 html[data-motion='minimal'] .finish .sticker-burst::after { display: none; }
-@media (prefers-reduced-motion: reduce) { .finish .finish-actions, html[data-celebrations='calm'] .finish .sticker-burst { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .finish .finish-actions, html[data-celebrations='calm'] .finish .sticker-burst { opacity: 1; }
+  .finish .sticker-burst::after { display: none; }
+}
 
 /* Касания: пружинящее возвращение после нажатия (нажатие — в styles.css через :active). */
 .tap { transition: transform var(--dur-press) var(--ease-spring); }

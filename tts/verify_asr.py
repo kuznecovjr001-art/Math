@@ -51,19 +51,22 @@ def main():
             if r['voice'] == a.voice:
                 items.append((Path(a.audio_dir) / f"{r['n']:02d}.wav", r['source']))
     else:
-        for p in json.loads(Path(a.phrases).read_text(encoding='utf-8'))[: a.limit]:
+        for p in json.loads(Path(a.phrases).read_text(encoding='utf-8')):
             f = Path(a.audio_dir) / f"{p['key']}.ogg"
             if f.exists():
                 items.append((f, p['text']))
+        items = items[: a.limit]
     rows, total = [], 0.0
     for f, text in items:
         y, _ = librosa.load(f, sr=16000)
         hyp = asr(y, generate_kwargs={'language': 'russian', 'task': 'transcribe'})['text']
-        e = wer(words(text), words(hyp))
+        ref, got = words(text), words(hyp)
+        # «по ровну» и «поровну» — одно и то же на слух: сравниваем ещё и без пробелов.
+        e = 0.0 if ''.join(ref) == ''.join(got) else wer(ref, got)
         total += e
         rows.append({'file': f.name, 'text': text, 'heard': hyp.strip(), 'wer': round(e, 3)})
     rows.sort(key=lambda r: -r['wer'])
-    out = Path(a.audio_dir) / 'asr.json'
+    out = Path('tts/out') / f'asr-{Path(a.audio_dir).name}.json'
     out.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding='utf-8')
     exact = sum(r['wer'] == 0 for r in rows)
     print(f'{a.voice or a.audio_dir}: файлов {len(rows)}, точно {exact}, средний WER {total / max(len(rows), 1):.3f}')

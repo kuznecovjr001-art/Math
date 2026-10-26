@@ -34,15 +34,30 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Записи голоса: <audio> просит диапазон байт (206), такой ответ не кэшируется. Берём файл целиком.
+  if (new URL(req.url).pathname.includes('/voice/')) {
+    const url = req.url.split('#')[0];
+    event.respondWith(
+      caches.match(url, { ignoreVary: true }).then((hit) => hit || fetch(url).then((res) => {
+        if (res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(url, copy)).catch(() => undefined);
+        }
+        return res;
+      })),
+    );
+    return;
+  }
+
   // Скрипты, стили, картинки, записи голоса: из кэша, иначе из сети с сохранением.
   event.respondWith(
     caches.match(req, { ignoreVary: true }).then(
       (hit) =>
         hit ||
         fetch(req).then((res) => {
-          if (res.ok) {
+          if (res.status === 200) {
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => undefined);
           }
           return res;
         }),

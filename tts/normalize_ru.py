@@ -98,10 +98,9 @@ TOKEN = re.compile(r'\d+|[А-Яа-яЁё]+|[^\sА-Яа-яЁё\d]+|\s+')
 
 
 def _noun(word):
-    for p in MORPH.parse(word):
-        if p.tag.POS == 'NOUN':
-            return p
-    return None
+    # После числа существительное чаще в родительном («2 десятка» — десяток, а не «десятка»): такой разбор первым.
+    nouns = [p for p in MORPH.parse(word) if p.tag.POS == 'NOUN']
+    return next((p for p in nouns if p.tag.case == 'gent'), nouns[0] if nouns else None)
 
 
 def _next_noun(tokens, i):
@@ -124,7 +123,7 @@ def normalize(text: str) -> str:
             if re.match(r'[А-Яа-яЁё]+$', t):
                 p = _noun(t)
                 if p and p.tag.number == 'plur' and p.tag.case == 'gent' and t.lower() not in ('раз', 'единиц'):
-                    last_gender = GENDER.get(MORPH.parse(p.normal_form)[0].tag.gender, last_gender)
+                    last_gender = GENDER.get(p.normalized.tag.gender, last_gender)
             out.append(t)
             continue
         n = int(t)
@@ -139,14 +138,17 @@ def normalize(text: str) -> str:
             case = 'loct'
         elif prep in PREP_CASE:
             case = PREP_CASE[prep]
-            if prep == 'в' and noun is not None and noun.tag.case != 'loct':
+            # «в 1 коробке»: форма на -е бывает и дательным, и предложным — смотрим все разборы.
+            if prep == 'в' and noun is not None and not any(p.tag.case == 'loct' for p in MORPH.parse(noun.word) if p.tag.POS == 'NOUN'):
                 case = 'accs'
         elif noun is not None and noun.tag.number == 'plur' and noun.tag.case in ('datv', 'ablt', 'loct'):
             case = noun.tag.case
         if prep == 'по' and n == 1:
             case = 'datv'
-        gender = GENDER.get(noun.tag.gender, 'm') if noun is not None and noun.tag.gender else last_gender
-        if noun is not None and noun.tag.gender:
+        # У форм множественного числа рода нет — берём его у начальной формы («2 ягоды» → «ягода», ж. р.).
+        noun_gender = noun.normalized.tag.gender if noun is not None else None
+        gender = GENDER.get(noun_gender, last_gender) if noun_gender else last_gender
+        if noun_gender:
             last_gender = gender
         out.append(number_words(n, case, gender))
     return ''.join(out)
@@ -168,6 +170,8 @@ if __name__ == '__main__':
         'Семь умножить на 8 — 56.': 'Семь умножить на восемь — пятьдесят шесть.',
         'Если десятков нет, пишем 0.': 'Если десятков нет, пишем ноль.',
         'Прыжки по 1: 1, 2, 3. Лягушка на 3.': 'Прыжки по одному: один, два, три. Лягушка на три.',
+        'Карандаш лежит в 1 коробке.': 'Карандаш лежит в одной коробке.',
+        'Положи в каждую из 21 коробки по 2 ягоды.': 'Положи в каждую из двадцати одной коробки по две ягоды.',
     }
     bad = 0
     for src, want in CASES_TO_CHECK.items():

@@ -106,7 +106,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     void speak(voiceText(text), 'question');
   }, [text, pos, done]);
 
-  useEffect(() => () => stopSpeaking(), []);
+  // Экран могли закрыть («Домой»), пока плеер ждал конца фразы: тогда ни речи, ни смены карточки.
+  const alive = useRef(true);
+  useEffect(() => () => { alive.current = false; stopSpeaking(); }, []);
 
   // После показа финиша: Счётик финишного экрана уже подписан на события и празднует.
   useEffect(() => { if (done) emit({ type: 'MISSION_COMPLETED' }); }, [done]);
@@ -154,6 +156,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     const release = (min: number, said: Promise<void> = Promise.resolve(), then?: () => void, max = 2500) => {
       const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
       void Promise.all([wait(min), Promise.race([said, wait(max)])]).then(() => {
+        if (!alive.current) return;
         then?.();
         busy.current = false;
         setLocked(false);
