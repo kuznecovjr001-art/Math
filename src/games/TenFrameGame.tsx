@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
@@ -11,7 +12,8 @@ function Frame({ cells, mark }: { cells: (string | null)[]; mark: boolean }) {
     <div className="tenframe">
       {cells.map((c, i) => (
         <span key={i} className={`tf-cell ${!c && mark ? 'attention' : ''}`}>
-          {c && <i className={`counter ${c}`} />}
+          {/* Фишки ложатся по одной, по порядку клеток: рамка заполняется так же, как ребёнок считает. */}
+          {c && <i className={`counter ${c}`} style={{ '--i': i } as CSSProperties} />}
         </span>
       ))}
     </div>

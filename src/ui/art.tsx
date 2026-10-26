@@ -124,15 +124,6 @@ export function SceneBg({ name }: { name: string }) {
   return <div className="scene-bg" style={vars} aria-hidden="true" />;
 }
 
-export type GuidePose = 'idle' | 'talk' | 'help' | 'happy' | 'think';
-
-/** Черепашка Счётик, проводник по островам. Без рисунка не показывается. */
-export function Guide({ pose, size = 96, className = '' }: { pose: GuidePose; size?: number; className?: string }) {
-  const src = customArt(`char/guide-${pose}`);
-  if (!src) return null;
-  return <img src={src} width={size} height={size} alt="" aria-hidden="true" draggable={false} className={`guide ${className}`} />;
-}
-
 /** Рисунки предметов, которые игры показывают через CSS (салфетка, фишки, палочки): переменные на корне приложения. */
 export function artVars(): CSSProperties {
   const vars: Record<string, string> = {};

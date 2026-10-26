@@ -143,3 +143,7 @@ html[data-motion='minimal'] .album-slot.has, html[data-motion='minimal'] .avatar
 .basket-items .counted { position: relative; }
 .basket-items .counted::after { content: ''; position: absolute; left: 20%; right: 20%; bottom: 2px; height: 5px; border-radius: 3px;
   background: var(--good); opacity: 0.55; animation: fade-in var(--dur-appear) var(--ease-out) both; }
+
+/* Рамка десятка: фишки появляются по одной. */
+.tf-cell .counter { animation: pop var(--dur-appear) var(--ease-spring) both; animation-delay: calc(var(--i) * 70ms); }
+html[data-motion='minimal'] .tf-cell .counter { animation: none; }
