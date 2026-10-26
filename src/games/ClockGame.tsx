@@ -14,8 +14,6 @@ export function ClockFace({ h, m, help }: { h: number; m: number; help: number }
     const r = (angle - 90) * (Math.PI / 180);
     return [100 + Math.cos(r) * len, 100 + Math.sin(r) * len];
   };
-  const [hx, hy] = hand(hourAngle, 48);
-  const [mx, my] = hand(minAngle, 72);
   const face = customArt('item/clock-face');
   return (
     <svg viewBox="0 0 200 200" width={220} height={220} role="img" aria-label="Часы">
@@ -25,8 +23,9 @@ export function ClockFace({ h, m, help }: { h: number; m: number; help: number }
         const [x, y] = hand((i + 1) * 30, 76);
         return <text key={i} x={x} y={y + 7} className="clock-num">{i + 1}</text>;
       })}
-      <line x1={100} y1={100} x2={mx} y2={my} className={`clock-min ${help >= 2 ? 'hint' : ''}`} />
-      <line x1={100} y1={100} x2={hx} y2={hy} className={`clock-hour ${help >= 2 ? 'hint' : ''}`} />
+      {/* Стрелки нарисованы на 12 и повёрнуты вокруг центра: при появлении они идут от 12 к нужному времени по часовой. */}
+      <line x1={100} y1={100} x2={100} y2={28} className={`clock-min clock-hand ${help >= 2 ? 'hint' : ''}`} style={{ transform: `rotate(${minAngle}deg)` }} />
+      <line x1={100} y1={100} x2={100} y2={52} className={`clock-hour clock-hand ${help >= 2 ? 'hint' : ''}`} style={{ transform: `rotate(${hourAngle}deg)` }} />
       <circle cx={100} cy={100} r={6} className="clock-pin" />
     </svg>
   );

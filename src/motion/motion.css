@@ -169,3 +169,8 @@ html[data-motion='moderate'] .btn.help.pulse { animation-iteration-count: 3; }
 html[data-motion='minimal'] .btn.help.pulse, html[data-motion='minimal'] .parcel.arrive,
 html[data-motion='minimal'] .array-scene.turned, html[data-motion='minimal'] .shirt-button.fallen,
 html[data-motion='minimal'] .finish-guide, html[data-motion='minimal'] .ribbon { animation: none; transition: none; }
+
+/* Часы: стрелки поворачиваются вокруг центра от 12 к заданному времени (геометрия та же, что у статичных). */
+.clock-hand { transform-box: view-box; transform-origin: 100px 100px; animation: clock-sweep 1s var(--ease-out) 200ms backwards; }
+@keyframes clock-sweep { from { transform: rotate(0deg); } }
+html[data-motion='minimal'] .clock-hand { animation: none; }
