@@ -71,7 +71,7 @@ def main():
     ap.add_argument('--only', nargs='*')
     ap.add_argument('--limit', type=int)
     ap.add_argument('--batch', type=int, default=16)
-    ap.add_argument('--compression', type=float, default=0.6)
+    ap.add_argument('--compression', type=float, default=0.96)  # ~19 кбит/с Opus: чистая речь, корпус ~140 МБ
     args = ap.parse_args()
 
     phrases = json.loads((ROOT / 'tts/out/phrases.json').read_text(encoding='utf-8'))

@@ -1,0 +1,92 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Голос Счётика — сравнение</title><style>body{font:16px/1.45 system-ui,sans-serif;max-width:1100px;margin:0 auto;padding:16px;background:#fff8e8;color:#3a2e1f}
+table{border-collapse:collapse;width:100%}td,th{border-top:1px solid #e7d5ad;padding:8px;vertical-align:top}audio{width:220px;height:36px}.src{color:#7a6230;font-size:13px}</style></head><body>
+<h1>Голос Счётика: три варианта Qwen3-TTS</h1>
+<p>Один и тот же текст, один голос на всю фразу (клон-промпт). Сжатие как в приложении: Ogg Opus ~19 кбит/с. 
+Проверено распознаванием Whisper: у всех трёх 15 из 16 фраз дословно, все числа в нужных падежах 
+(«Счётик» распознан как «Щётик» — так он и произносится). <b>Решение по тембру — за вами, на слух.</b></p><ul>
+<li><b>A. Мужской, учитель (выбран)</b> — спокойный баритон, темп 12,4 зн/с, тон ~134 Гц</li>
+<li><b>B. Мужской, рассказчик</b> — светлый тенор, 13,3 зн/с, ~162 Гц</li>
+<li><b>C. Женский, воспитательница</b> — 14,3 зн/с, ~217 Гц; потребует женского рода в репликах Счётика</li>
+</ul><table><tr><th>Фраза</th><th>A. Мужской</th><th>B. Мужской</th><th>C. Женский</th></tr>
+<tr><td>Привет! Я Счётик. Давай вместе поиграем!<div class="src">говорится: Привет! Я Счётик. Давай вместе поиграем!</div></td>
+<td><audio controls preload="none" src="a-teacher-male/01.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/01.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/01.ogg"></audio></td>
+</tr>
+<tr><td>Посмотри внимательно. Сколько яблок лежит на столе?<div class="src">говорится: Посмотри внимательно. Сколько яблок лежит на столе?</div></td>
+<td><audio controls preload="none" src="a-teacher-male/02.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/02.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/02.ogg"></audio></td>
+</tr>
+<tr><td>Отлично! Ты всё правильно посчитал!<div class="src">говорится: Отлично! Ты всё правильно посчитал!</div></td>
+<td><audio controls preload="none" src="a-teacher-male/03.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/03.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/03.ogg"></audio></td>
+</tr>
+<tr><td>Почти получилось. Давай попробуем ещё раз.<div class="src">говорится: Почти получилось. Давай попробуем ещё раз.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/04.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/04.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/04.ogg"></audio></td>
+</tr>
+<tr><td>Не спеши. Я тебе немного помогу.<div class="src">говорится: Не спеши. Я тебе немного помогу.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/05.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/05.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/05.ogg"></audio></td>
+</tr>
+<tr><td>Ура! Ты открыл новый остров!<div class="src">говорится: Ура! Ты открыл новый остров!</div></td>
+<td><audio controls preload="none" src="a-teacher-male/06.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/06.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/06.ogg"></audio></td>
+</tr>
+<tr><td>5 + 3 = 8.<div class="src">говорится: пять  плюс  три  равно  восемь.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/07.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/07.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/07.ogg"></audio></td>
+</tr>
+<tr><td>7 × 8 — 56.<div class="src">говорится: семь  умножить на  восемь — пятьдесят шесть.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/08.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/08.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/08.ogg"></audio></td>
+</tr>
+<tr><td>У меня 1 яблоко, 2 яблока, 5 яблок, 11 яблок, 21 яблоко и 25 яблок.<div class="src">говорится: У меня одно яблоко, два яблока, пять яблок, одиннадцать яблок, двадцать одно яблоко и двадцать пять яблок.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/09.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/09.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/09.ogg"></audio></td>
+</tr>
+<tr><td>На столе 1 груша, 2 груши, 21 груша и 25 груш.<div class="src">говорится: На столе одна груша, две груши, двадцать одна груша и двадцать пять груш.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/10.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/10.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/10.ogg"></audio></td>
+</tr>
+<tr><td>Положи в каждую из 21 коробки по 2 конфеты.<div class="src">говорится: Положи в каждую из двадцати одной коробки по две конфеты.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/11.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/11.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/11.ogg"></audio></td>
+</tr>
+<tr><td>От 11 до 25 не хватает 14.<div class="src">говорится: От одиннадцати до двадцати пяти не хватает четырнадцати.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/12.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/12.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/12.ogg"></audio></td>
+</tr>
+<tr><td>В 5 коробках по 21 карандашу.<div class="src">говорится: В пяти коробках по двадцать один карандашу.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/13.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/13.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/13.ogg"></audio></td>
+</tr>
+<tr><td>Я задумал число: 2 сотни, 5 десятков и 1 единица. Какое это число?<div class="src">говорится: Я задумал число: две сотни, пять десятков и одна единица. Какое это число?</div></td>
+<td><audio controls preload="none" src="a-teacher-male/14.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/14.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/14.ogg"></audio></td>
+</tr>
+<tr><td>В двух аквариумах 11 рыбок. В первом 2. Сколько во втором?<div class="src">говорится: В двух аквариумах одиннадцать рыбок. В первом две. Сколько во втором?</div></td>
+<td><audio controls preload="none" src="a-teacher-male/15.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/15.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/15.ogg"></audio></td>
+</tr>
+<tr><td>Сколько будет 25 плюс 11? Прыгай по числовой прямой: сначала десятками, потом единицами.<div class="src">говорится: Сколько будет двадцать пять плюс одиннадцать? Прыгай по числовой прямой: сначала десятками, потом единицами.</div></td>
+<td><audio controls preload="none" src="a-teacher-male/16.ogg"></audio></td>
+<td><audio controls preload="none" src="b-storyteller-male/16.ogg"></audio></td>
+<td><audio controls preload="none" src="c-teacher-female/16.ogg"></audio></td>
+</tr>
+</table><p>Как сменить голос: <code>python tts/build_voice.py --voice b-storyteller-male</code> (весь корпус заново, 6–11 ч на RTX 5070 Ti).</p></body></html>

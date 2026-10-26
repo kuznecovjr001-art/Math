@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PHRASE } from '../audio/phrases';
-import { sfx } from '../audio/sfx';
-import { speak, stopSpeaking } from '../audio/voice';
+import { hasRecording, speak, stopSpeaking, voiceReady } from '../audio/voice';
 import { stickerArt } from '../content/art';
 import { MISSION_SCENE } from '../content/scenes';
 import { seededRng } from '../content/generate';
 import { missionLength } from '../content/levels';
-import { cardId, instruction, voiceText, type Mission } from '../content/missions';
+import { cardId, instruction, voiceText, type CardParams, type Mission } from '../content/missions';
 import { buildSteps, type PlayMode } from '../content/steps';
 import { newId } from '../engine/storage';
 import type { Attempt, HelpLevel, MissionSession, Mode, Variant } from '../engine/types';
@@ -58,6 +57,10 @@ import { Emoji, Icon, SceneBg } from '../ui/art';
 
 type NewAttempt = Omit<Attempt, 'id' | 'profileId' | 'at'>;
 
+/** Карточка озвучена целиком: задание и подсказки к ней есть в записях голоса. */
+const voiced = (m: Mission) => (p: CardParams) =>
+  hasRecording(voiceText(instruction(p))) && (m.helpFor?.(p) ?? []).every((h) => hasRecording(voiceText(h)));
+
 const MODE_OF: Record<Variant, Mode> = { A: 'learn', B: 'probe', C: 'review' };
 
 const STEP_TITLE: Record<Variant, string> = {
@@ -82,7 +85,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   // «Ещё разок» начинает новый заход: новые числа и только самостоятельные карточки.
   const [round, setRound] = useState(() => ({ mode, seed: Date.now(), id: newId() }));
   const steps = useMemo(
-    () => buildSteps(mission, round.mode, missionLength(mission.id), seededRng(round.seed)),
+    () => buildSteps(mission, round.mode, missionLength(mission.id), seededRng(round.seed), voiceReady ? voiced(mission) : undefined),
     [mission, round],
   );
   const [pos, setPos] = useState(0);
@@ -155,7 +158,6 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     };
 
     if (r.correct && r.final === false) {
-      sfx.good();
       emit({ type: 'ANSWER_CORRECT', final: false });
       const next = r.next ?? PHRASE.nextDefault;
       void speak(next, 'question');
@@ -165,7 +167,6 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     }
 
     if (r.correct) {
-      sfx.good();
       emit({ type: 'ANSWER_CORRECT', final: true });
       const praise = steps[pos + 1] ? PHRASE.good : mission.praise;
       setMessage(praise);
@@ -184,7 +185,6 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
       return;
     }
 
-    sfx.soft();
     emit({ type: 'ANSWER_INCORRECT' });
     const nextErrors = errors + 1;
     setErrors(nextErrors);
@@ -229,7 +229,13 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   const p = step.params;
 
   return (
-    <div className="screen mission">
+    <div
+      className="screen mission"
+      // Касание предмета в игре: Счётик просыпается и смотрит на действие (кнопки панели не считаются).
+      onPointerDown={(e) => {
+        if ((e.target as Element).closest('.game button, .game [draggable], .game .tap')) emit({ type: 'OBJECT_PICKED' });
+      }}
+    >
       <SceneBg name={MISSION_SCENE[mission.id] ?? 'meadow'} />
       <header className="mission-bar">
         <button className="btn icon" onClick={onExit} aria-label="Домой"><Icon name="home" /></button>

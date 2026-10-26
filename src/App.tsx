@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { PHRASE } from './audio/phrases';
-import { setSfxEnabled } from './audio/sfx';
+import { setSfxEnabled, sfxForEvent } from './audio/sfx';
+import { emit, onGameEvent } from './motion/events';
 import { setVoiceEnabled, setVoiceVolume, speak, stopSpeaking } from './audio/voice';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { getMission } from './content/missions';
@@ -117,8 +118,12 @@ export function App() {
     });
   };
 
+  useEffect(() => onGameEvent(sfxForEvent), []);
+
   const giveSticker = (missionId: string) => {
     if (!profile) return;
+    // Новая наклейка — после праздника миссии, чтобы звуки не наложились.
+    if (!(data.stickers[profile.id] ?? []).includes(missionId)) setTimeout(() => emit({ type: 'STICKER_AWARDED' }), 900);
     setData((d) => {
       const list = d.stickers[profile.id] ?? [];
       if (list.includes(missionId)) return d;

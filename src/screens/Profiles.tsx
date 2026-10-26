@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Profile } from '../engine/types';
-import { Emoji, Guide, Icon, SceneBg } from '../ui/art';
+import { Schetik } from '../motion/Schetik';
+import { Emoji, Icon, SceneBg } from '../ui/art';
 
 export const AVATARS = ['1F431', '1F436', '1F430', '1F43B', '1F98A', '1F994', '1F43C', '1F427', '1F989', '1F42D'];
 const AVATAR_NAMES: Record<string, string> = {
@@ -65,7 +66,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
       <SceneBg name="profiles" />
       <button className="btn corner adult-btn" onClick={onParent}><Icon name="adult" size={28} />Для взрослых</button>
       <div className="profiles-head">
-        <Guide pose="idle" size={120} />
+        <Schetik size={120} />
         <h1>Кто играет?</h1>
       </div>
       <div className="avatar-grid">

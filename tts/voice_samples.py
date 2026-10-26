@@ -24,14 +24,17 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 # Счётик в текстах говорит о себе в мужском роде («Я задумал число»), поэтому два мужских варианта
 # и один женский для сравнения (с ним пришлось бы менять формы глаголов в фразах).
+# Описания на английском: на русские VoiceDesign отвечал голосом не того пола (проверено по высоте тона).
 VOICES = {
-    'a-teacher-male': 'Тёплый спокойный мужской голос доброго учителя начальных классов, средний тембр, '
-                      'неспешная чёткая речь с естественными паузами, мягкая улыбка в голосе, без пафоса.',
-    'b-storyteller-male': 'Мягкий дружелюбный молодой мужской голос рассказчика детских сказок, светлый тембр, '
-                          'спокойный темп, ласковые интонации, чёткое произношение, не мультяшный и не писклявый.',
-    'c-teacher-female': 'Тёплый спокойный женский голос воспитательницы детского сада, средний тембр, '
-                        'неспешная ясная речь, доброжелательные интонации, без излишней эмоциональности.',
+    'a-teacher-male': 'A warm, calm adult male voice with a gentle baritone. A kind primary school teacher speaking '
+                      'Russian slowly and clearly, with natural pauses and a friendly smile in the voice. Not theatrical.',
+    'b-storyteller-male': 'A soft, friendly young adult male storyteller with a light tenor voice. Calm pace, tender '
+                          'intonation, very clear articulation. Not cartoonish, not squeaky, not like a voice assistant.',
+    'c-teacher-female': 'A warm, calm adult female kindergarten teacher with a medium-pitched voice. Slow, clear '
+                        'Russian speech, kind and gentle, without exaggerated emotion.',
 }
+# Ожидаемая высота основного тона, Гц: голос другого пола или «мультяшный» не проходит.
+PITCH = {'a-teacher-male': (85, 170), 'b-storyteller-male': (95, 185), 'c-teacher-female': (165, 260)}
 REFERENCE = 'Привет! Я Счётик. Давай посчитаем вместе: один, два, три. Посмотри внимательно и не спеши.'
 
 PHRASES = [
@@ -64,8 +67,17 @@ def main():
     design = Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign', device_map='cuda:0', dtype=torch.bfloat16)
     print('languages:', design.get_supported_languages(), flush=True)
     refs = {}
+    import librosa
     for name, instruct in VOICES.items():
-        w, sr = design.generate_voice_design(text=REFERENCE, language='Russian', instruct=instruct)
+        lo, hi = PITCH[name]
+        for attempt in range(6):
+            w, sr = design.generate_voice_design(text=REFERENCE, language='Russian', instruct=instruct)
+            y = librosa.resample(np.asarray(w[0], dtype=np.float32), orig_sr=sr, target_sr=16000)
+            f0, _, _ = librosa.pyin(y, fmin=60, fmax=400, sr=16000)
+            med = float(np.nanmedian(f0))
+            print(f'{name}: попытка {attempt + 1}, тон {med:.0f} Гц (нужно {lo}–{hi})', flush=True)
+            if lo <= med <= hi:
+                break
         sf.write(OUT / f'{name}-reference.wav', w[0], sr)
         refs[name] = (w[0], sr)
     del design

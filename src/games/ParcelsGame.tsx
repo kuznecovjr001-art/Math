@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
-import { Parcel } from '../ui/art';
+import { Icon, Parcel } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
 import { answerChoices, type GameProps } from './types';
 
@@ -56,7 +56,13 @@ export function ParcelsGame({ params, help, locked, onSubmit }: GameProps<P>) {
           })}
         </div>
       </div>
-      <div className="choices">
+      {stage === 'ask' && (
+        <button className="btn icon replay" onClick={() => setReplay((r) => r + 1)} disabled={locked} aria-label="Показать ещё раз">
+          <Icon name="review" size={36} />
+        </button>
+      )}
+      {/* Пока идёт сценка, ответы спрятаны, а не «серые»: ребёнок смотрит на склад, а не на неактивные кнопки. */}
+      <div className={`choices ${stage === 'ask' ? 'ready' : 'waiting'}`}>
         {answerChoices(answer, 0).map((n) => (
           <button
             key={n}

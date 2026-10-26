@@ -113,4 +113,6 @@ export const stopSpeaking = voice.stop;
 export const setVoiceEnabled = voice.setEnabled;
 export const setVoiceVolume = voice.setVolume;
 export const hasRecording = voice.has;
+/** Есть ли вообще записи (до первой сборки голоса — нет, и генератор не ограничивается). */
+export const voiceReady = Object.keys((manifest as { files: Record<string, string> }).files).length > 0;
 export const missingPhrases = voice.missing;

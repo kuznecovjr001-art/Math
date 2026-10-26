@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
 import { NumberChoices } from './NumberChoices';
@@ -34,14 +35,17 @@ export function JumpsGame({ params, help, locked, onSubmit }: GameProps<P>) {
           {help >= 2 && Array.from({ length: params.count }, (_, k) => {
             const a = x(k * params.step), b = x((k + 1) * params.step);
             return (
-              <g key={k}>
-                <path d={`M${a} 104 Q${(a + b) / 2} ${104 - 70} ${b} 104`} className="nl-arc" />
+              <g key={k} className="nl-hop" style={{ '--k': k } as CSSProperties}>
+                <path d={`M${a} 104 Q${(a + b) / 2} ${104 - 70} ${b} 104`} className="nl-arc" pathLength={1} />
                 {help >= 3 && <text x={b} y={62} className="nl-land">{(k + 1) * params.step}</text>}
               </g>
             );
           })}
         </svg>
-        <span className="frog" style={{ left: `${(x(0) / W) * 100}%` }}><Emoji code="1F438" size={44} label="лягушка" /></span>
+        {/* На разобранном примере лягушка прыгает по дугам: шаги видны по одному. До подсказки стоит на нуле. */}
+        <span className="frog-track" style={help >= 3 ? ({ '--to': `${((x(answer) - x(0)) / W) * 100}%`, '--n': params.count } as CSSProperties) : undefined}>
+          <span className={`frog ${help >= 3 ? 'hopping' : ''}`} style={{ left: `${(x(0) / W) * 100}%` }}><Emoji code="1F438" size={44} label="лягушка" /></span>
+        </span>
       </div>
       <NumberChoices options={jumpChoices(params.step, params.count)} answer={answer} locked={locked} onSubmit={onSubmit} />
     </div>

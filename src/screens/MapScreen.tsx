@@ -8,7 +8,8 @@ import { getMission } from '../content/missions';
 import { todaySuggestions } from '../content/plan';
 import { isReviewDue, missionDone } from '../engine/progress';
 import type { Attempt, MissionSession, Profile } from '../engine/types';
-import { bgVars, Emoji, Guide, Icon, SceneBg } from '../ui/art';
+import { Schetik } from '../motion/Schetik';
+import { bgVars, Emoji, Icon, SceneBg } from '../ui/art';
 import type { PlayMode } from './MissionPlayer';
 
 interface Props {
@@ -104,7 +105,7 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
       </header>
 
       <section className="today" aria-label="Сегодня">
-        <Guide pose="idle" size={112} className="today-guide" />
+        <Schetik size={112} className="today-guide" />
         {suggestions.map((s) => {
           const m = getMission(s.id)!;
           return (

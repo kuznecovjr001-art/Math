@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, type CSSProperties } from 'react';
 import { customArt } from '../content/art';
 import { CHARACTER_IDLE, characterStep, poseOf, type CharacterState } from './character';
 import { onGameEvent, type GameEvent } from './events';
@@ -27,7 +27,8 @@ export function Schetik({ size = 96, className = '' }: { size?: number; classNam
   const srcs = POSES.map((p) => customArt(`char/guide-${p}`));
   if (!srcs.every(Boolean)) return null;
   return (
-    <div className={`schetik ${className}`} data-mood={mood} style={{ width: size, height: size }} aria-hidden="true">
+    // Размер — переменная: правила экрана (--sch в styles.css) могут уменьшить Счётика на узком телефоне.
+    <div className={`schetik ${className}`} data-mood={mood} style={{ '--sch-default': `${size}px` } as CSSProperties} aria-hidden="true">
       <div className="schetik-body">
         {POSES.map((p, i) => (
           <img key={p} src={srcs[i]!} width={size} height={size} alt="" draggable={false} className={p === pose ? 'on' : ''} />

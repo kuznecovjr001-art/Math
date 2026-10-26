@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { PHRASE } from '../audio/phrases';
 import { sfx } from '../audio/sfx';
 import { ITEMS, type CardParams } from '../content/missions';
@@ -16,8 +16,11 @@ function Grid({ rows, cols, labels }: { rows: number; cols: number; labels: bool
   return (
     <div className="array-grid" style={{ gridTemplateColumns: `repeat(${cols}, auto)${labels ? ' auto' : ''}` }}>
       {Array.from({ length: rows }, (_, r) => [
-        ...Array.from({ length: cols }, (_, c) => <Emoji key={`${r}-${c}`} code={ITEMS.tree.img} size={40} />),
-        ...(labels ? [<span key={`l${r}`} className="row-label">{cols}</span>] : []),
+        // С подсказкой ряды по очереди «вспыхивают»: по cols деревьев, rows раз — структура умножения.
+        ...Array.from({ length: cols }, (_, c) => (
+          <span key={`${r}-${c}`} className={labels ? 'row-glow' : ''} style={{ '--r': r } as CSSProperties}><Emoji code={ITEMS.tree.img} size={40} /></span>
+        )),
+        ...(labels ? [<span key={`l${r}`} className="row-label row-glow" style={{ '--r': r } as CSSProperties}>{cols}</span>] : []),
       ])}
     </div>
   );

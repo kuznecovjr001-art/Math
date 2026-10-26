@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { tenChoices } from '../content/numbers';
 import { NumberChoices } from './NumberChoices';
@@ -26,8 +27,8 @@ export function OpenLineGame({ params, help, locked, onSubmit }: GameProps<P>) {
           <text x={x(params.a)} y={154} className="nl-num">{params.a}</text>
           <text x={W / 2} y={30} className="nl-plus">+ {params.b}</text>
           {jumps.map(([a, b, t], k) => (
-            <g key={k}>
-              <path d={`M${x(a)} 114 Q${(x(a) + x(b)) / 2} 50 ${x(b)} 114`} className={`nl-arc ${t === '+10' ? '' : 'ones'}`} />
+            <g key={k} className="nl-hop" style={{ '--k': k } as CSSProperties}>
+              <path d={`M${x(a)} 114 Q${(x(a) + x(b)) / 2} 50 ${x(b)} 114`} className={`nl-arc ${t === '+10' ? '' : 'ones'}`} pathLength={1} />
               <text x={(x(a) + x(b)) / 2} y={72} className="nl-step">{t}</text>
               <line x1={x(b)} y1={110} x2={x(b)} y2={130} className="nl-tick" />
               <text x={x(b)} y={154} className="nl-num">{b}</text>
