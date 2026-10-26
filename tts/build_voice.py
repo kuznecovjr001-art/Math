@@ -6,7 +6,7 @@
   python tts/build_voice.py --voice a-teacher-male --limit 200      # пробная партия
 
 Вход: tts/out/phrases.json (scripts/voice-extract.ts). Выход: public/voice/<voice>/<key>.ogg (Opus),
-public/voice/manifest.json, tts/out/build-report.json.
+src/audio/voice-keys.json (список озвученных ключей), tts/out/build-report.json.
 Запись диктора: положите tts/human/<key>.ogg (или .wav) — она займёт место синтеза без правки кода.
 Скрипт можно прервать и запустить снова: готовые файлы не пересоздаются.
 """
@@ -122,8 +122,9 @@ def main():
             write_opus(dst, w, sr, args.compression)
 
     files = {p.stem: f'{args.voice}/{p.name}' for p in sorted(out_dir.glob('*.ogg'))}
-    (PUB / 'manifest.json').write_text(json.dumps({'version': int(time.time()), 'voice': args.voice, 'files': files},
-                                                   ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    # Приложение получает только список ключей (путь = voice/<голос>/<ключ>.ogg): отдельный ленивый чанк.
+    (ROOT / 'src/audio/voice-keys.json').write_text(json.dumps(
+        {'version': int(time.time()), 'voice': args.voice, 'keys': sorted(files)}, separators=(',', ':')), encoding='utf-8')
     known = {p['key'] for p in phrases}
     report['coverage'] = {'phrases': len(phrases), 'recorded': len(known & files.keys()),
                           'missing': sorted(known - files.keys())[:200], 'human': sorted(human)}

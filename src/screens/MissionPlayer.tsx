@@ -85,7 +85,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   // «Ещё разок» начинает новый заход: новые числа и только самостоятельные карточки.
   const [round, setRound] = useState(() => ({ mode, seed: Date.now(), id: newId() }));
   const steps = useMemo(
-    () => buildSteps(mission, round.mode, missionLength(mission.id), seededRng(round.seed), voiceReady ? voiced(mission) : undefined),
+    () => buildSteps(mission, round.mode, missionLength(mission.id), seededRng(round.seed), voiceReady() ? voiced(mission) : undefined),
     [mission, round],
   );
   const [pos, setPos] = useState(0);

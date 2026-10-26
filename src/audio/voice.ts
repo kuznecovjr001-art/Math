@@ -7,7 +7,6 @@
  * - Фраза без записи не подменяется синтезом речи: она пропускается (текст на экране) и попадает в missing().
  * - VOICE_STARTED / VOICE_FINISHED уходят в общую шину событий: по ним говорит Счётик.
  */
-import manifest from '../../public/voice/manifest.json';
 import { emit, type VoiceEmotion } from '../motion/events';
 import { phraseKey } from './phraseKey';
 
@@ -100,9 +99,22 @@ export function createVoice(d: Deps) {
 }
 
 const BASE = `${import.meta.env.BASE_URL}voice/`;
+
+/** Список озвученных фраз (tts/build_voice.py) — отдельный чанк, грузится сразу после старта, не в первом экране. */
+interface VoiceKeys { version: number; voice: string; keys: string[] }
+const recorded = new Set<string>();
+let voiceName = '';
+export const voiceKeysLoaded: Promise<void> = import('./voice-keys.json')
+  .then((m) => {
+    const v = (m.default ?? m) as VoiceKeys;
+    voiceName = v.voice;
+    v.keys.forEach((k) => recorded.add(k));
+  })
+  .catch(() => undefined);
+
 const voice = createVoice({
-  recorded: new Set(Object.keys((manifest as { files: Record<string, string> }).files)),
-  url: (key) => `${BASE}${(manifest as { files: Record<string, string> }).files[key]}`,
+  recorded,
+  url: (key) => `${BASE}${voiceName}/${key}.ogg`,
   clip: (src) => new Audio(src),
   key: phraseKey,
 });
@@ -113,6 +125,6 @@ export const stopSpeaking = voice.stop;
 export const setVoiceEnabled = voice.setEnabled;
 export const setVoiceVolume = voice.setVolume;
 export const hasRecording = voice.has;
-/** Есть ли вообще записи (до первой сборки голоса — нет, и генератор не ограничивается). */
-export const voiceReady = Object.keys((manifest as { files: Record<string, string> }).files).length > 0;
 export const missingPhrases = voice.missing;
+/** Есть ли записи (до первой сборки голоса — нет, и генератор не ограничивается). */
+export const voiceReady = () => recorded.size > 0;

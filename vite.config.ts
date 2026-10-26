@@ -5,5 +5,5 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   // Рабочие копии агентов (.claude/worktrees) и Android-сборка — не тесты этого дерева.
-  test: { environment: 'node', exclude: [...configDefaults.exclude, '.claude/**', 'android/**'] },
+  test: { environment: 'node', exclude: [...configDefaults.exclude, '.claude/**', 'android/**', 'e2e/**'] },
 });

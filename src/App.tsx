@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { PHRASE } from './audio/phrases';
 import { setSfxEnabled, sfxForEvent } from './audio/sfx';
 import { emit, onGameEvent } from './motion/events';
-import { setVoiceEnabled, setVoiceVolume, speak, stopSpeaking } from './audio/voice';
+import { setVoiceEnabled, setVoiceVolume, speak, stopSpeaking, voiceKeysLoaded } from './audio/voice';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { getMission } from './content/missions';
 import { importMerge, loadData, newId, saveData } from './engine/storage';
@@ -15,7 +15,8 @@ import { artVars } from './ui/art';
 
 // Первый экран — профили и карта; миссия с играми и разделы для взрослых грузятся отдельно.
 const load = {
-  mission: () => import('./screens/MissionPlayer'),
+  // Миссия ждёт список озвученных фраз: генератор берёт только карточки с записью голоса.
+  mission: () => voiceKeysLoaded.then(() => import('./screens/MissionPlayer')),
   album: () => import('./screens/Album'),
   credits: () => import('./screens/Credits'),
   privacy: () => import('./screens/Privacy'),
