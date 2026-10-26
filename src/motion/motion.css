@@ -150,3 +150,10 @@ html[data-motion='minimal'] .album-slot.has, html[data-motion='minimal'] .avatar
 /* Рамка десятка: фишки появляются по одной. */
 .tf-cell .counter { animation: pop var(--dur-appear) var(--ease-spring) both; animation-delay: calc(var(--i) * 70ms); }
 html[data-motion='minimal'] .tf-cell .counter { animation: none; }
+
+/* Перетаскивание: предмет над пальцем, корзина под пальцем мягко откликается. */
+.drag-item { touch-action: none; cursor: grab; display: inline-flex; animation: pop var(--dur-appear) var(--ease-spring) backwards; }
+.drag-item.dragging { cursor: grabbing; z-index: 5; position: relative; }
+.bin { transition: transform var(--dur-press) var(--ease-out); }
+.bin.near { transform: scale(1.05); border-color: var(--primary); }
+html[data-motion='minimal'] .bin.near { transform: none; }

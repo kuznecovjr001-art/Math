@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDragToZone } from '../motion/drag';
 import { sfx } from '../audio/sfx';
 import type { CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
@@ -22,6 +23,7 @@ export function SortGame({ params, help, locked, onSubmit }: GameProps<P>) {
     sfx.back();
     setPlaced((p) => p.map((x, j) => (j === i ? null : x)));
   };
+  const drag = useDragToZone((bin) => drop(bin as 0 | 1), locked || !current);
   const check = () => {
     const wrong = params.items.filter((it, i) => placed[i] !== it.bin).map((it) => it.name);
     onSubmit({ correct: wrong.length === 0, answer: wrong.length ? `не туда: ${wrong.join(', ')}` : 'всё по группам' });
@@ -31,12 +33,13 @@ export function SortGame({ params, help, locked, onSubmit }: GameProps<P>) {
     <div className="game">
       <div className="sort-current">
         {current
-          ? <Emoji code={current.icon} size={96} label={current.name} />
+          // Предмет можно перетащить пальцем в корзину или нажать на корзину — как удобнее ребёнку.
+          ? <span key={next} className="drag-item" {...drag}><Emoji code={current.icon} size={96} label={current.name} /></span>
           : <span className="stock-empty">Всё разложено</span>}
       </div>
       <div className="bins">
         {params.bins.map((b, bi) => (
-          <div key={bi} className="bin">
+          <div key={bi} className="bin" data-drop-zone={bi}>
             <button className="btn bin-btn" disabled={locked || !current} onClick={() => drop(bi as 0 | 1)}>
               <Emoji code={b.icon} size={40} /> {b.title}
             </button>

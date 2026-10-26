@@ -63,3 +63,29 @@ test('настройки анимаций и звука хранятся отд�
   const progress = await page.evaluate(() => JSON.parse(localStorage.getItem('mathkids:v1')!));
   expect(progress.settings.motion).toBeUndefined();
 });
+
+test('сортировка: предмет перетаскивается пальцем в корзину, мимо — возвращается', async ({ page }) => {
+  await seed(page, ids);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'QA' }).click();
+  await page.locator(`button.stone-btn[aria-label^="${getMission('N10')!.title}"]`).click();
+  const item = page.locator('.drag-item');
+  await expect(item).toBeVisible();
+  const before = await page.locator('.bin-items button').count();
+  const bin = page.locator('.bin').first();
+  const a = (await item.boundingBox())!, b = (await bin.boundingBox())!;
+  // В корзину: корзина под пальцем откликается, после отпускания предмет в ней.
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 8 });
+  await expect(bin).toHaveClass(/near/);
+  await page.mouse.up();
+  expect(await page.locator('.bin-items button').count()).toBe(before + 1);
+  // Мимо: следующий предмет отпустили далеко от корзин — он остаётся на месте.
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(a.x + a.width / 2 + 5, a.y - 120, { steps: 6 });
+  await page.mouse.up();
+  expect(await page.locator('.bin-items button').count()).toBe(before + 1);
+  await expect(item).toBeVisible();
+});
