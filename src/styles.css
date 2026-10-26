@@ -482,7 +482,7 @@ body:has(.screen.map) { background: var(--sea); }
 .digit-cue .tile-digit { font-size: 96px; color: #118ab2; }
 
 .scatter { position: relative; width: min(100%, 560px); margin: 0 auto; background: var(--card); border: 3px solid var(--line); border-radius: var(--radius); }
-.scatter-item { position: absolute; transform: translateX(-50%); }
+.scatter-item { position: absolute; translate: -50% 0; } /* translate, а не transform: нажатие (.tap:active scale) не сбивает центрирование */
 
 .compare { display: flex; flex-direction: column; gap: 14px; align-items: center; background: var(--card); border: 3px solid var(--line); border-radius: var(--radius); padding: 16px; }
 .compare-row { display: flex; justify-content: center; min-height: 56px; }

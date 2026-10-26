@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { sfx } from '../audio/sfx';
 import { ITEMS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
@@ -22,14 +24,29 @@ export function CountGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const item = ITEMS[params.item];
   const pos = scatter(params.n, params.n);
   const rows = Math.max(...pos.map((p) => Math.ceil(p.y + 1)));
+  // Ребёнок может отмечать посчитанное касанием. Повторное касание не считает предмет дважды,
+  // а итог не показывается — считает сам ребёнок, отметки лишь помогают не сбиться.
+  const [counted, setCounted] = useState<Set<number>>(() => new Set());
+  const mark = (i: number) => {
+    if (locked || counted.has(i)) return;
+    sfx.tick();
+    setCounted((c) => new Set(c).add(i));
+  };
   return (
     <div className="game">
       <div className="scatter" style={{ height: rows * 92 + 24 }}>
         {pos.map((p, i) => (
-          <span key={i} className="scatter-item" style={{ left: `${p.x * 100}%`, top: p.y * 92 + 12 }}>
+          <button
+            key={i}
+            className={`scatter-item tap ${counted.has(i) ? 'counted' : ''}`}
+            style={{ left: `${p.x * 100}%`, top: p.y * 92 + 12 }}
+            onClick={() => mark(i)}
+            aria-pressed={counted.has(i)}
+            aria-label={counted.has(i) ? 'Уже посчитан' : 'Посчитать'}
+          >
             <Emoji code={item.img} size={68} />
             {help >= 2 && <span className="badge">{i + 1}</span>}
-          </span>
+          </button>
         ))}
       </div>
       <Choices

@@ -157,3 +157,9 @@ html[data-motion='minimal'] .tf-cell .counter { animation: none; }
 .bin { transition: transform var(--dur-press) var(--ease-out); }
 .bin.near { transform: scale(1.05); border-color: var(--primary); }
 html[data-motion='minimal'] .bin.near { transform: none; }
+
+/* Счёт: посчитанный предмет приглушён и отмечен кольцом — видно, что его уже учли. */
+.scatter-item.tap { background: none; border: none; padding: 0; }
+.scatter-item.counted .emoji { opacity: 0.55; }
+.scatter-item.counted::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 4px solid var(--good);
+  animation: pop var(--dur-appear) var(--ease-spring) backwards; pointer-events: none; }
