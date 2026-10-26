@@ -5,6 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
 const local = !process.env.CI;
 export default defineConfig({
   testDir: 'e2e',
+  grepInvert: process.env.DEMO ? undefined : /@demo/,
   timeout: 120_000,
   fullyParallel: false,
   reporter: [['list'], ['html', { open: 'never', outputFolder: '.qa/playwright-report' }]],

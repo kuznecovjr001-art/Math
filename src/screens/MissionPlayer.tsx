@@ -108,6 +108,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
 
   useEffect(() => () => stopSpeaking(), []);
 
+  // После показа финиша: Счётик финишного экрана уже подписан на события и празднует.
+  useEffect(() => { if (done) emit({ type: 'MISSION_COMPLETED' }); }, [done]);
+
   useEffect(() => {
     onSession({
       id: round.id, missionId: mission.id, mode: round.mode, startedAt: round.seed,
@@ -177,7 +180,6 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
         if (pos + 1 < steps.length) setPos(pos + 1);
         else {
           setDone(true);
-          emit({ type: 'MISSION_COMPLETED' });
           void speak(`${mission.praise} ${mission.finish}`, 'praise');
           onFinish();
         }
