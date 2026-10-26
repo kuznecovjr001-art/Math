@@ -19,7 +19,8 @@ export function MeasureGame({ params, help, locked, onSubmit }: GameProps<P>) {
       <button key={i} className="ribbon-row" disabled={locked} onClick={() => pick(i)} aria-label={i === 0 ? 'Верхняя лента' : 'Нижняя лента'}>
         <span
           className={`ribbon r${i}`}
-          style={{ marginLeft: (aligned ? 0 : t.shift ?? 0) * CELL, width: t.len! * CELL }}
+          // Сдвиг — transform, а не margin: выравнивание лент на подсказке не пересчитывает раскладку.
+          style={{ transform: `translateX(${(aligned ? 0 : t.shift ?? 0) * CELL}px)`, width: t.len! * CELL }}
         >
           {help >= 3 && Array.from({ length: t.len! }, (_, k) => <i key={k} className="ribbon-cell">{k + 1}</i>)}
         </span>
