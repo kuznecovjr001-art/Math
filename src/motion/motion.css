@@ -174,3 +174,7 @@ html[data-motion='minimal'] .finish-guide, html[data-motion='minimal'] .ribbon {
 .clock-hand { transform-box: view-box; transform-origin: 100px 100px; animation: clock-sweep 1s var(--ease-out) 200ms backwards; }
 @keyframes clock-sweep { from { transform: rotate(0deg); } }
 html[data-motion='minimal'] .clock-hand { animation: none; }
+
+/* Умножение: группы точек появляются по очереди. */
+.dot-group { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * 320ms); }
+html[data-motion='minimal'] .dot-group { animation: none; }

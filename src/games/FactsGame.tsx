@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { factChoices, type CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
@@ -10,7 +11,8 @@ function DotGroups({ a, b }: { a: number; b: number }) {
   return (
     <div className="dot-groups" role="img" aria-label={`${b} ${b === 1 ? 'группа' : 'групп'} по ${a}`}>
       {Array.from({ length: b }, (_, g) => (
-        <span key={g} className="dot-group">
+        // Группы появляются по одной: «по a» — одна группа, «b раз» — столько групп.
+        <span key={g} className="dot-group" style={{ '--g': g } as CSSProperties}>
           {Array.from({ length: a }, (_, i) => <i key={i} />)}
         </span>
       ))}
