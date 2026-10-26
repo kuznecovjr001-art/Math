@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flyFrom } from '../motion/flight';
 import { sfx } from '../audio/sfx';
 import type { CardParams } from '../content/missions';
 import { Cup, Emoji, Plate, Spoon } from '../ui/art';
@@ -11,6 +12,14 @@ const GUEST_NAMES = ['котёнок', 'щенок', 'зайчик', 'медве
 
 export function CupsGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const [given, setGiven] = useState<number[]>(() => Array(params.receivers).fill(0));
+  const stockRef = useRef<HTMLDivElement>(null);
+  const flight = useRef<{ i: number; from: DOMRect } | null>(null);
+  // Чашка перелетает из запаса к гостю: видно, что раздаём то, что было.
+  useLayoutEffect(() => {
+    const f = flight.current;
+    flight.current = null;
+    if (f) flyFrom(stockRef.current?.closest('.game')?.querySelectorAll('.receiver-items')[f.i]?.lastElementChild, f.from);
+  }, [given]);
   const used = given.reduce((s, x) => s + x, 0);
   const stock = params.items - used;
   const Item = params.scene === 'tea' ? Cup : Spoon;
@@ -18,6 +27,8 @@ export function CupsGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const give = (i: number) => {
     if (locked || stock <= 0) return;
     sfx.pop();
+    const last = stockRef.current?.lastElementChild?.getBoundingClientRect();
+    if (last) flight.current = { i, from: last };
     setGiven((g) => g.map((x, j) => (j === i ? x + 1 : x)));
   };
   const takeBack = (i: number) => {
@@ -39,7 +50,7 @@ export function CupsGame({ params, help, locked, onSubmit }: GameProps<P>) {
 
   return (
     <div className="game">
-      <div className="stock" role="group" aria-label={`Осталось ${stock}`}>
+      <div className="stock" role="group" aria-label={`Осталось ${stock}`} ref={stockRef}>
         {Array.from({ length: stock }, (_, i) => <Item key={i} />)}
         {stock === 0 && <span className="stock-empty">Всё раздали</span>}
       </div>

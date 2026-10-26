@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { flyFrom } from '../motion/flight';
 import { sfx } from '../audio/sfx';
 import { FRUITS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
@@ -9,11 +10,19 @@ type P = Extract<CardParams, { kind: 'basket' }>;
 
 export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const [inBasket, setInBasket] = useState(0);
+  const from = useRef<DOMRect | null>(null);
+  const basketRef = useRef<HTMLDivElement>(null);
+  // Положенный фрукт прилетает из запаса в корзину.
+  useLayoutEffect(() => {
+    if (from.current) flyFrom(basketRef.current?.children[inBasket - 1], from.current);
+    from.current = null;
+  }, [inBasket]);
   const fruit = FRUITS[params.fruit];
   const stock = params.stock - inBasket;
 
-  const put = () => {
+  const put = (e: React.MouseEvent<HTMLElement>) => {
     if (locked || stock <= 0) return;
+    from.current = e.currentTarget.getBoundingClientRect();
     sfx.pop();
     setInBasket((n) => n + 1);
   };
@@ -41,7 +50,7 @@ export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
         ))}
       </div>
       <div className="basket" role="group" aria-label={`В корзине ${inBasket}`}>
-        <div className="basket-items">
+        <div className="basket-items" ref={basketRef}>
           {Array.from({ length: slots }, (_, i) =>
             i < inBasket ? (
               <button key={i} className="tap counted" onClick={take} aria-label="Вернуть обратно">
