@@ -96,4 +96,4 @@ public/        манифест PWA, service worker, картинки OpenMoji �
 
 Картинки животных, фруктов, подарка, поезда и звезды — [OpenMoji](https://openmoji.org/), лицензия [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), без изменений. Текст лицензии: `public/licenses/openmoji-LICENSE.txt`.
 
-Озвучка — синтезатор [Piper](https://github.com/rhasspy/piper), голос Irina (данные [RHVoice](https://github.com/RHVoice/RHVoice)).
+Голос Счётика синтезирован заранее моделью [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) (Alibaba Qwen, лицензия Apache-2.0). Голос создан по текстовому описанию, это не копия голоса реального человека.

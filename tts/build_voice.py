@@ -71,6 +71,11 @@ def main():
     ap.add_argument('--only', nargs='*')
     ap.add_argument('--limit', type=int)
     ap.add_argument('--batch', type=int, default=16)
+    # Пакет ограничен и по сумме символов: длинные фразы иначе переполняют 16 ГБ видеопамяти и Windows
+    # уводит её в общую память — генерация замедляется в разы.
+    ap.add_argument('--chars', type=int, default=700)
+    # Несколько процессов на одной видеокарте: --shard 0/2 и --shard 1/2 делят фразы пополам.
+    ap.add_argument('--shard', default='0/1')
     ap.add_argument('--compression', type=float, default=0.96)  # ~19 кбит/с Opus: чистая речь, корпус ~140 МБ
     args = ap.parse_args()
 
@@ -79,6 +84,8 @@ def main():
     out_dir = PUB / args.voice
     todo = [p for p in phrases if (args.only and p['key'] in args.only)
             or (not args.only and not (out_dir / f"{p['key']}.ogg").exists())]
+    k, n = map(int, args.shard.split('/'))
+    todo = sorted(todo, key=lambda p: p['key'])[k::n]
     if args.limit:
         todo = todo[:args.limit]
     human = {p.stem: p for p in (ROOT / 'tts/human').glob('*.*')} if (ROOT / 'tts/human').exists() else {}
@@ -92,8 +99,17 @@ def main():
     report = {'voice': args.voice, 'suspicious': [], 'failed': []}
     t0, done_s = time.time(), 0.0
     todo.sort(key=lambda p: len(p['text']))  # похожая длина в пакете — меньше пустой работы
-    for i in range(0, len(todo), args.batch):
-        batch = [p for p in todo[i:i + args.batch] if p['key'] not in human]
+    todo = [p for p in todo if p['key'] not in human]
+    batches, cur = [], []
+    for p in todo:
+        if cur and (len(cur) >= args.batch or sum(len(x['text']) for x in cur) + len(p['text']) > args.chars):
+            batches.append(cur)
+            cur = []
+        cur.append(p)
+    if cur:
+        batches.append(cur)
+    done_n = 0
+    for batch in batches:
         if not batch:
             continue
         texts = [spoken(p['text'], stress) for p in batch]
@@ -110,8 +126,10 @@ def main():
                 report['suspicious'].append({'key': p['key'], 'text': p['text'], 'sec': round(sec, 2), 'cps': round(cps, 1)})
             write_opus(out_dir / f"{p['key']}.ogg", w, sr, args.compression)
             done_s += sec
+        torch.cuda.empty_cache()
+        done_n += len(batch)
         el = time.time() - t0
-        print(f'{min(i + args.batch, len(todo))}/{len(todo)}  аудио {done_s / 60:.1f} мин  прошло {el / 60:.1f} мин  RTF {el / max(done_s, 1):.2f}', flush=True)
+        print(f'{done_n}/{len(todo)}  аудио {done_s / 60:.1f} мин  прошло {el / 60:.1f} мин  RTF {el / max(done_s, 1):.2f}', flush=True)
 
     for key, src in human.items():
         dst = out_dir / f'{key}.ogg'

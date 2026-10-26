@@ -37,7 +37,7 @@ export function Credits({ onBack }: { onBack: () => void }) {
         <p>Фоны, черепашка Счётик, звери, предметы, эмблемы и наклейки — комплект рисунков «Остров счёта», сделанный для этого приложения. Где своего рисунка пока нет, показывается картинка OpenMoji или простой рисунок в коде (стол, руки, весы, бусы).</p>
         <p>Шрифт Nunito — The Nunito Project Authors, лицензия SIL Open Font License 1.1 (файл licenses/nunito-OFL.txt в приложении).
           Программные библиотеки React и Capacitor — лицензия MIT.</p>
-        <p>Голос заданий — синтезатор речи <Ext href="https://github.com/rhasspy/piper">Piper</Ext> (голос Irina, обучен на данных <Ext href="https://github.com/RHVoice/RHVoice">RHVoice</Ext>). Редкие задания с новыми числами читает голос устройства.</p>
+        <p>Голос Счётика записан заранее моделью синтеза речи <Ext href="https://github.com/QwenLM/Qwen3-TTS">Qwen3-TTS</Ext> (Alibaba Qwen, лицензия Apache-2.0). Голос создан по описанию и не повторяет голос реального человека. Все фразы, включая задания с новыми числами, звучат этим голосом.</p>
       </section>
     </div>
   );
