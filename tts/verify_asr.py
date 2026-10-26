@@ -56,7 +56,12 @@ def main():
             if f.exists():
                 items.append((f, p['text']))
         items = items[: a.limit]
-    rows, total = [], 0.0
+    out = Path('tts/out') / f'asr-{Path(a.audio_dir).name}.json'
+    # Уже проверенные файлы не распознаём заново: можно запускать по мере генерации корпуса.
+    prev = {r['file']: r for r in json.loads(out.read_text(encoding='utf-8'))} if out.exists() and not a.samples else {}
+    rows = [prev[f.name] for f, _ in items if f.name in prev]
+    total = sum(r['wer'] for r in rows)
+    items = [(f, t) for f, t in items if f.name not in prev]
     for f, text in items:
         y, _ = librosa.load(f, sr=16000)
         hyp = asr(y, generate_kwargs={'language': 'russian', 'task': 'transcribe'})['text']
@@ -66,7 +71,6 @@ def main():
         total += e
         rows.append({'file': f.name, 'text': text, 'heard': hyp.strip(), 'wer': round(e, 3)})
     rows.sort(key=lambda r: -r['wer'])
-    out = Path('tts/out') / f'asr-{Path(a.audio_dir).name}.json'
     out.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding='utf-8')
     exact = sum(r['wer'] == 0 for r in rows)
     print(f'{a.voice or a.audio_dir}: файлов {len(rows)}, точно {exact}, средний WER {total / max(len(rows), 1):.3f}')
