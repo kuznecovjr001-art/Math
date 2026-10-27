@@ -91,7 +91,7 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
     }
     case 'placeValue': {
       const tens = int(rng, 0, 9);
-      return { ...t, h: int(rng, 1, 9), t: tens, o: pick(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter((x) => x !== tens)) };
+      return { ...t, h: int(rng, 1, 5), t: tens, o: pick(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter((x) => x !== tens)) };
     }
     case 'riddle': {
       const [h, tt, o] = shuffle(rng, [1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3);

@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { Icon, Parcel } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'parcels' }>;
 type Stage = 'start' | 'change' | 'ask';
 
 export function ParcelsGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const [stage, setStage] = useState<Stage>('start');
   const [replay, setReplay] = useState(0);
   const answer = expectedAnswer(params);
@@ -50,7 +51,7 @@ export function ParcelsGame({ params, help, locked, onSubmit }: GameProps<P>) {
             return (
               <div key={`${replay}-${i}`} className={cls}>
                 <Parcel size={64} />
-                {help >= 3 && stage === 'ask' && stays && <span className="badge">{stayNo}</span>}
+                {(help >= 3 || solved) && stage === 'ask' && stays && <span className="badge">{stayNo}</span>}
               </div>
             );
           })}
@@ -68,7 +69,7 @@ export function ParcelsGame({ params, help, locked, onSubmit }: GameProps<P>) {
             key={n}
             className="btn choice"
             disabled={locked || stage !== 'ask'}
-            onClick={() => onSubmit({ correct: n === answer, answer: String(n) })}
+            onClick={() => submit({ correct: n === answer, answer: String(n) })}
           >
             <NumberTile n={n} />
           </button>

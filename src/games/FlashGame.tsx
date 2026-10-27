@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'flash' }>;
 
@@ -15,6 +15,7 @@ const DICE: Record<number, number[]> = {
 export const FLASH_MS = 1500;
 
 export function FlashGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const [open, setOpen] = useState(true);
   const stayOpen = help >= 2;
 
@@ -35,7 +36,7 @@ export function FlashGame({ params, help, locked, onSubmit }: GameProps<P>) {
               const on = dice ? dice.includes(i) : i < params.n;
               return (
                 <span key={i} className="flash-cell">
-                  {on && <i className="flash-dot">{help >= 3 ? ++k : ''}</i>}
+                  {on && <i className="flash-dot">{(help >= 3 || solved) ? ++k : ''}</i>}
                 </span>
               );
             })
@@ -45,7 +46,7 @@ export function FlashGame({ params, help, locked, onSubmit }: GameProps<P>) {
         options={answerChoices(params.n)}
         render={(n) => <NumberTile n={n} dots={false} />}
         disabled={locked}
-        onPick={(n) => onSubmit({ correct: n === params.n, answer: String(n) })}
+        onPick={(n) => submit({ correct: n === params.n, answer: String(n) })}
       />
     </div>
   );

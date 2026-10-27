@@ -1,6 +1,6 @@
 import { measureAnswer, type CardParams, type Thing } from '../content/missions';
 import { Emoji } from '../ui/art';
-import type { GameProps } from './types';
+import { useSolved, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'measure' }>;
 
@@ -8,8 +8,9 @@ const CELL = 34;
 
 /** Длина: ленты, которые сдвинуты друг относительно друга. Масса: весы показывают, что тяжелее. */
 export function MeasureGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const right = measureAnswer(params);
-  const pick = (i: number) => onSubmit({ correct: i === right, answer: i === 0 ? 'первое' : 'второе' });
+  const pick = (i: number) => submit({ correct: i === right, answer: i === 0 ? 'первое' : 'второе' });
   const isLength = params.attr === 'longer' || params.attr === 'shorter';
 
   if (isLength) {
@@ -22,7 +23,7 @@ export function MeasureGame({ params, help, locked, onSubmit }: GameProps<P>) {
           // Сдвиг — transform, а не margin: выравнивание лент на подсказке не пересчитывает раскладку.
           style={{ transform: `translateX(${(aligned ? 0 : t.shift ?? 0) * CELL}px)`, width: t.len! * CELL }}
         >
-          {help >= 3 && Array.from({ length: t.len! }, (_, k) => <i key={k} className="ribbon-cell">{k + 1}</i>)}
+          {(help >= 3 || solved) && Array.from({ length: t.len! }, (_, k) => <i key={k} className="ribbon-cell">{k + 1}</i>)}
         </span>
       </button>
     );

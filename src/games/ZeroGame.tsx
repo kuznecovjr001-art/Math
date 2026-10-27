@@ -1,12 +1,13 @@
 import type { CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'zero' }>;
 
 /** Рубашка: оторвавшиеся пуговицы лежат внизу; ответ может быть нулём. */
 export function ZeroGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const left = params.start - params.lose;
   return (
     <div className="game">
@@ -22,12 +23,12 @@ export function ZeroGame({ params, help, locked, onSubmit }: GameProps<P>) {
           ))}
         </div>
       </div>
-      {help >= 3 && <div className="sum-hint">{params.start} − {params.lose} = ?</div>}
+      {(help >= 3 || solved) && <div className="sum-hint">{params.start} − {params.lose} = ?</div>}
       <Choices
         options={answerChoices(left, 0)}
         render={(n) => <NumberTile n={n} dots={false} />}
         disabled={locked}
-        onPick={(n) => onSubmit({ correct: n === left, answer: String(n) })}
+        onPick={(n) => submit({ correct: n === left, answer: String(n) })}
       />
     </div>
   );

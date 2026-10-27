@@ -3,7 +3,7 @@ import TIPS from '../content/handTips.json';
 import type { CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'fingers' }>;
 
@@ -63,6 +63,7 @@ function SchemeHand({ up, mirror, labels, from }: { up: number; mirror: boolean;
 }
 
 export function FingersGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const folded = params.total - params.up;
   const first = Math.min(params.up, 5);
   return (
@@ -71,12 +72,12 @@ export function FingersGame({ params, help, locked, onSubmit }: GameProps<P>) {
         <Hand up={first} mirror={false} labels={help >= 2} from={0} />
         {params.total === 10 && <Hand up={params.up - first} mirror labels={help >= 2} from={5} />}
       </div>
-      {help >= 3 && <div className="sum-hint">{params.total} = {params.up} + ?</div>}
+      {(help >= 3 || solved) && <div className="sum-hint">{params.total} = {params.up} + ?</div>}
       <Choices
         options={answerChoices(folded, 0)}
         render={(n) => <NumberTile n={n} />}
         disabled={locked}
-        onPick={(n) => onSubmit({ correct: n === folded, answer: String(n) })}
+        onPick={(n) => submit({ correct: n === folded, answer: String(n) })}
       />
     </div>
   );

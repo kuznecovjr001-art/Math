@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { sfx } from '../audio/sfx';
 import type { CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
-import type { GameProps } from './types';
+import { useSolved, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'order' }>;
 
@@ -14,6 +14,7 @@ export function shuffled<T>(xs: T[]): T[] {
 }
 
 export function OrderGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const pool = shuffled(params.events.map((e, i) => ({ ...e, i })));
   const [seq, setSeq] = useState<number[]>([]);
   // Подсказка 3 показывает, что ставить следующим, если начало ряда уже верное.
@@ -29,7 +30,7 @@ export function OrderGame({ params, help, locked, onSubmit }: GameProps<P>) {
     sfx.back();
     setSeq((s) => s.filter((x) => x !== i));
   };
-  const check = () => onSubmit({
+  const check = () => submit({
     correct: seq.every((x, k) => x === k),
     answer: seq.map((x) => params.events[x].name).join(' → '),
   });
@@ -58,7 +59,7 @@ export function OrderGame({ params, help, locked, onSubmit }: GameProps<P>) {
         {pool.map((e) => (
           <button
             key={e.i}
-            className={`btn choice ${help >= 3 && e.i === nextRight ? 'attention' : ''}`}
+            className={`btn choice ${(help >= 3 || solved) && e.i === nextRight ? 'attention' : ''}`}
             disabled={locked || seq.includes(e.i)}
             onClick={() => take(e.i)}
           >

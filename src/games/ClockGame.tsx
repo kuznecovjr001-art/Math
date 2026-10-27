@@ -2,7 +2,7 @@ import { expectedAnswer, type CardParams } from '../content/missions';
 import { customArt } from '../content/art';
 import { clockChoices } from '../content/numbers';
 import { Choices } from './Choices';
-import type { GameProps } from './types';
+import { useSolved, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'clock' }>;
 
@@ -32,19 +32,20 @@ export function ClockFace({ h, m, help }: { h: number; m: number; help: number }
 }
 
 export function ClockGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const answer = expectedAnswer(params);
   const opts = clockChoices(params);
   return (
     <div className="game">
       <div className="more-scene clock-scene">
-        <ClockFace h={params.h} m={params.m} help={help} />
+        <ClockFace h={params.h} m={params.m} help={solved ? 3 : help} />
         {help >= 2 && <div className="clock-legend"><span className="hour">короткая — часы</span><span className="min">длинная — минуты</span></div>}
       </div>
       <Choices
         options={opts.map((_, i) => i)}
         render={(i) => <span className="clock-text">{opts[i]}</span>}
         disabled={locked}
-        onPick={(i) => onSubmit({ correct: i === answer, answer: opts[i] })}
+        onPick={(i) => submit({ correct: i === answer, answer: opts[i] })}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { HelpLevel } from '../engine/types';
 
 export interface GameResult {
@@ -9,6 +10,18 @@ export interface GameResult {
   next?: string;
   /** Верный ответ: столько мс игра показывает разбор (лягушка допрыгивает и т. п.), прежде чем перейти дальше. */
   showMs?: number;
+}
+
+/**
+ * Решено ли: после верного ответа игра показывает разбор (вместо «?» — ответ) и просит на это время showMs.
+ * Возвращает флаг и обёртку над onSubmit.
+ */
+export function useSolved(onSubmit: (r: GameResult) => void, showMs = 900): [boolean, (r: GameResult) => void] {
+  const [solved, setSolved] = useState(false);
+  return [solved, (r) => {
+    if (r.correct && r.final !== false) setSolved(true);
+    onSubmit(r.correct && r.final !== false ? { ...r, showMs: r.showMs ?? showMs } : r);
+  }];
 }
 
 export interface GameProps<P> {
