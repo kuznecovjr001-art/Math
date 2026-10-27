@@ -842,3 +842,44 @@ details summary { min-height: 44px; display: flex; align-items: center; cursor: 
 @media (max-width: 520px) { .today-card { min-height: 72px; padding: 8px 12px; } .today-card .emoji { width: 52px; height: 52px; } }
 /* Плитки ответов на планшете крупнее. */
 @media (min-width: 900px) { .choices .btn.choice { min-width: 150px; min-height: 120px; } }
+
+/* ——— Правки по аудиту доступности ——— */
+/* Касание попадает только в саму кнопку камня: подпись и соседний камень не перехватывают его. */
+.stone, .stone-title, .stone-star, .stone-due, .stone-lock { pointer-events: none; }
+.stone-btn { pointer-events: auto; }
+.stone-due { font-size: 15px; }
+/* Главная кнопка: белый текст на более тёмном бирюзовом — контраст ≥ 4,5:1. */
+.btn.primary:not(:disabled) { background: #1f7a6f; border-color: #17594f; --ledge: #17594f; }
+.mark.ok { color: #1f7a6f; }
+/* Сотенная таблица на телефоне: клетки и цифры крупнее. */
+@media (max-width: 520px) {
+  .chart100 { grid-template-columns: repeat(10, minmax(0, 1fr)); width: 100%; }
+  .c100 { font-size: 14px; padding: 6px 0; }
+}
+.zone { min-width: 48px; }
+.finger-label { font-size: 18px; min-width: 30px; line-height: 26px; }
+.coin-art b { text-shadow: 0 0 3px #fff8dc, 0 0 6px #fff8dc, 0 0 10px #fff8dc; }
+details summary { min-height: 48px; }
+/* Повтор задания без звука — мягкая подсветка текста. */
+.task-text[data-flash] { animation: task-flash 900ms var(--ease-out); }
+@keyframes task-flash { 30% { box-shadow: 0 0 0 6px rgba(255, 209, 102, 0.9); } }
+@media (prefers-reduced-motion: reduce) { .task-text[data-flash] { animation: none; outline: 4px solid #ffd166; } }
+/* Телефон лёжа: миссия помещается по высоте — ниже шапка, реплика и плитки. */
+@media (max-height: 500px) {
+  .btn.choice { min-height: 72px; padding: 4px 12px; }
+  .btn.icon { width: 48px; height: 48px; }
+  .task-text { font-size: 19px; line-height: 1.25; }
+  .task-guide { width: 48px; height: 48px; --sch: 48px; }
+  .island-map { --stone: 56px; }
+  .island[data-island='table'] .island-map { --stone: 42px; }
+  .island-map .stone-title { display: none; }
+}
+/* Чашка каждому: пустое место под чашку — пунктирное блюдце, а не белая пустота. */
+.receiver-items { align-items: center; }
+.receiver-items:empty::before { content: ''; display: block; width: 60px; height: 22px; border-radius: 50%; border: 3px dashed #c9b27a; background: #fffaf0; }
+@media (max-height: 500px) {
+  .receiver { padding: 6px; gap: 2px; }
+  .receiver-main { min-height: 64px; }
+  .receiver-main .emoji, .receiver-main img { width: 56px; height: 56px; }
+  .receiver-items { min-height: 40px; }
+}

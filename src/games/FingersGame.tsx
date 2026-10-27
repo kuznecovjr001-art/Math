@@ -41,7 +41,7 @@ function SchemeHand({ up, mirror, labels, from }: { up: number; mirror: boolean;
       transform={mirror ? `translate(${2 * x} 0) scale(-1 1)` : undefined}>{n}</text>
   );
   return (
-    <svg width="124" height="150" viewBox="0 0 124 150" className="hand" aria-label={`Поднято пальцев: ${up}`}>
+    <svg width="124" height="150" viewBox="0 0 124 150" className="hand" role="img" aria-label={`Поднято пальцев: ${up}`}>
       <g transform={mirror ? 'translate(124 0) scale(-1 1)' : undefined}>
         {/* Поднятые пальцы рисуются за ладонью. */}
         {xs.map((x, i) => i + 1 <= up - 1

@@ -94,6 +94,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   const [locked, setLocked] = useState(false);
   const [errors, setErrors] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
+  const [replay, setReplay] = useState(0);
   const [done, setDone] = useState(false);
   const busy = useRef(false);
   const step = steps[pos];
@@ -258,7 +259,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
             <span key={i} className={`dot ${i < pos ? 'past' : i === pos ? 'now' : ''}`} title={STEP_TITLE[s.variant]} />
           ))}
         </div>
-        <button className="btn icon" onClick={() => void speak(voiceText(text), 'question')} aria-label="Повторить задание"><Icon name="sound" /></button>
+        <button className="btn icon" onClick={() => { setReplay((n) => n + 1); void speak(voiceText(text), 'question'); }} aria-label="Повторить задание"><Icon name="sound" /></button>
         <button
           className={`btn icon help ${errors > 0 && help === 0 ? 'pulse' : ''}`}
           onClick={raiseHelp}
@@ -271,7 +272,8 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
       <h1 className="sr-only">{mission.title}</h1>
       <div className="task-row">
         <Schetik size={84} className="task-guide" />
-        <div className="task-text">
+        {/* Повтор задания виден и без звука: текст мягко подсвечивается. Новая карточка объявляется читалке. */}
+        <div className="task-text" aria-live="polite" key={`t${pos}-${replay}`} data-flash={replay > 0 || undefined}>
           <span className="step-tag">{step.variant === 'C' && <Icon name="review" size={16} />}{STEP_TITLE[step.variant]}</span>
           {text}
         </div>
