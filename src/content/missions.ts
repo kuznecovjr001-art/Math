@@ -153,7 +153,7 @@ export function instruction(p: CardParams): string {
         ? `Было ${count(p.start, 'посылка', 'посылки', 'посылок')}. Привезли ещё ${p.change === 1 ? 'одну' : p.change}. Сколько стало?`
         : `Было ${count(p.start, 'посылка', 'посылки', 'посылок')}. ${p.change === 1 ? 'Одну посылку' : p.change} отправили. Сколько осталось?`;
     case 'shapes':
-      return `Найди такую же фигуру: ${SHAPE_NAMES[p.target]}. Она может быть повёрнута или другого размера.`;
+      return `Найди такую же фигуру: ${SHAPE_NAMES[p.target]}.`;
     case 'tenframe':
       return p.b === 0
         ? 'Сколько фишек не хватает до полного десятка?'
