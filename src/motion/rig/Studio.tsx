@@ -87,7 +87,7 @@ export default function Studio() {
   }
 
   async function save() {
-    const r = await fetch('/__rig-save', { method: 'POST', body: formatRig(rig) }).catch(() => null);
+    const r = await fetch('/__rig-save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: formatRig(rig) }).catch(() => null);
     setStatus(r?.ok ? 'Сохранено в rig.json' : 'Не сохранилось — скопируйте JSON');
   }
 
