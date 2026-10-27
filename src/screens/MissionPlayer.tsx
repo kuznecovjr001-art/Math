@@ -107,8 +107,13 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   }, [text, pos, done]);
 
   // Экран могли закрыть («Домой»), пока плеер ждал конца фразы: тогда ни речи, ни смены карточки.
+  // Флаг ставится и при монтировании: StrictMode в разработке монтирует экран дважды, и без этого
+  // после первой «смерти» карточки переставали бы сменяться.
   const alive = useRef(true);
-  useEffect(() => () => { alive.current = false; stopSpeaking(); }, []);
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; stopSpeaking(); };
+  }, []);
 
   // После показа финиша: Счётик финишного экрана уже подписан на события и празднует.
   useEffect(() => { if (done) emit({ type: 'MISSION_COMPLETED' }); }, [done]);

@@ -21,6 +21,8 @@ test('Счётик реагирует на начало задания, каса
   await page.getByRole('button', { name: 'Готово' }).click();
   expect(await mood(page)).toBe('happy');
   await expect.poll(() => mood(page), { timeout: 4000 }).toBe('listening');
+  // После верного ответа игра сама переходит к следующей карточке.
+  await expect(page.getByRole('img', { name: /^Задание 2 из/ })).toBeVisible({ timeout: 5000 });
   expect(errors).toEqual([]);
 });
 
