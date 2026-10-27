@@ -21,13 +21,28 @@
 
 | Голос | Описание | Тон (медиана) | Темп | Whisper |
 | --- | --- | --- | --- | --- |
-| **A. a-teacher-male** (выбран) | тёплый спокойный учитель, баритон | ~134 Гц | 12,4 зн/с | 15/16 дословно |
+| A. a-teacher-male (был основным до 2026-10-28) | тёплый спокойный учитель, баритон | ~134 Гц | 12,4 зн/с | 15/16 дословно |
 | B. b-storyteller-male | мягкий рассказчик, светлый тенор | ~162 Гц | 13,3 зн/с | 15/16 |
 | C. c-teacher-female | воспитательница | ~217 Гц | 14,3 зн/с | 15/16 |
 
 Единственное «расхождение» у всех — «Счётик» распознан как «Щётик»: так слово и произносится.
 A выбран как самый спокойный и потому, что Счётик в текстах говорит о себе в мужском роде («Я задумал число»);
-для C пришлось бы менять формы глаголов. **Окончательный выбор тембра — за владельцем на слух.**
+для C пришлось бы менять формы глаголов.
+
+### Голос самого Счётика (2026-10-28, просьба владельца «похожий на стиль Счётика»)
+
+`python tts/voice_samples.py tts/out/samples-schetik d-schetik-bright e-schetik-soft`
+
+| Голос | Описание | Тон клона (медиана) | Скорость (RTF) | Whisper |
+| --- | --- | --- | --- | --- |
+| **E. e-schetik-soft** (выбран) | мягкий молодой мультяшный голос, тёплый | ~230 Гц | 0,56 в корпусе | 16/16 дословно |
+| D. d-schetik-bright | яркий тенор черепашонка | ~350 Гц — почти писк | 0,67 | 15/16 |
+
+Образцы для прослушивания — в «Загрузки/Schitalochka-golos-Schetika». Корпус пишется заново этим голосом;
+прежний a-teacher-male в приложение не попадает. **Окончательный выбор — за владельцем на слух.**
+
+Похвала и поддержка звучат разными фразами без повтора подряд (`PRAISE`, `SUPPORT`, `pickPhrase` в
+`src/audio/phrases.ts`); поддержка никогда не говорит «неправильно».
 
 Находка: на описание голоса по-русски VoiceDesign отвечал голосом не того пола (у «мужских» вышло ~230 Гц).
 Описания переведены на английский, а скрипт проверяет высоту тона референса и повторяет генерацию, если она вне
@@ -38,9 +53,9 @@ A выбран как самый спокойный и потому, что Сч
 ```bash
 npx vite-node scripts/voice-extract.ts                       # 1. все фразы → tts/out/phrases.json
 python tts/voice_samples.py tts/out/samples                  # 2. голоса-кандидаты и клон-промпты tts/voices/*.pt
-python tts/build_voice.py --voice a-teacher-male             # 3. корпус → public/voice/<голос>/<ключ>.ogg + manifest.json
-python tts/verify_asr.py public/voice/a-teacher-male --phrases tts/out/phrases.json   # 4. сверка Whisper
-python tts/build_voice.py --voice a-teacher-male --only <ключ> <ключ>                 # 5. выборочно заново
+python tts/build_voice.py --voice e-schetik-soft             # 3. корпус → public/voice/<голос>/<ключ>.ogg + manifest.json
+python tts/verify_asr.py public/voice/e-schetik-soft --phrases tts/out/phrases.json   # 4. сверка Whisper
+python tts/build_voice.py --voice e-schetik-soft --only <ключ> <ключ>                 # 5. выборочно заново
 ```
 
 Python-окружение: `C:\Users\djkuz\dev-tools\tts-venv` (torch 2.11 cu128, qwen-tts 0.1.1, pymorphy3, transformers).
