@@ -746,8 +746,10 @@ body:has(.screen.map) { background: var(--sea); }
 .sym-half i.ghost { background: #e0c3fc; }
 .sym-axis { width: 0; align-self: stretch; border-left: 4px dashed #e76f51; margin: 0 8px; }
 .clock-scene { flex-direction: column; }
-.clock-face { fill: #fff; stroke: #3d2c00; stroke-width: 6; }
-.clock-num { font-size: 20px; font-weight: 800; text-anchor: middle; fill: #3d2c00; }
+.clock-face { fill: #fffaf0; stroke: #3d2c00; stroke-width: 6; }
+.clock-tick { stroke: #b9a77a; stroke-width: 1.5; }
+.clock-tick.big { stroke: #3d2c00; stroke-width: 3; }
+.clock-num { font-size: 19px; font-weight: 800; text-anchor: middle; fill: #3d2c00; }
 .clock-hour { stroke: #3d2c00; stroke-width: 9; stroke-linecap: round; }
 .clock-min { stroke: #3d2c00; stroke-width: 5; stroke-linecap: round; }
 .clock-hour.hint { stroke: #1d6fa5; }

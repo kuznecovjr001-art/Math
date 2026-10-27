@@ -1,5 +1,4 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
-import { customArt } from '../content/art';
 import { clockChoices } from '../content/numbers';
 import { Choices } from './Choices';
 import { useSolved, type GameProps } from './types';
@@ -14,13 +13,18 @@ export function ClockFace({ h, m, help }: { h: number; m: number; help: number }
     const r = (angle - 90) * (Math.PI / 180);
     return [100 + Math.cos(r) * len, 100 + Math.sin(r) * len];
   };
-  const face = customArt('item/clock-face');
   return (
     <svg viewBox="0 0 200 200" width={220} height={220} role="img" aria-label="Часы">
-      {face ? <image href={face} x={4} y={4} width={192} height={192} /> : <circle cx={100} cy={100} r={94} className="clock-face" />}
+      {/* Свой векторный циферблат: на рисунке item/clock-face цифры свои и кривые, вместе с нашими они слипались. */}
+      <circle cx={100} cy={100} r={94} className="clock-face" />
+      {Array.from({ length: 60 }, (_, i) => {
+        const [x1, y1] = hand(i * 6, i % 5 ? 88 : 84);
+        const [x2, y2] = hand(i * 6, 91);
+        return <line key={`t${i}`} x1={x1} y1={y1} x2={x2} y2={y2} className={i % 5 ? 'clock-tick' : 'clock-tick big'} />;
+      })}
       {help >= 3 && m === 30 && <path d="M100 100 L100 14 A86 86 0 0 1 100 186 Z" className="clock-half" />}
       {Array.from({ length: 12 }, (_, i) => {
-        const [x, y] = hand((i + 1) * 30, 76);
+        const [x, y] = hand((i + 1) * 30, 68);
         return <text key={i} x={x} y={y + 7} className="clock-num">{i + 1}</text>;
       })}
       {/* Стрелки нарисованы на 12 и повёрнуты вокруг центра: при появлении они идут от 12 к нужному времени по часовой. */}
