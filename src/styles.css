@@ -408,6 +408,9 @@ body:has(.screen.map) { background: var(--sea); }
   cursor: pointer;
 }
 .group.plate .group-add { border-radius: 50%; background: #fff; border-color: #90a4ae; }
+/* Нарисованные коробка и тарелка вместо плоских заглушек (артовые переменные — artVars в ui/art.tsx). */
+.group.box .group-add { background: var(--art-box-back, #f6e0c2) center / contain no-repeat; border-color: transparent; }
+.group.plate .group-add { background: var(--art-plate, #fff) center / contain no-repeat; border-color: transparent; }
 .group-items {
   position: absolute;
   top: 8px;

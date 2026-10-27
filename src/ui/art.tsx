@@ -127,7 +127,7 @@ export function SceneBg({ name }: { name: string }) {
 /** Рисунки предметов, которые игры показывают через CSS (салфетка, фишки, палочки): переменные на корне приложения. */
 export function artVars(): CSSProperties {
   const vars: Record<string, string> = {};
-  for (const name of ['napkin', 'counter-red', 'counter-blue', 'stick', 'band']) {
+  for (const name of ['napkin', 'counter-red', 'counter-blue', 'stick', 'band', 'plate', 'box-back']) {
     const src = customArt(`item/${name}`);
     if (src) vars[`--art-${name}`] = `url(${src})`;
   }
