@@ -65,8 +65,9 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
       return { ...t, counts, ask: t.ask === 'most' ? 'most' : pick(rng, items) };
     }
     case 'groupsOf': {
-      const [, hi] = span(pool, 'groupsOf', (p) => p.total / p.size);
-      return { ...t, total: t.size * int(rng, 2, hi) };
+      // Диапазон — по тому же размеру группы: у машин (по 4) авторских групп меньше, чем у велосипедов.
+      const [, hi] = span(pool.filter((p) => p.kind !== 'groupsOf' || p.size === t.size), 'groupsOf', (p) => p.total / p.size);
+      return { ...t, total: t.size * int(rng, 2, Math.max(hi, 4)) };
     }
     case 'jumps': {
       const [, hiStep] = span(pool, 'jumps', (p) => p.step);

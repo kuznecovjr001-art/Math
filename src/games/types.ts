@@ -7,6 +7,8 @@ export interface GameResult {
   final?: boolean;
   /** Вопрос следующего шага, если final === false. */
   next?: string;
+  /** Верный ответ: столько мс игра показывает разбор (лягушка допрыгивает и т. п.), прежде чем перейти дальше. */
+  showMs?: number;
 }
 
 export interface GameProps<P> {

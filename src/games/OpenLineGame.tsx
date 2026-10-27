@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { tenChoices } from '../content/numbers';
 import { NumberChoices } from './NumberChoices';
@@ -6,8 +6,12 @@ import type { GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'openLine' }>;
 
-/** Открытая числовая прямая: от a прыгаем десятками, потом единицами. Прыжки рисуются с подсказкой. */
+/**
+ * Открытая числовая прямая: от a прыгаем десятками, потом единицами. Прыжки рисуются с подсказкой,
+ * а после верного ответа — все сразу по очереди: +10, +10, … и последний прыжок единицами.
+ */
 export function OpenLineGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, setSolved] = useState(false);
   const answer = expectedAnswer(params);
   const tens = Math.floor(params.b / 10);
   const ones = params.b % 10;
@@ -16,8 +20,8 @@ export function OpenLineGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const x = (v: number) => 40 + ((v - params.a) / span) * (W - 80);
   const stops = [params.a, ...Array.from({ length: tens }, (_, k) => params.a + (k + 1) * 10)];
   const jumps: [number, number, string][] = [];
-  if (help >= 2) stops.slice(1).forEach((v, k) => jumps.push([stops[k], v, '+10']));
-  if (help >= 3 && ones > 0) jumps.push([stops[stops.length - 1], answer, `+${ones}`]);
+  if (help >= 2 || solved) stops.slice(1).forEach((v, k) => jumps.push([stops[k], v, '+10']));
+  if ((help >= 3 || solved) && ones > 0) jumps.push([stops[stops.length - 1], answer, `+${ones}`]);
   return (
     <div className="game">
       <div className="more-scene line-wrap">
@@ -36,7 +40,10 @@ export function OpenLineGame({ params, help, locked, onSubmit }: GameProps<P>) {
           ))}
         </svg>
       </div>
-      <NumberChoices options={tenChoices(answer, 1, 100)} answer={answer} locked={locked} onSubmit={onSubmit} />
+      <NumberChoices options={tenChoices(answer, 1, 100)} answer={answer} locked={locked} onSubmit={(r) => {
+        if (r.correct) setSolved(true);
+        onSubmit({ ...r, showMs: r.correct ? (tens + (ones > 0 ? 1 : 0)) * 380 + 500 : undefined });
+      }} />
     </div>
   );
 }

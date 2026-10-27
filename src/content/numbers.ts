@@ -63,7 +63,7 @@ export const BAR_STORY: Record<BarStory, { icon: string; whole: (n: number) => s
 export const MEASURE_THINGS: Record<Measurable, { icon: string; text: string; unit: MeasureUnit }> = {
   rope: { icon: '1FAA2', text: 'какой длины верёвка', unit: 'm' },
   ribbon: { icon: '1F380', text: 'какой длины лента', unit: 'm' },
-  milk: { icon: '1F95B', text: 'сколько сока в бутылке', unit: 'l' },
+  milk: { icon: '1F95B', text: 'сколько молока в стакане', unit: 'l' },
   bucket: { icon: '1FAA3', text: 'сколько воды в ведре', unit: 'l' },
   watermelon: { icon: '1F349', text: 'сколько весит арбуз', unit: 'kg' },
   apples: { icon: '1F34E', text: 'сколько весит пакет яблок', unit: 'kg' },
@@ -82,7 +82,7 @@ export const WEEK = ['понедельник', 'вторник', 'среда', '
 const WEEK_AFTER = ['понедельника', 'вторника', 'среды', 'четверга', 'пятницы', 'субботы', 'воскресенья'];
 const WEEK_BEFORE = ['понедельником', 'вторником', 'средой', 'четвергом', 'пятницей', 'субботой', 'воскресеньем'];
 
-const PLACE_NAME = {
+export const PLACE_NAME = {
   h: (n: number) => count(n, 'сотня', 'сотни', 'сотен'),
   t: (n: number) => count(n, 'десяток', 'десятка', 'десятков'),
   o: (n: number) => count(n, 'единица', 'единицы', 'единиц'),
@@ -95,7 +95,7 @@ export function instructionMore(p: MoreParams): string {
     case 'coins': return `${p.name[0].toUpperCase()}${p.name.slice(1)} стоит ${count(p.price, 'рубль', 'рубля', 'рублей')}. Положи монеты и заплати ровно столько.`;
     case 'tally':
       return p.ask === 'most'
-        ? 'Каких фруктов больше всего? Можно посчитать каждый вид.'
+        ? 'Чего больше всего? Можно посчитать каждый вид.'
         : `Сколько здесь ${ITEMS[p.ask].forms[2]}?`;
     case 'groupsOf': {
       const g = GROUP_HOLDER[p.size];
@@ -104,7 +104,7 @@ export function instructionMore(p: MoreParams): string {
         : `Есть ${count(p.total, ...g.itemForms)}. ${p.size === 2 ? 'Велосипеду' : 'Машине'} нужно ${count(p.size, ...g.itemForms)}. Сколько ${g.holderForms[2]} получится?`;
     }
     case 'jumps': return `Лягушка прыгает от нуля ${p.count} ${plural(p.count, 'раз', 'раза', 'раз')} по ${p.step}. Где она окажется?`;
-    case 'fraction': return `Где закрашена ${FRAC_TEXT[p.ask]}?`;
+    case 'fraction': return `Где ${p.ask === 'threeQuarters' ? 'закрашены' : 'закрашена'} ${FRAC_TEXT[p.ask]}?`;
     case 'units': return p.unit === 'clip' ? 'Сколько скрепок помещается вдоль ленты?' : 'Сколько карандашей помещается вдоль ленты?';
     case 'complete100': return `Закрашено ${p.n}. Сколько клеток не хватает до 100?`;
     case 'placeValue': return 'Какое число собрано из блоков?';

@@ -43,8 +43,8 @@ export function ShapesGame({ params, help, locked, onSubmit }: GameProps<P>) {
         render={(s) => (
           <ShapeSvg
             shape={s}
-            size={s === params.target ? 84 : 100}
-            turn={s === params.target ? params.turn : 15}
+            size={92}
+            turn={(params.turn + params.options.indexOf(s) * 25) % 90}
             corners={help >= 2}
             color={COLORS[params.options.indexOf(s) % COLORS.length]}
           />

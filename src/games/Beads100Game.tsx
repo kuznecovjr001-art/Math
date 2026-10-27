@@ -1,5 +1,6 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { tenChoices } from '../content/numbers';
+import { plural } from '../content/words';
 import { NumberChoices } from './NumberChoices';
 import type { GameProps } from './types';
 
@@ -26,7 +27,7 @@ export function Beads100Game({ params, help, locked, onSubmit }: GameProps<P>) {
           </div>
         ))}
       </div>
-      {help >= 3 && <div className="sum-hint">{tens * 10} и ещё {n % 10}</div>}
+      {help >= 3 && <div className="sum-hint">{n % 10 ? `${tens * 10} и ещё ${n % 10}` : `${tens} ${plural(tens, 'десяток', 'десятка', 'десятков')}`}</div>}
       <NumberChoices options={tenChoices(n, 1, 100)} answer={n} locked={locked} onSubmit={onSubmit} />
     </div>
   );

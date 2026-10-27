@@ -67,8 +67,8 @@ const WEIGHTS: Required<Pick<Thing, 'icon' | 'name' | 'weight'>>[] = [
 /** События дня по порядку: утро, день, вечер, ночь. */
 const DAY_PARTS: DayEvent[][] = [
   [{ icon: '1F305', name: 'просыпаемся' }, { icon: '1FAA5', name: 'чистим зубы утром' }],
-  [{ icon: '1F3EB', name: 'идём в садик' }, { icon: '1F37D', name: 'обедаем' }],
-  [{ icon: '1F319', name: 'наступает вечер' }, { icon: '1F319', name: 'смотрим на луну' }],
+  [{ icon: '26BD', name: 'играем днём' }, { icon: '1F37D', name: 'обедаем' }],
+  [{ icon: '1F319', name: 'смотрим на луну' }],
   [{ icon: '1F6CF', name: 'ложимся спать' }],
 ];
 
@@ -196,7 +196,7 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
       return { ...t, target, options: shuffle(rng, [target, ...others]), turn: pick(rng, TURNS) };
     }
     case 'tenframe': {
-      if (t.b === 0) return { ...t, a: int(rng, 1, 9) };
+      if (t.b === 0) return { ...t, a: int(rng, 2, 9) }; // a ≥ 2: иначе среди вариантов «10» — весь десяток
       const [, maxSum] = span(pool, 'tenframe', (p) => p.a + p.b);
       const a = int(rng, 6, 9);
       return { ...t, a, b: int(rng, 11 - a, Math.min(9, maxSum - a)) };
@@ -223,7 +223,8 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
       do {
         per = int(rng, 2, 4);
         groups = int(rng, 2, 4);
-      } while (per * groups > maxTotal);
+        // per === groups: «2 + 2» и «2 × 2» обе верны — такую карточку не даём.
+      } while (per * groups > maxTotal || per === groups);
       return { ...t, per, groups, item: pick(rng, FRUITS) };
     }
     case 'array': {

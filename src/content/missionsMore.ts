@@ -85,8 +85,8 @@ export const MORE_MISSIONS: Mission[] = [
     },
     help: [
       'Посчитай каждый вид отдельно.',
-      'Я выстроил фрукты столбиками.',
-      'Самый высокий столбик — тех больше всего.',
+      'Я записал палочками: сколько палочек, столько штук.',
+      'Где палочек больше всего, того и больше.',
     ],
     praise: 'Ты разобрался, чего сколько!',
     finish: 'Столбики построены.',
@@ -112,7 +112,7 @@ export const MORE_MISSIONS: Mission[] = [
     home: 'Сколько пар носков получится из 10 носков? Раскладывайте по два.',
   },
   {
-    id: 'N22', title: 'Прыжки по прямой', skill: 'M10', requires: [], icon: '1F438',
+    id: 'N22', title: 'Лягушка прыгает', skill: 'M10', requires: [], icon: '1F438',
     cards: {
       A: [{ kind: 'jumps', step: 2, count: 4 }, { kind: 'jumps', step: 3, count: 3 }],
       B: [{ kind: 'jumps', step: 5, count: 3 }, { kind: 'jumps', step: 2, count: 5 }],

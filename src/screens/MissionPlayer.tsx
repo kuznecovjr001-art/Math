@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PHRASE } from '../audio/phrases';
+import { PHRASE, PRAISE, pickPhrase, SUPPORT } from '../audio/phrases';
 import { hasRecording, speak, stopSpeaking, voiceReady } from '../audio/voice';
 import { stickerArt } from '../content/art';
 import { MISSION_SCENE } from '../content/scenes';
@@ -52,6 +52,7 @@ import { WeekGame } from '../games/WeekGame';
 import { UnitPickGame } from '../games/UnitPickGame';
 import type { GameResult } from '../games/types';
 import { emit } from '../motion/events';
+import { motionOff } from '../motion/flight';
 import { Schetik } from '../motion/Schetik';
 import { Emoji, Icon, SceneBg } from '../ui/art';
 
@@ -179,9 +180,11 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
 
     if (r.correct) {
       emit({ type: 'ANSWER_CORRECT', final: true });
-      const praise = steps[pos + 1] ? PHRASE.good : mission.praise;
+      const praise = steps[pos + 1] ? pickPhrase(PRAISE) : mission.praise;
       setMessage(praise);
-      release(700, speak(praise, 'praise'), () => {
+      // Разбор после ответа не обрывается: ждём его, даже если похвала короче (без движения — сразу дальше).
+      const show = motionOff() ? 0 : r.showMs ?? 0;
+      release(Math.max(700, show), speak(praise, 'praise'), () => {
         setMessage(null);
         setErrors(0);
         setHelp(0);
@@ -201,8 +204,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     if (nextErrors >= 2 && help < 3) {
       release(900, undefined, raiseHelp);
     } else {
-      setMessage(PHRASE.again);
-      release(900, speak(PHRASE.again, 'support'));
+      const support = pickPhrase(SUPPORT);
+      setMessage(support);
+      release(900, speak(support, 'support'));
     }
   };
 

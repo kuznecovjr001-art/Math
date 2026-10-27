@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { sfx } from '../audio/sfx';
+import { PHRASE } from '../audio/phrases';
 import { expectedAnswer, FRUITS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
@@ -33,7 +34,7 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
     const correct = share
       ? stock === 0 && inGroup.every((n) => n === inGroup[0])
       : inGroup.every((n) => n === params.per);
-    onSubmit({ correct, answer: `раскладка ${inGroup.join(',')}`, final: false });
+    onSubmit({ correct, answer: `раскладка ${inGroup.join(',')}`, final: false, next: share ? PHRASE.nextEach : undefined });
     if (correct) setStep('total');
   };
 

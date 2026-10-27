@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { type CardParams } from '../content/missions';
 import { COINS } from '../content/numbers';
 import { customArt } from '../content/art';
@@ -9,8 +9,9 @@ type P = Extract<CardParams, { kind: 'coins' }>;
 
 function Coin({ v }: { v: number }) {
   const own = customArt(`item/coin-${v}`);
+  // На рисунке монеты номинала нет: цифру ставим поверх, иначе ребёнок не узнает, сколько стоит монета.
   return own
-    ? <img src={own} width={56} height={56} alt="" aria-hidden="true" />
+    ? <span className="coin-art" aria-hidden="true"><img src={own} width={56} height={56} alt="" /><b>{v}</b></span>
     : <span className={`coin c${v}`} aria-hidden="true">{v}</span>;
 }
 
@@ -25,18 +26,20 @@ function greedy(price: number): number[] {
 /** Магазин: ребёнок кладёт монеты на блюдце и платит ровно столько, сколько стоит игрушка. */
 export function CoinsGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const [tray, setTray] = useState<number[]>([]);
+  // После оплаты монеты по одной уезжают к игрушке, игрушка радостно подпрыгивает — покупка состоялась.
+  const [paid, setPaid] = useState(false);
   const sum = tray.reduce((a, b) => a + b, 0);
   return (
     <div className="game">
       <div className="more-scene shop">
-        <div className="price-tag">
+        <div className={`price-tag ${paid ? 'bought' : ''}`}>
           <Emoji code={params.toy} size={84} label={params.name} />
           <span className="price">{params.price} ₽</span>
         </div>
         <div className="tray" role="group" aria-label={`На блюдце ${sum} ₽`}>
           {tray.length === 0 && <span className="tray-empty">Блюдце</span>}
           {tray.map((v, i) => (
-            <button key={i} className="coin-btn" disabled={locked} onClick={() => setTray(tray.filter((_, k) => k !== i))} aria-label={`Убрать монету ${v}`}>
+            <button key={i} className={`coin-btn ${paid ? 'paid' : ''}`} style={{ '--i': i } as CSSProperties} disabled={locked} onClick={() => setTray(tray.filter((_, k) => k !== i))} aria-label={`Убрать монету ${v}`}>
               <Coin v={v} />
             </button>
           ))}
@@ -54,7 +57,11 @@ export function CoinsGame({ params, help, locked, onSubmit }: GameProps<P>) {
       <button
         className="btn primary big pay"
         disabled={locked || sum === 0}
-        onClick={() => { onSubmit({ correct: sum === params.price, answer: String(sum) }); if (sum !== params.price) setTray([]); }}
+        onClick={() => {
+          const ok = sum === params.price;
+          if (ok) setPaid(true); else setTray([]);
+          onSubmit({ correct: ok, answer: String(sum), showMs: ok ? tray.length * 150 + 900 : undefined });
+        }}
       >
         Оплатить
       </button>

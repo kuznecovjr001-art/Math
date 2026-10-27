@@ -121,16 +121,54 @@ html[data-motion='minimal'] .beam { animation: none; }
 
 /* Числовая прямая: прыжки рисуются по одному (--k — номер прыжка), подпись приземления — после дуги. */
 .nl-hop .nl-arc { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-arc var(--dur-step) var(--ease-out) forwards;
-  animation-delay: calc(var(--k) * 380ms); }
-.nl-hop text { opacity: 0; animation: fade-in var(--dur-appear) var(--ease-out) forwards; animation-delay: calc(var(--k) * 380ms + 300ms); }
+  animation-delay: calc(var(--k) * var(--hop, 380ms)); }
+.nl-hop text { opacity: 0; animation: fade-in var(--dur-appear) var(--ease-out) forwards; animation-delay: calc(var(--k) * var(--hop, 380ms) + 300ms); }
 @keyframes draw-arc { to { stroke-dashoffset: 0; } }
 @keyframes fade-in { to { opacity: 1; } }
 .frog-track { position: absolute; inset: 0; pointer-events: none; }
-.frog-track .frog.hopping { animation: frog-hop 380ms ease-in-out var(--n); }
-.frog-track:has(.hopping) { animation: frog-go calc(var(--n) * 380ms) linear forwards; }
+.frog-track .frog.hopping { animation: frog-hop var(--hop, 380ms) ease-in-out var(--n); }
+.frog-track:has(.hopping) { animation: frog-go calc(var(--n) * var(--hop, 380ms)) linear forwards; }
 @keyframes frog-go { to { transform: translateX(var(--to)); } }
 /* Отдельное свойство translate не мешает transform(-50%) у лягушки: прыжок вверх на каждой дуге. */
 @keyframes frog-hop { 50% { translate: 0 -28px; } }
+
+/* Под салфеткой: после верного ответа салфетка уезжает вверх-вбок, спрятанное появляется. */
+.napkin.lifted { animation: napkin-lift 700ms var(--ease-out) forwards; }
+@keyframes napkin-lift { to { transform: translate(38%, -58%) rotate(18deg); opacity: 0.35; } }
+.under-napkin { animation: reveal 400ms var(--ease-out) 250ms both; }
+@keyframes reveal { from { opacity: 0; transform: scale(0.8); } }
+html[data-motion='minimal'] .napkin.lifted { animation: none; opacity: 0; }
+
+/* Деление по сколько: держатели с предметами появляются по одному после верного ответа. */
+.group-set.deal { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * 300ms); }
+html[data-motion='minimal'] .group-set.deal { animation: none; }
+
+/* Задача: точки модели выкладываются по одной, «ушедшие» при вычитании отлетают. */
+.expr-model i { animation: pop 300ms var(--ease-spring) backwards; animation-delay: calc(var(--i) * 35ms); }
+.expr-model i.gone { animation: leave 600ms var(--ease-out) forwards; animation-delay: calc(400ms + var(--i) * 35ms); }
+@keyframes leave { to { transform: translate(14px, -18px); opacity: 0.25; } }
+html[data-motion='minimal'] .expr-model i { animation: none; }
+html[data-motion='minimal'] .expr-model i.gone { opacity: 0.25; }
+
+/* Мерки: недостающие скрепки и карандаши ложатся по одной. */
+.unit-cell.auto { animation: pop 260ms var(--ease-spring) backwards; animation-delay: calc(var(--i) * 150ms); }
+html[data-motion='minimal'] .unit-cell.auto { animation: none; }
+
+/* Симметрия: отражение раскрывается от линии, как крыло. */
+.sym-flip { display: inline-block; transform-origin: 0 50%; animation: sym-flip 700ms var(--ease-out) both; }
+@keyframes sym-flip { from { transform: perspective(400px) rotateY(-90deg); } }
+html[data-motion='minimal'] .sym-flip { animation: none; }
+
+/* Бусы: выбранная бусина садится на место, нитка продолжается. */
+.bead.placed { animation: pop 300ms var(--ease-spring) both; }
+.bead.grow { animation: pop 300ms var(--ease-spring) backwards; animation-delay: calc(300ms + var(--i) * 220ms); }
+html[data-motion='minimal'] .bead:is(.placed, .grow) { animation: none; }
+
+/* Магазин: монеты уезжают к игрушке, игрушка подпрыгивает. */
+.coin-btn.paid { animation: coin-pay 500ms var(--ease-out) forwards; animation-delay: calc(var(--i) * 150ms); }
+@keyframes coin-pay { to { transform: translateY(-90px) scale(0.6); opacity: 0; } }
+.price-tag.bought { animation: sch-hop var(--dur-joy) var(--ease-spring) 500ms 1; }
+html[data-motion='minimal'] :is(.coin-btn.paid, .price-tag.bought) { animation: none; }
 
 /* Массив: ряды вспыхивают по очереди. */
 .row-glow { display: inline-flex; animation: row-glow 500ms var(--ease-spring) both; animation-delay: calc(var(--r) * 350ms); }
@@ -213,5 +251,5 @@ html[data-motion='minimal'] .finish-guide, html[data-motion='minimal'] .ribbon {
 html[data-motion='minimal'] .clock-hand { animation: none; }
 
 /* Умножение: группы точек появляются по очереди. */
-.dot-group { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * 320ms); }
+.dot-group { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * var(--step, 320ms)); }
 html[data-motion='minimal'] .dot-group { animation: none; }

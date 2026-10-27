@@ -1,11 +1,10 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
-import { riddleChoices } from '../content/numbers';
+import { PLACE_NAME, riddleChoices } from '../content/numbers';
 import { NumberChoices } from './NumberChoices';
 import type { GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'riddle' }>;
 
-const PLACE = { h: 'сотни', t: 'десятки', o: 'единицы' } as const;
 
 /** Загадка: разряды названы вперемешку. Подсказка раскладывает их по столбикам таблицы разрядов. */
 export function RiddleGame({ params, help, locked, onSubmit }: GameProps<P>) {
@@ -13,7 +12,7 @@ export function RiddleGame({ params, help, locked, onSubmit }: GameProps<P>) {
   return (
     <div className="game">
       <div className="more-scene riddle-clues">
-        {params.order.map((k) => <span key={k} className={`clue ${k}`}>{params[k]} <small>{PLACE[k]}</small></span>)}
+        {params.order.map((k) => <span key={k} className={`clue ${k}`}>{PLACE_NAME[k](params[k])}</span>)}
       </div>
       {help >= 2 && (
         <table className="pv-table">
