@@ -23,7 +23,7 @@ export function ZeroGame({ params, help, locked, onSubmit }: GameProps<P>) {
           ))}
         </div>
       </div>
-      {(help >= 3 || solved) && <div className="sum-hint">{params.start} − {params.lose} = ?</div>}
+      {(help >= 3 || solved) && <div className="sum-hint">{params.start} − {params.lose} = {solved ? left : '?'}</div>}
       <Choices
         options={answerChoices(left, 0)}
         render={(n) => <NumberTile n={n} dots={false} />}

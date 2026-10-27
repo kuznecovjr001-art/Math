@@ -72,7 +72,7 @@ export function FingersGame({ params, help, locked, onSubmit }: GameProps<P>) {
         <Hand up={first} mirror={false} labels={help >= 2} from={0} />
         {params.total === 10 && <Hand up={params.up - first} mirror labels={help >= 2} from={5} />}
       </div>
-      {(help >= 3 || solved) && <div className="sum-hint">{params.total} = {params.up} + ?</div>}
+      {(help >= 3 || solved) && <div className="sum-hint">{params.total} = {params.up} + {solved ? folded : '?'}</div>}
       <Choices
         options={answerChoices(folded, 0)}
         render={(n) => <NumberTile n={n} />}

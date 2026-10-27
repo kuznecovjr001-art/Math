@@ -30,8 +30,8 @@ export function FlashGame({ params, help, locked, onSubmit }: GameProps<P>) {
   let k = 0;
   return (
     <div className="game">
-      <div className={`flash-card ${dice ? 'dice' : 'frame'}`} role="img" aria-label={open || stayOpen ? `${params.n} точек` : 'Карточка закрыта'}>
-        {open || stayOpen
+      <div className={`flash-card ${dice ? 'dice' : 'frame'}`} role="img" aria-label={open || stayOpen || solved ? `${params.n} точек` : 'Карточка закрыта'}>
+        {open || stayOpen || solved
           ? Array.from({ length: cells }, (_, i) => {
               const on = dice ? dice.includes(i) : i < params.n;
               return (
