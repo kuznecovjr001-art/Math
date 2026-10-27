@@ -2,16 +2,22 @@ import { writeFileSync } from 'node:fs';
 import { configDefaults, defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
+const LOCAL = new Set(['localhost', '127.0.0.1', '[::1]']);
+
 /** Страница сборки Счётика (/#rig) сохраняет раскладку рига в файл. Только dev-сервер, только этот файл. */
 const rigSave: Plugin = {
   name: 'rig-save',
   apply: 'serve',
   configureServer(server) {
     server.middlewares.use('/__rig-save', (req, res) => {
-      // Только страница самого dev-сервера: JSON-тип требует CORS-preflight, Origin должен совпадать с хостом.
+      // Только страница самого dev-сервера на этом компьютере: Host и Origin — из списка локальных имён
+      // (а не «Origin равен Host» — это обходится подменой DNS), JSON-тип требует CORS-preflight.
+      const local = (h?: string) => {
+        try { return !!h && LOCAL.has(new URL(h.includes('://') ? h : `http://${h}`).hostname); } catch { return false; }
+      };
       const origin = req.headers.origin;
-      const sameOrigin = !origin || new URL(origin).host === req.headers.host;
-      if (req.method !== 'POST' || !sameOrigin || !req.headers['content-type']?.startsWith('application/json')) {
+      const trusted = local(req.headers.host) && (origin === undefined || local(origin));
+      if (req.method !== 'POST' || !trusted || !req.headers['content-type']?.startsWith('application/json')) {
         res.statusCode = 403; res.end(); return;
       }
       let body = '';
