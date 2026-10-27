@@ -286,8 +286,9 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
           b: longFirst ? shortThing : longThing,
         };
       }
-      const [x, y] = shuffle(rng, WEIGHTS);
-      const b = x.weight === y.weight ? WEIGHTS.find((w) => w.weight !== x.weight)! : y;
+      // Разница в весе явная (≥ 2): весы не должны спорить со здравым смыслом («мишка тяжелее яблока?»).
+      const [x, ...rest] = shuffle(rng, WEIGHTS);
+      const b = rest.find((w) => Math.abs(w.weight - x.weight) >= 2)!;
       return { ...t, attr: pick(rng, ['heavier', 'lighter'] as const), a: x, b };
     }
     case 'order': {

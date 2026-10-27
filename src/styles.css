@@ -885,3 +885,9 @@ details summary { min-height: 48px; }
   .receiver-main .emoji, .receiver-main img { width: 56px; height: 56px; }
   .receiver-items { min-height: 40px; }
 }
+
+/* Создание профиля: 10 зверят — двумя ровными рядами по 5. */
+.avatar-grid:has(> :nth-child(10):last-child) { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; width: min(100%, 640px); }
+.avatar-grid:has(> :nth-child(10):last-child) > * { min-width: 0; }
+/* Финиш: совет для взрослых — отдельной читаемой карточкой. */
+.home-idea { background: rgba(255, 253, 245, 0.95); border: 2px dashed var(--line); color: var(--ink); }
