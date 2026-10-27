@@ -17,6 +17,8 @@
 .schetik-body { position: absolute; inset: 0; transform-origin: 50% 100%; }
 .schetik-body img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 180ms var(--ease-out); }
 .schetik-body img.on { opacity: 1; }
+/* Риг двигает себя сам (motion/rig/animate): CSS-движение поз к нему не относится. */
+.schetik-rig, .schetik-rig svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 
 /* Дыхание в покое и при слушании: едва заметно, 4 с. */
 .schetik[data-mood='idle'] .schetik-body,

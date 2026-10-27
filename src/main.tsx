@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App, preloadScreens } from './App';
 import { FIXED_PHRASES } from './audio/phrases';
@@ -10,9 +10,12 @@ import '@fontsource-variable/nunito';
 import './styles.css';
 import './motion/motion.css';
 
+// Страница сборки Счётика — только при разработке (/#rig); в сборку приложения не попадает.
+const RigStudio = import.meta.env.DEV && location.hash === '#rig' ? lazy(() => import('./motion/rig/Studio')) : null;
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {RigStudio ? <Suspense><RigStudio /></Suspense> : <App />}
   </StrictMode>,
 );
 

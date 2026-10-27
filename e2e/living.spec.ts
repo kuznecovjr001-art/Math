@@ -52,8 +52,16 @@ test('уменьшенное движение: анимации выключен
   await page.goto('/');
   await page.getByRole('button', { name: 'QA' }).click();
   await page.locator('.today-card').first().click();
-  const anim = await page.locator('.schetik-body').first().evaluate((el) => getComputedStyle(el).animationName);
-  expect(anim).toBe('none');
+  // Риг Счётика замирает: поза и выражение меняются сразу, без движения, дыхания и моргания.
+  const rig = page.locator('.schetik-rig').first();
+  await expect(rig).toBeVisible();
+  const frame = () => rig.evaluate((el) => [...el.querySelectorAll('[data-node], [data-v]')]
+    .map((g) => `${g.getAttribute('transform')}|${g.getAttribute('display')}`).join(';'));
+  // Приветствие держится 1,5 с, потом «слушает» — смена позы мгновенная; дальше ничего не должно двигаться.
+  await page.waitForTimeout(2000);
+  const a = await frame();
+  await page.waitForTimeout(1500);
+  expect(await frame()).toBe(a);
 });
 
 test('настройки анимаций и звука хранятся отдельно от прогресса', async ({ page }) => {
