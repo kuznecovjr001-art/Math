@@ -1,3 +1,5 @@
+import { customArt } from '../content/art';
+import TIPS from '../content/handTips.json';
 import type { CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
@@ -5,8 +7,31 @@ import { answerChoices, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'fingers' }>;
 
-/** Рука: up пальцев поднято, остальные загнуты и видны на ладони. Пальцы поднимаются от большого. */
+/**
+ * Нарисованная ладошка (art-src/hand → assets/art/hand): ладонь к зрителю, большой палец наружу —
+ * у первой руки слева (правая рука), у второй справа (левая). Подписи — над кончиками поднятых пальцев.
+ */
+function DrawnHand({ src, up, tips, labels, from }: { src: string; up: number; tips: number[][]; labels: boolean; from: number }) {
+  return (
+    <div className="hand drawn" role="img" aria-label={`Поднято пальцев: ${up}`}>
+      <img src={src} alt="" draggable={false} />
+      {labels && tips.map(([x, y], i) => (
+        <span key={i} className="finger-label" style={{ left: `${x}%`, top: `${y}%` }}>{from + i + 1}</span>
+      ))}
+    </div>
+  );
+}
+
+/** Рука: up пальцев поднято, остальные загнуты и видны на ладони. Есть рисунок — ладошка, нет — схема. */
 function Hand({ up, mirror, labels, from }: { up: number; mirror: boolean; labels: boolean; from: number }) {
+  const name = `hand-${mirror ? 'left' : 'right'}-${up}`;
+  const src = customArt(`hand/${name}`);
+  if (src) return <DrawnHand src={src} up={up} tips={(TIPS as Record<string, number[][]>)[name] ?? []} labels={labels} from={from} />;
+  return <SchemeHand up={up} mirror={mirror} labels={labels} from={from} />;
+}
+
+/** Схема руки: пальцы поднимаются от большого. Запасной вид, пока нет рисунка. */
+function SchemeHand({ up, mirror, labels, from }: { up: number; mirror: boolean; labels: boolean; from: number }) {
   const xs = [32, 52, 72, 92];
   const skin = '#f6c99b';
   const fold = '#d9925a';

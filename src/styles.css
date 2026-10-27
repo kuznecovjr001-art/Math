@@ -575,6 +575,10 @@ body:has(.screen.map) { background: var(--sea); }
 @keyframes fall { from { transform: translateY(-160px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .hands { display: flex; gap: 16px; justify-content: center; }
+.hand.drawn { position: relative; width: min(150px, 38vw); }
+.hand.drawn img { display: block; width: 100%; height: auto; }
+.finger-label { position: absolute; transform: translate(-50%, -110%); min-width: 24px; padding: 0 4px; border-radius: 12px;
+  background: #fff; border: 2px solid #118ab2; color: #0b5d78; font-size: 14px; font-weight: 800; line-height: 20px; text-align: center; }
 
 .ribbons { display: flex; flex-direction: column; gap: 18px; margin: 0 auto; max-width: 100%; padding: 12px; background: var(--card); border: 3px solid var(--line); border-radius: var(--radius); }
 .ribbons.aligned { border-left: 6px solid #118ab2; }

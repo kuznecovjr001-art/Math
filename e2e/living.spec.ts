@@ -13,7 +13,8 @@ test('Счётик реагирует на начало задания, каса
   await page.getByRole('button', { name: 'QA' }).click();
   expect(await mood(page)).toBe('idle');
   await page.locator('.today-card').first().click();
-  await expect(page.locator('.screen.mission')).toBeVisible();
+  // Первый вход в миссию на холодном dev-сервере собирает чанк игр дольше 5 с.
+  await expect(page.locator('.screen.mission')).toBeVisible({ timeout: 20_000 });
   expect(await mood(page)).toBe('greeting');
   // «Чашка каждому»: дать каждому гостю по чашке и нажать «Готово».
   for (const b of await page.locator('.receiver-main').all()) await b.click();

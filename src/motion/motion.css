@@ -61,6 +61,41 @@ html[data-motion='minimal'] .schetik-z { animation: none !important; transform: 
 .map-clouds span + span { top: 55%; width: 26vmax; height: 9vmax; animation-duration: 110s; animation-delay: -50s; opacity: 0.8; }
 @keyframes cloud { to { transform: translateX(160vw); } }
 
+/* Живая карта острова (MapLife): над рисунком, под камнями; координаты — в процентах рисунка. */
+.map-life { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.map-life > div { position: absolute; inset: 0; }
+.map-life .life-port { display: none; }
+@media (orientation: portrait) { .map-life .life-land { display: none; } .map-life .life-port { display: block; } }
+.island-map > .stone { z-index: 1; }
+.life-part { position: absolute; object-fit: contain; }
+.life-spin { animation: life-spin 14s linear infinite; }
+.life-flag { transform-origin: 0 50%; animation: life-flag 2.4s ease-in-out infinite; }
+.life-bob { transform-origin: 50% 80%; animation: life-bob 4s ease-in-out infinite; }
+.life-glint, .life-wave { position: absolute; transform: translate(-50%, -50%); }
+.life-glint { width: 20px; height: 20px; opacity: 0; animation: life-glint 3.6s ease-in-out infinite;
+  background: radial-gradient(closest-side, #fff 30%, rgba(255, 255, 255, 0)); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+.life-wave { width: 22px; height: 8px; border-bottom: 3px solid rgba(255, 255, 255, 0.55); border-radius: 0 0 50% 50%; animation: life-wave 5s ease-in-out infinite; }
+.life-cloud { position: absolute; left: 0; width: 16%; opacity: 0.92; animation: life-cloud 70s linear infinite; }
+.life-cloud.slow { width: 11%; opacity: 0.8; animation-duration: 105s; animation-delay: -60s; }
+.life-cloud svg { display: block; width: 100%; height: auto; }
+@keyframes life-spin { to { transform: rotate(360deg); } }
+@keyframes life-flag { 0%, 100% { transform: skewY(0) scaleX(1); } 50% { transform: skewY(-5deg) scaleX(0.93); } }
+@keyframes life-bob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-3%) rotate(1.5deg); } }
+@keyframes life-glint { 0%, 60%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 30% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); } }
+@keyframes life-wave { 0%, 100% { opacity: 0.25; transform: translate(-60%, -50%); } 50% { opacity: 0.8; transform: translate(-40%, -50%); } }
+@keyframes life-cloud { from { transform: translateX(-120%); } to { transform: translateX(760%); } }
+/* Карта вне экрана не тратит кадры. */
+.island-map:not([data-live]) .map-life * { animation-play-state: paused; }
+/* Движение выключено: детали стоят на месте, облаков и бликов нет. */
+html[data-ambient='false'] .map-life *, html[data-motion='moderate'] .map-life *, html[data-motion='minimal'] .map-life * { animation: none; }
+html[data-ambient='false'] .map-life :is(.life-cloud, .life-glint, .life-wave),
+html[data-motion='moderate'] .map-life :is(.life-cloud, .life-glint, .life-wave),
+html[data-motion='minimal'] .map-life :is(.life-cloud, .life-glint, .life-wave) { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .map-life * { animation: none !important; }
+  .map-life :is(.life-cloud, .life-glint, .life-wave) { display: none; }
+}
+
 /* Лёгкий параллакс морского фона при прокрутке карты (только фон экрана, не карты островов). */
 @supports (animation-timeline: scroll()) {
   .screen.map .scene-bg { bottom: -8vh; animation: map-parallax linear both; animation-timeline: scroll(root); }

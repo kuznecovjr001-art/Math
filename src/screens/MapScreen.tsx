@@ -8,6 +8,7 @@ import { getMission } from '../content/missions';
 import { todaySuggestions } from '../content/plan';
 import { isReviewDue, missionDone } from '../engine/progress';
 import type { Attempt, MissionSession, Profile } from '../engine/types';
+import { MapLife } from '../motion/MapLife';
 import { Schetik } from '../motion/Schetik';
 import { bgVars, Emoji, Icon, SceneBg } from '../ui/art';
 import type { PlayMode } from './MissionPlayer';
@@ -141,6 +142,7 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
               {isl.title}
             </h2>
             <LazyMap className={`island-map ${bg ? 'drawn' : 'plain'}`} bg={bg}>
+              {bg && <MapLife island={isl.id} />}
               {stops.map((st) => stone(st.id, st))}
             </LazyMap>
             {extra.length > 0 && (
@@ -159,16 +161,22 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
 /**
  * Карта острова грузит свой рисунок, только когда подходит к экрану:
  * на слабом телефоне первый экран не ждёт картинок всех шести островов.
+ * Пока карта видна, у неё есть data-live — только тогда двигается её живой слой (MapLife).
  */
 function LazyMap({ className, bg, children }: { className: string; bg?: CSSProperties; children: ReactNode }) {
   const ref = useRef<HTMLOListElement>(null);
   const [near, setNear] = useState(typeof IntersectionObserver === 'undefined');
+  const [live, setLive] = useState(false);
   useEffect(() => {
     const el = ref.current;
-    if (near || !el) return;
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) setNear(true); }, { rootMargin: '400px' });
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver((es) => {
+      const e = es[es.length - 1];
+      if (e.isIntersecting) setNear(true);
+      setLive(e.intersectionRatio > 0);
+    }, { rootMargin: '400px', threshold: [0, 0.01] });
     io.observe(el);
     return () => io.disconnect();
-  }, [near]);
-  return <ol ref={ref} className={className} style={near ? bg : undefined}>{children}</ol>;
+  }, []);
+  return <ol ref={ref} className={className} style={near ? bg : undefined} data-live={live || undefined}>{children}</ol>;
 }
