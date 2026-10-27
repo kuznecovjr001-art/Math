@@ -809,3 +809,36 @@ details summary { min-height: 44px; display: flex; align-items: center; cursor: 
 
 /* Значок в метке «Вспомним» — свой рисунок с классом .emoji не должен вырастать до размера картинки миссии. */
 .today-card .today-reason .emoji { width: 18px; height: 18px; }
+
+/* ——— Правки по аудиту интерфейса ——— */
+/* Котёнок: куда можно посадить, видно сразу — лёгкий пунктир у всех зон. */
+.zone { border-color: rgba(61, 44, 0, 0.22); background: rgba(255, 255, 255, 0.18); }
+/* Остров таблицы: 9 камней на горе — камни меньше, подписи компактнее, чтобы не наезжали. */
+.island[data-island='table'] .island-map { --stone: 68px; }
+.island[data-island='table'] .stone-title { font-size: 13px; }
+@media (max-width: 520px) { .island[data-island='table'] .island-map { --stone: 46px; } }
+/* Пример на меловой доске читается: светлая плашка. */
+.fact { display: table; margin: 0 auto; padding: 4px 22px; border-radius: 20px; background: rgba(255, 253, 245, 0.92); box-shadow: 0 4px 0 var(--line); }
+/* Три варианта — в один ряд и на телефоне, без «сироты» во второй строке. */
+@media (max-width: 520px) {
+  .choices:has(> :nth-child(3):last-child) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
+  .choices:has(> :nth-child(3):last-child) > * { min-width: 0; }
+}
+/* Выключенная кнопка остаётся своего цвета: видно, что она станет нажимаемой. */
+.btn.primary:disabled { opacity: 1; background: #b9dfd8; border-color: #8cc7bd; color: #1f5f56; box-shadow: none; }
+/* Точки прогресса видны на любом фоне сцены. */
+.progress { background: rgba(255, 253, 245, 0.8); border-radius: 999px; padding: 6px 10px; }
+.dot { border-color: #3d2c00; }
+/* Подписи поверх нарисованных фонов — на светлой плашке. */
+.map-name { flex: 0 1 auto; background: rgba(255, 253, 245, 0.88); border-radius: 14px; padding: 2px 12px; margin-right: auto; }
+.field { background: rgba(255, 253, 245, 0.9); border-radius: 18px; padding: 10px 12px; color: var(--ink); }
+.error { color: #b23c1f; }
+.toggle input { flex: none; accent-color: var(--primary); }
+/* Пока грузится экран — фон сцены, а не пустота. */
+.screen.loading { min-height: 60vh; background: radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.6), transparent 70%); }
+/* Финиш на телефоне: Счётик не наезжает на медаль. */
+@media (max-width: 520px) { .finish-guide { margin-left: -8px; margin-top: 24px; } }
+/* «Сегодня» на телефоне ниже, чтобы острова были видны на первом экране. */
+@media (max-width: 520px) { .today-card { min-height: 72px; padding: 8px 12px; } .today-card .emoji { width: 52px; height: 52px; } }
+/* Плитки ответов на планшете крупнее. */
+@media (min-width: 900px) { .choices .btn.choice { min-width: 150px; min-height: 120px; } }
