@@ -81,6 +81,8 @@ def main():
     ap.add_argument('--shard', default='0/1')
     ap.add_argument('--compression', type=float, default=0.96)  # ~19 кбит/с Opus: чистая речь, корпус ~140 МБ
     args = ap.parse_args()
+    # Сломанная замена ударений испортила бы тысячи записей, а Whisper ударений не слышит — проверяем до генерации.
+    assert spoken('Сравни 2 числа.', {'сравни': 'сравнИ'}) == 'СравнИ два числа.', spoken('Сравни 2 числа.', {'сравни': 'сравнИ'})
 
     phrases = json.loads((ROOT / 'tts/out/phrases.json').read_text(encoding='utf-8'))
     stress = json.loads(STRESS.read_text(encoding='utf-8')) if STRESS.exists() else {}

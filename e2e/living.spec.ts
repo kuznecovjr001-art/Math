@@ -81,7 +81,8 @@ test('сортировка: предмет перетаскивается пал
   await page.getByRole('button', { name: 'QA' }).click();
   await page.locator(`button.stone-btn[aria-label^="${getMission('N10')!.title}"]`).click();
   const item = page.locator('.drag-item');
-  await expect(item).toBeVisible();
+  // Ждём, пока предмет встанет и примет касание: экран и карточка ещё проявляются (смена экрана, card-in).
+  await item.click({ trial: true });
   const before = await page.locator('.bin-items button').count();
   const bin = page.locator('.bin').first();
   const a = (await item.boundingBox())!, b = (await bin.boundingBox())!;

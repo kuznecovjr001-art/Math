@@ -290,7 +290,8 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
           {text}
         </div>
       </div>
-      {message && <div className="bubble" role="status">{message}</div>}
+      {/* Место под реплику занято всегда: появляясь, она не сдвигает игру из-под пальца. */}
+      <div className="bubble-slot">{message && <div className="bubble" role="status" key={message}>{message}</div>}</div>
       {p.kind === 'cups' && <CupsGame key={key} params={p} {...gameProps} />}
       {p.kind === 'basket' && <BasketGame key={key} params={p} {...gameProps} />}
       {p.kind === 'seats' && <SeatsGame key={key} params={p} {...gameProps} />}

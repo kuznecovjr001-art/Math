@@ -81,7 +81,7 @@ h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; }
   --ledge: var(--line);
   box-shadow: 0 5px 0 var(--ledge);
   margin-bottom: 5px;
-  transition: transform 0.08s, box-shadow 0.08s;
+  transition: transform 0.08s, box-shadow 0.08s, opacity var(--dur-appear) var(--ease-out);
 }
 .btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--ledge); }
 .btn:disabled { opacity: 0.45; cursor: default; }
@@ -891,3 +891,28 @@ details summary { min-height: 48px; }
 .avatar-grid:has(> :nth-child(10):last-child) > * { min-width: 0; }
 /* Финиш: совет для взрослых — отдельной читаемой карточкой. */
 .home-idea { background: rgba(255, 253, 245, 0.95); border: 2px dashed var(--line); color: var(--ink); }
+/* Всё задание видно без прокрутки: на узком телефоне четыре гостя в ряд, лёжа — плотнее по высоте. */
+@media (max-width: 520px) {
+  .receivers { gap: 8px; }
+  .receiver { min-width: 0; flex: 1 1 64px; max-width: 120px; padding: 6px; }
+  .receiver-main { min-width: 0; min-height: 64px; }
+  .receiver-main .emoji, .receiver-main img { width: 60px; height: 60px; }
+  .receiver-items:empty::before { width: 48px; }
+}
+@media (max-height: 500px) {
+  .game { gap: 10px; }
+  .stock { min-height: 56px; padding: 6px; }
+  .hand.drawn { width: min(120px, 22vh); }
+  /* Лёжа гость и его блюдце — рядом, а не друг под другом. */
+  .receivers { flex-wrap: nowrap; }
+  .receiver { flex-direction: row; gap: 8px; min-width: 0; flex: 1 1 0; max-width: 200px; }
+  .receiver-items { flex: 1; min-width: 0; }
+  .receiver-items:empty::before { width: 44px; height: 18px; }
+  .screen.mission { padding: 8px 12px; gap: 8px; }
+  .screen.mission .btn.big { min-height: 56px; padding: 6px 40px; }
+}
+/* Совсем низкий экран лёжа (360 px): запас чашек — мельче, чтобы «Готово» оставалась на экране. */
+@media (max-height: 380px) {
+  .stock { min-height: 0; padding: 4px; }
+  .stock img { width: 34px; height: 34px; }
+}

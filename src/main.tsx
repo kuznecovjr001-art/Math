@@ -10,6 +10,9 @@ import '@fontsource-variable/nunito';
 import './styles.css';
 import './motion/motion.css';
 
+// Браузер умеет растворять экран в экране (App.go) — тогда собственное проявление экранов не нужно.
+if ('startViewTransition' in document) document.documentElement.classList.add('vt');
+
 // Страница сборки Счётика — только при разработке (/#rig); в сборку приложения не попадает.
 const RigStudio = import.meta.env.DEV && location.hash === '#rig' ? lazy(() => import('./motion/rig/Studio')) : null;
 

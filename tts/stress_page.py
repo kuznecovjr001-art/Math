@@ -30,17 +30,12 @@ audio_dir = root / 'public/voice' / voice
 VOWELS = re.compile(r'[аеиоуыэюя]')
 
 
-def spoken(text: str) -> str:
-    # Ровно то, что произносил голос (ударная гласная в словаре — заглавная, ниже всё переводится в строчные).
-    return build_spoken(text, stress)
-
-
 freq: Counter = Counter()
 where: dict = defaultdict(list)
 for p in phrases:
     if not (audio_dir / f"{p['key']}.ogg").exists():
         continue
-    said = spoken(p['text'])
+    said = build_spoken(p['text'], stress)  # ровно то, что произносил голос
     for w in re.findall(r'[а-яё]+', said.lower()):
         if 'ё' in w or len(VOWELS.findall(w)) < 2:
             continue
