@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PHRASE, PRAISE, pickPhrase, SUPPORT } from '../audio/phrases';
-import { hasRecording, speak, stopSpeaking, voiceReady } from '../audio/voice';
+import { hasRecording, speak, speakAll, stopSpeaking, voiceReady } from '../audio/voice';
 import { stickerArt } from '../content/art';
 import { MISSION_SCENE } from '../content/scenes';
 import { seededRng } from '../content/generate';
 import { missionLength } from '../content/levels';
-import { cardId, instruction, voiceText, type CardParams, type Mission } from '../content/missions';
+import { cardId, instruction, voiceParts, voiceText, type CardParams, type Mission } from '../content/missions';
 import { buildSteps, type PlayMode } from '../content/steps';
 import { newId } from '../engine/storage';
 import type { Attempt, HelpLevel, MissionSession, Mode, Variant } from '../engine/types';
@@ -60,7 +60,7 @@ type NewAttempt = Omit<Attempt, 'id' | 'profileId' | 'at'>;
 
 /** Карточка озвучена целиком: задание и подсказки к ней есть в записях голоса. */
 const voiced = (m: Mission) => (p: CardParams) =>
-  hasRecording(voiceText(instruction(p))) && (m.helpFor?.(p) ?? []).every((h) => hasRecording(voiceText(h)));
+  voiceParts(instruction(p)).every(hasRecording) && (m.helpFor?.(p) ?? []).every((h) => hasRecording(voiceText(h)));
 
 const MODE_OF: Record<Variant, Mode> = { A: 'learn', B: 'probe', C: 'review' };
 /** Пауза после фразы Счётика, прежде чем сменится карточка: фраза не обрывается на полуслове. */
@@ -110,7 +110,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     if (done) return;
     // Счётик сам решает, как реагировать (motion/character): здоровается на первой карточке, потом слушает.
     emit({ type: 'TASK_STARTED', first: pos === 0 });
-    void speak(voiceText(text), 'question');
+    void speakAll(voiceParts(text), 150, 'question');
   }, [text, pos, done]);
 
   // Экран могли закрыть («Домой»), пока плеер ждал конца фразы: тогда ни речи, ни смены карточки.
@@ -271,7 +271,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
             <span key={i} className={`dot ${i < pos ? 'past' : i === pos ? 'now' : ''}`} title={STEP_TITLE[s.variant]} />
           ))}
         </div>
-        <button className="btn icon" onClick={() => { setReplay((n) => n + 1); void speak(voiceText(text), 'question'); }} aria-label="Повторить задание"><Icon name="sound" /></button>
+        <button className="btn icon" onClick={() => { setReplay((n) => n + 1); void speakAll(voiceParts(text), 150, 'question'); }} aria-label="Повторить задание"><Icon name="sound" /></button>
         <button
           className={`btn icon help ${errors > 0 && help === 0 ? 'pulse' : ''}`}
           onClick={raiseHelp}

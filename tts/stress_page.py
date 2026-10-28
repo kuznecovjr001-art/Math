@@ -19,7 +19,7 @@ import torch
 from transformers import pipeline
 
 sys.path.insert(0, str(Path(__file__).parent))
-from normalize_ru import normalize  # noqa: E402
+from build_voice import spoken as build_spoken  # noqa: E402
 from verify_asr import words  # noqa: E402
 
 voice = sys.argv[1]
@@ -31,11 +31,8 @@ VOWELS = re.compile(r'[аеиоуыэюя]')
 
 
 def spoken(text: str) -> str:
-    # Как в build_voice.spoken: проверяем ровно то, что произносил голос.
-    t = normalize(text.replace('…', '.'))
-    for word, fixed in stress.items():
-        t = re.sub(rf'\b{re.escape(word)}\b', fixed, t)
-    return t
+    # Ровно то, что произносил голос (ударная гласная в словаре — заглавная, ниже всё переводится в строчные).
+    return build_spoken(text, stress)
 
 
 freq: Counter = Counter()

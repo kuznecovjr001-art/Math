@@ -35,8 +35,11 @@ MIN_CPS, MAX_CPS = 6.0, 22.0
 
 def spoken(text: str, stress: dict) -> str:
     t = normalize(text.replace('…', '.'))
+    # Ударная гласная заглавной буквой («сравнИ»): из знака ´, «+» и заглавной модель на слух слушается только её.
     for word, fixed in stress.items():
-        t = re.sub(rf'\b{re.escape(word)}\b', fixed, t)
+        # Без учёта регистра: «Сравни» в начале фразы тоже исправляется, заглавная первая буква сохраняется.
+        t = re.sub(rf'(?<![а-яё]){re.escape(word)}(?![а-яё])',
+                   lambda m: fixed[0].upper() + fixed[1:] if m.group()[0].isupper() else fixed, t, flags=re.I)
     return t
 
 

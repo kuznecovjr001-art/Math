@@ -128,6 +128,19 @@ export function voiceText(text: string): string {
     .trim();
 }
 
+/**
+ * Постоянные хвосты инструкций: звучат отдельной записью, выбранной на слух. Синтез ставит в них ударение
+ * то верно, то нет («прЫгай»), и в сотнях вариантов задания его не проверить — а одна запись проверена.
+ */
+const FIXED_TAILS = ['Прыгай по числовой прямой: сначала десятками, потом единицами.'];
+
+/** Фразы, которыми озвучивается текст: обычно одна, у задания с постоянным хвостом — вопрос и хвост. */
+export function voiceParts(text: string): string[] {
+  const t = voiceText(text);
+  const tail = FIXED_TAILS.find((x) => t.endsWith(` ${x}`));
+  return tail ? [t.slice(0, -tail.length).trim(), tail] : [t];
+}
+
 /** Озвучиваемая инструкция к карточке. */
 export function instruction(p: CardParams): string {
   if (isMore(p)) return instructionMore(p);
