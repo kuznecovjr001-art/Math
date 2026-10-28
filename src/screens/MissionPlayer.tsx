@@ -63,6 +63,10 @@ const voiced = (m: Mission) => (p: CardParams) =>
   hasRecording(voiceText(instruction(p))) && (m.helpFor?.(p) ?? []).every((h) => hasRecording(voiceText(h)));
 
 const MODE_OF: Record<Variant, Mode> = { A: 'learn', B: 'probe', C: 'review' };
+/** Пауза после фразы Счётика, прежде чем сменится карточка: фраза не обрывается на полуслове. */
+const BREATH_MS = 350;
+/** Уход карточки — как .screen.mission[data-leaving] в motion.css. */
+const LEAVE_MS = 320;
 
 const STEP_TITLE: Record<Variant, string> = {
   A: 'Учимся',
@@ -96,6 +100,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   const [message, setMessage] = useState<string | null>(null);
   const [replay, setReplay] = useState(0);
   const [done, setDone] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const busy = useRef(false);
   const step = steps[pos];
   const text = instruction(step.params);
@@ -157,12 +162,12 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     });
 
     /**
-     * Ответ разблокируется, когда договорена фраза, но не раньше min (видна реакция) и не позже max:
-     * без звука, без записи или при сбое игра идёт дальше сама.
+     * Ответ разблокируется, когда фраза договорена и после неё прошла короткая пауза, но не раньше min
+     * (видна реакция). max — только страховка от зависшей записи; без звука или записи игра идёт дальше сама.
      */
-    const release = (min: number, said: Promise<void> = Promise.resolve(), then?: () => void, max = 2500) => {
+    const release = (min: number, said: Promise<void> = Promise.resolve(), then?: () => void, max = 8000) => {
       const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-      void Promise.all([wait(min), Promise.race([said, wait(max)])]).then(() => {
+      void Promise.all([wait(min), Promise.race([said.then(() => wait(BREATH_MS)), wait(max)])]).then(() => {
         if (!alive.current) return;
         then?.();
         busy.current = false;
@@ -186,15 +191,21 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
       // Разбор после ответа не обрывается: ждём его, даже если похвала короче (без движения — сразу дальше).
       const show = motionOff() ? 0 : r.showMs ?? 0;
       release(Math.max(700, show), speak(praise, 'praise'), () => {
-        setMessage(null);
-        setErrors(0);
-        setHelp(0);
-        if (pos + 1 < steps.length) setPos(pos + 1);
-        else {
-          setDone(true);
-          void speak(`${mission.praise} ${mission.finish}`, 'praise');
-          onFinish();
-        }
+        // Карточка сначала мягко уходит, потом появляется следующая (или финиш) — без резкой подмены.
+        setLeaving(true);
+        setTimeout(() => {
+          if (!alive.current) return;
+          setLeaving(false);
+          setMessage(null);
+          setErrors(0);
+          setHelp(0);
+          if (pos + 1 < steps.length) setPos(pos + 1);
+          else {
+            setDone(true);
+            void speak(`${mission.praise} ${mission.finish}`, 'praise');
+            onFinish();
+          }
+        }, motionOff() ? 0 : LEAVE_MS);
       });
       return;
     }
@@ -246,6 +257,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   return (
     <div
       className="screen mission"
+      data-leaving={leaving || undefined}
       // Касание предмета в игре: Счётик просыпается и смотрит на действие (кнопки панели не считаются).
       onPointerDown={(e) => {
         if ((e.target as Element).closest('.game button, .game [draggable], .game .tap')) emit({ type: 'OBJECT_PICKED' });

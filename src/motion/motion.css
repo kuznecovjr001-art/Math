@@ -262,3 +262,13 @@ html[data-motion='minimal'] .clock-hand { animation: none; }
 /* Умножение: группы точек появляются по очереди. */
 .dot-group { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * var(--step, 320ms)); }
 html[data-motion='minimal'] .dot-group { animation: none; }
+
+/* Смена карточки: старая мягко уходит (MissionPlayer LEAVE_MS), новая проявляется. Экраны появляются плавно. */
+.screen { animation: screen-in 280ms var(--ease-out) both; }
+@keyframes screen-in { from { opacity: 0; } }
+.screen.mission > .game, .screen.mission .task-text { animation: card-in 380ms var(--ease-out) both; }
+@keyframes card-in { from { opacity: 0; transform: translateY(12px); } }
+.screen.mission .task-text[data-flash] { animation: task-flash 900ms var(--ease-out); }
+.screen.mission > .game, .screen.mission .task-text, .screen.mission .bubble { transition: opacity 320ms var(--ease-out), transform 320ms var(--ease-out); }
+.screen.mission[data-leaving] > .game, .screen.mission[data-leaving] .task-text, .screen.mission[data-leaving] .bubble { opacity: 0; transform: translateY(-10px); }
+html[data-motion='minimal'] .screen, html[data-motion='minimal'] .screen.mission > .game, html[data-motion='minimal'] .screen.mission .task-text { animation: none; }

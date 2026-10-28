@@ -48,6 +48,8 @@ export default defineConfig({
   plugins: [react(), rigSave],
   // gsap грузится в отдельном чанке рига: без этого dev-сервер находит его на лету и перезагружает страницу.
   optimizeDeps: { include: ['gsap'] },
+  // Отчёты тестов (.qa) перезагружали страницу посреди e2e; 14 тыс. файлов голоса тормозили запуск dev-сервера.
+  server: { watch: { ignored: ['**/.qa/**', '**/public/voice/**'] } },
   base: './',
   // Рабочие копии агентов (.claude/worktrees) и Android-сборка — не тесты этого дерева.
   test: { environment: 'node', exclude: [...configDefaults.exclude, '.claude/**', 'android/**', 'e2e/**'] },
