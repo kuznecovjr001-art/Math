@@ -281,8 +281,8 @@ html, body { overscroll-behavior-y: contain; }
 html.vt .screen { animation: none; }
 /* Реплика Счётика: место под две строки зарезервировано, она появляется мягко и не двигает игру. */
 .bubble-slot { min-height: 84px; display: flex; justify-content: center; align-items: flex-start; }
-@media (max-height: 500px) {
-  /* Лёжа места нет: реплика всплывает поверх верха игры, ничего не сдвигая. */
+@media (max-height: 500px), (max-height: 700px) and (max-width: 420px) {
+  /* Лёжа и на маленьком телефоне места нет: реплика всплывает поверх верха игры, ничего не сдвигая. */
   .bubble-slot { min-height: 0; height: 0; position: relative; z-index: 3; }
   .bubble-slot .bubble { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; width: fit-content; }
 }

@@ -27,6 +27,6 @@ for (const [w, h] of [[915, 412], [740, 360], [360, 640]]) {
       if (r.low > r.H + 1) bad.push(`${id} low=${r.low} H=${r.H} doc=${r.doc}`);
       await page.getByRole('button', { name: 'Домой' }).click();
     }
-    console.log(`${w}x${h}: ${bad.length} below fold\n` + bad.join('\n'));
+    expect(bad, 'ниже края экрана').toEqual([]);
   });
 }
