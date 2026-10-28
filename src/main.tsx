@@ -22,6 +22,11 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
+// Первый вход в миссию не ждёт разбора чанков экранов: готовим их в простое, пока ребёнок на карте
+// (на Android service worker нет, и без этого чанк грузился в момент нажатия).
+const idle = (f: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2000));
+idle(() => void preloadScreens());
+
 // На Android всё уже внутри APK: кэш service worker только мешал бы обновлениям.
 if ('serviceWorker' in navigator && import.meta.env.PROD && !isNative) {
   window.addEventListener('load', () => {

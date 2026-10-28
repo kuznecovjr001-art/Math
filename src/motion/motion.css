@@ -250,8 +250,8 @@ html[data-motion='minimal'] .bin.near { transform: none; }
   animation: pop var(--dur-appear) var(--ease-spring) backwards; pointer-events: none; }
 
 /* Старые анимации из styles.css на уровнях движения. Пульс помощи — сигнал, но не бесконечный в «умеренном». */
-html[data-motion='moderate'] .btn.help.pulse { animation-iteration-count: 3; }
-html[data-motion='minimal'] .btn.help.pulse, html[data-motion='minimal'] .parcel.arrive,
+html[data-motion='moderate'] .btn.help.pulse::after { animation-iteration-count: 3; }
+html[data-motion='minimal'] .btn.help.pulse::after, html[data-motion='minimal'] .parcel.arrive,
 html[data-motion='minimal'] .array-scene.turned, html[data-motion='minimal'] .shirt-button.fallen,
 html[data-motion='minimal'] .finish-guide, html[data-motion='minimal'] .ribbon { animation: none; transition: none; }
 
