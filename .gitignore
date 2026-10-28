@@ -6,3 +6,4 @@ tsconfig.tsbuildinfo
 .claude/worktrees/
 .qa/
 tts/out/
+__pycache__/
