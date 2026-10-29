@@ -41,7 +41,9 @@ export function useDragToZone(onDrop: (zone: number) => void, disabled: boolean)
     onPointerMove(e: React.PointerEvent<HTMLElement>) {
       const s = st.current;
       if (!s) return;
-      s.el.style.transform = `translate(${e.clientX - s.x}px, ${e.clientY - s.y}px) scale(1.08)`;
+      // Внутри увеличенной или уменьшенной сцены (CSS zoom) сдвиг пересчитываем, чтобы предмет шёл ровно под пальцем.
+      const z = (s.el as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom || 1;
+      s.el.style.transform = `translate(${(e.clientX - s.x) / z}px, ${(e.clientY - s.y) / z}px) scale(1.08)`;
       setNear(zoneAt(e.clientX, e.clientY));
     },
     onPointerUp(e: React.PointerEvent<HTMLElement>) {

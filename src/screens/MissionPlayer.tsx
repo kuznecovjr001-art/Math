@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { PHRASE } from '../audio/phrases';
-import { hasRecording, speak, stopSpeaking, voiceReady } from '../audio/voice';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { PHRASE, PRAISE, pickPhrase, SUPPORT } from '../audio/phrases';
+import { hasRecording, speak, speakAll, stopSpeaking, voiceReady } from '../audio/voice';
 import { stickerArt } from '../content/art';
 import { MISSION_SCENE } from '../content/scenes';
 import { seededRng } from '../content/generate';
 import { missionLength } from '../content/levels';
-import { cardId, instruction, voiceText, type CardParams, type Mission } from '../content/missions';
+import { cardId, instruction, voiceParts, voiceText, type CardParams, type Mission } from '../content/missions';
 import { buildSteps, type PlayMode } from '../content/steps';
 import { newId } from '../engine/storage';
 import type { Attempt, HelpLevel, MissionSession, Mode, Variant } from '../engine/types';
@@ -52,6 +52,7 @@ import { WeekGame } from '../games/WeekGame';
 import { UnitPickGame } from '../games/UnitPickGame';
 import type { GameResult } from '../games/types';
 import { emit } from '../motion/events';
+import { motionOff } from '../motion/flight';
 import { Schetik } from '../motion/Schetik';
 import { Emoji, Icon, SceneBg } from '../ui/art';
 
@@ -59,9 +60,34 @@ type NewAttempt = Omit<Attempt, 'id' | 'profileId' | 'at'>;
 
 /** Карточка озвучена целиком: задание и подсказки к ней есть в записях голоса. */
 const voiced = (m: Mission) => (p: CardParams) =>
-  hasRecording(voiceText(instruction(p))) && (m.helpFor?.(p) ?? []).every((h) => hasRecording(voiceText(h)));
+  voiceParts(instruction(p)).every(hasRecording) && (m.helpFor?.(p) ?? []).every((h) => hasRecording(voiceText(h)));
 
 const MODE_OF: Record<Variant, Mode> = { A: 'learn', B: 'probe', C: 'review' };
+/** Пауза после фразы Счётика, прежде чем сменится карточка: фраза не обрывается на полуслове. */
+const BREATH_MS = 350;
+/**
+ * Всё задание — на одном экране: если игра не помещается по высоте, её самые высокие части по очереди уменьшаются
+ * ровно настолько, чтобы «Готово» и ответы остались видны. Ребёнок не знает, что можно прокрутить.
+ * Ответы — не мельче 3/4 (плитка остаётся не меньше 48 px), картинка сцены — не мельче половины.
+ */
+function fitScene(screen: HTMLElement) {
+  const game = screen.querySelector<HTMLElement>(':scope > .game');
+  if (!game) return;
+  const parts = ([...game.children] as HTMLElement[]).filter((el) => !el.matches('button'));
+  parts.forEach((el) => { el.style.zoom = ''; });
+  const over = () => document.documentElement.scrollHeight - window.innerHeight;
+  for (const el of parts.sort((a, b) => b.offsetHeight - a.offsetHeight)) {
+    const was = over();
+    if (was <= 0) return;
+    const h = el.offsetHeight;
+    el.style.zoom = String(Math.max(el.matches('.choices') ? 0.75 : 0.5, (h - was - 2) / h));
+    // Часть не задавала высоту (рядом выше соседняя колонка): уменьшать её незачем.
+    if (over() >= was) el.style.zoom = '';
+  }
+}
+
+/** Уход карточки — как .screen.mission[data-leaving] в motion.css. */
+const LEAVE_MS = 320;
 
 const STEP_TITLE: Record<Variant, string> = {
   A: 'Учимся',
@@ -93,7 +119,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
   const [locked, setLocked] = useState(false);
   const [errors, setErrors] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
+  const [replay, setReplay] = useState(0);
   const [done, setDone] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const busy = useRef(false);
   const step = steps[pos];
   const text = instruction(step.params);
@@ -103,12 +131,31 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     if (done) return;
     // Счётик сам решает, как реагировать (motion/character): здоровается на первой карточке, потом слушает.
     emit({ type: 'TASK_STARTED', first: pos === 0 });
-    void speak(voiceText(text), 'question');
+    void speakAll(voiceParts(text), 150, 'question');
   }, [text, pos, done]);
 
   // Экран могли закрыть («Домой»), пока плеер ждал конца фразы: тогда ни речи, ни смены карточки.
+  // Флаг ставится и при монтировании: StrictMode в разработке монтирует экран дважды, и без этого
+  // после первой «смерти» карточки переставали бы сменяться.
   const alive = useRef(true);
-  useEffect(() => () => { alive.current = false; stopSpeaking(); }, []);
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; stopSpeaking(); };
+  }, []);
+
+  // До первого кадра новой карточки и при любом изменении размеров игры (поворот, предметы в корзине).
+  const screenRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const screen = screenRef.current;
+    const game = screen?.querySelector(':scope > .game');
+    if (!screen || !game) return;
+    const fit = () => fitScene(screen);
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(game);
+    window.addEventListener('resize', fit);
+    return () => { ro.disconnect(); window.removeEventListener('resize', fit); };
+  }, [round.seed, pos, done]);
 
   // После показа финиша: Счётик финишного экрана уже подписан на события и празднует.
   useEffect(() => { if (done) emit({ type: 'MISSION_COMPLETED' }); }, [done]);
@@ -150,12 +197,12 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     });
 
     /**
-     * Ответ разблокируется, когда договорена фраза, но не раньше min (видна реакция) и не позже max:
-     * без звука, без записи или при сбое игра идёт дальше сама.
+     * Ответ разблокируется, когда фраза договорена и после неё прошла короткая пауза, но не раньше min
+     * (видна реакция). max — только страховка от зависшей записи; без звука или записи игра идёт дальше сама.
      */
-    const release = (min: number, said: Promise<void> = Promise.resolve(), then?: () => void, max = 2500) => {
+    const release = (min: number, said: Promise<void> = Promise.resolve(), then?: () => void, max = 8000) => {
       const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-      void Promise.all([wait(min), Promise.race([said, wait(max)])]).then(() => {
+      void Promise.all([wait(min), Promise.race([said.then(() => wait(BREATH_MS)), wait(max)])]).then(() => {
         if (!alive.current) return;
         then?.();
         busy.current = false;
@@ -174,18 +221,26 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
 
     if (r.correct) {
       emit({ type: 'ANSWER_CORRECT', final: true });
-      const praise = steps[pos + 1] ? PHRASE.good : mission.praise;
+      const praise = steps[pos + 1] ? pickPhrase(PRAISE) : mission.praise;
       setMessage(praise);
-      release(700, speak(praise, 'praise'), () => {
-        setMessage(null);
-        setErrors(0);
-        setHelp(0);
-        if (pos + 1 < steps.length) setPos(pos + 1);
-        else {
-          setDone(true);
-          void speak(`${mission.praise} ${mission.finish}`, 'praise');
-          onFinish();
-        }
+      // Разбор после ответа не обрывается: ждём его, даже если похвала короче (без движения — сразу дальше).
+      const show = motionOff() ? 0 : r.showMs ?? 0;
+      release(Math.max(700, show), speak(praise, 'praise'), () => {
+        // Карточка сначала мягко уходит, потом появляется следующая (или финиш) — без резкой подмены.
+        setLeaving(true);
+        setTimeout(() => {
+          if (!alive.current) return;
+          setLeaving(false);
+          setMessage(null);
+          setErrors(0);
+          setHelp(0);
+          if (pos + 1 < steps.length) setPos(pos + 1);
+          else {
+            setDone(true);
+            void speak(`${mission.praise} ${mission.finish}`, 'praise');
+            onFinish();
+          }
+        }, motionOff() ? 0 : LEAVE_MS);
       });
       return;
     }
@@ -196,8 +251,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     if (nextErrors >= 2 && help < 3) {
       release(900, undefined, raiseHelp);
     } else {
-      setMessage(PHRASE.again);
-      release(900, speak(PHRASE.again, 'support'));
+      const support = pickPhrase(SUPPORT);
+      setMessage(support);
+      release(900, speak(support, 'support'));
     }
   };
 
@@ -235,7 +291,9 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
 
   return (
     <div
+      ref={screenRef}
       className="screen mission"
+      data-leaving={leaving || undefined}
       // Касание предмета в игре: Счётик просыпается и смотрит на действие (кнопки панели не считаются).
       onPointerDown={(e) => {
         if ((e.target as Element).closest('.game button, .game [draggable], .game .tap')) emit({ type: 'OBJECT_PICKED' });
@@ -249,7 +307,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
             <span key={i} className={`dot ${i < pos ? 'past' : i === pos ? 'now' : ''}`} title={STEP_TITLE[s.variant]} />
           ))}
         </div>
-        <button className="btn icon" onClick={() => void speak(voiceText(text), 'question')} aria-label="Повторить задание"><Icon name="sound" /></button>
+        <button className="btn icon" onClick={() => { setReplay((n) => n + 1); void speakAll(voiceParts(text), 150, 'question'); }} aria-label="Повторить задание"><Icon name="sound" /></button>
         <button
           className={`btn icon help ${errors > 0 && help === 0 ? 'pulse' : ''}`}
           onClick={raiseHelp}
@@ -262,12 +320,14 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
       <h1 className="sr-only">{mission.title}</h1>
       <div className="task-row">
         <Schetik size={84} className="task-guide" />
-        <div className="task-text">
+        {/* Повтор задания виден и без звука: текст мягко подсвечивается. Новая карточка объявляется читалке. */}
+        <div className="task-text" aria-live="polite" key={`t${pos}-${replay}`} data-flash={replay > 0 || undefined}>
           <span className="step-tag">{step.variant === 'C' && <Icon name="review" size={16} />}{STEP_TITLE[step.variant]}</span>
           {text}
         </div>
       </div>
-      {message && <div className="bubble" role="status">{message}</div>}
+      {/* Место под реплику занято всегда: появляясь, она не сдвигает игру из-под пальца. */}
+      <div className="bubble-slot">{message && <div className="bubble" role="status" key={message}>{message}</div>}</div>
       {p.kind === 'cups' && <CupsGame key={key} params={p} {...gameProps} />}
       {p.kind === 'basket' && <BasketGame key={key} params={p} {...gameProps} />}
       {p.kind === 'seats' && <SeatsGame key={key} params={p} {...gameProps} />}

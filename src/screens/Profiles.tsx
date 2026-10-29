@@ -77,7 +77,7 @@ export function Profiles({ profiles, onPick, onCreate, onParent }: Props) {
           </button>
         ))}
         {profiles.length < 6 && (
-          <button className="tap avatar add" onClick={() => setAdding(true)} aria-label="Добавить ребёнка"><Icon name="plus" size={56} /></button>
+          <button className="tap avatar add" onClick={() => setAdding(true)} aria-label="Добавить ребёнка"><Icon name="plus" size={56} /><span className="avatar-name">Новый</span></button>
         )}
       </div>
     </div>

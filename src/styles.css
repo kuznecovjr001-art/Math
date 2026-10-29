@@ -29,7 +29,8 @@
 html, body, #root { margin: 0; min-height: 100%; }
 
 body {
-  background: radial-gradient(circle at 20% 0%, var(--bg-2), var(--bg) 60%) fixed;
+  /* Без «fixed»: фиксированный фон перерисовывает весь экран на каждом кадре прокрутки. */
+  background: radial-gradient(circle at 20% 0%, var(--bg-2), var(--bg) 60%);
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
@@ -81,7 +82,7 @@ h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; }
   --ledge: var(--line);
   box-shadow: 0 5px 0 var(--ledge);
   margin-bottom: 5px;
-  transition: transform 0.08s, box-shadow 0.08s;
+  transition: transform 0.08s, box-shadow 0.08s, opacity var(--dur-appear) var(--ease-out);
 }
 .btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--ledge); }
 .btn:disabled { opacity: 0.45; cursor: default; }
@@ -91,12 +92,14 @@ h2 { font-size: 22px; font-weight: 900; margin: 0 0 8px; }
 .btn.danger { border-color: var(--attention); --ledge: #f2b8a6; color: #9c3d24; }
 .btn.icon { width: 64px; height: 64px; padding: 0; font-size: 28px; flex: none; border-radius: 22px; }
 .btn.help { background: #fff3c4; border-color: var(--accent); --ledge: #c9773a; font-size: 32px; }
-.btn.help.pulse { animation: pulse 1.2s ease-in-out infinite; }
+/* Пульс кнопки помощи — кольцом на ::after (transform/opacity), а не box-shadow: без перерисовки на каждом кадре. */
+.btn.help.pulse { position: relative; }
+.btn.help.pulse::after { content: ''; position: absolute; inset: -4px; border-radius: inherit; border: 4px solid rgba(244, 162, 97, 0.7); pointer-events: none; animation: pulse 1.2s ease-in-out infinite; }
 .btn:focus-visible, .tap:focus-visible { outline: 4px solid #118ab2; outline-offset: 3px; }
 
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 162, 97, 0.7); }
-  50% { box-shadow: 0 0 0 14px rgba(244, 162, 97, 0); }
+  0% { transform: scale(1); opacity: 1; }
+  70%, 100% { transform: scale(1.3); opacity: 0; }
 }
 
 .tap {
@@ -318,9 +321,10 @@ body:has(.screen.map) { background: var(--sea); }
 /* Миссия */
 .mission-bar { display: flex; align-items: center; gap: 10px; }
 .mission-bar h1 { margin: 0; flex: 1; text-align: left; font-size: 28px; }
-.progress { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 6px; }
+/* Точки в одну строку: на узком телефоне 9 шагов сжимают промежутки, а не переносятся. */
+.progress { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: clamp(2px, 1vw, 6px); }
 /* Миссии длинные, точек много: держим их мелкими, но с контуром, как камни на карте. */
-.dot { width: 16px; height: 16px; flex-shrink: 0; border-radius: 50%; background: var(--card); border: 2px solid var(--line); }
+.dot { width: clamp(11px, 3.4vw, 16px); height: clamp(11px, 3.4vw, 16px); flex-shrink: 0; border-radius: 50%; background: var(--card); border: 2px solid var(--line); }
 .dot.past { background: var(--primary); border-color: #1f7a6f; }
 .dot.now { background: var(--accent); border-color: #c9773a; transform: scale(1.35); box-shadow: 0 0 0 3px var(--card); }
 .task-text {
@@ -407,6 +411,9 @@ body:has(.screen.map) { background: var(--sea); }
   cursor: pointer;
 }
 .group.plate .group-add { border-radius: 50%; background: #fff; border-color: #90a4ae; }
+/* Нарисованные коробка и тарелка вместо плоских заглушек (артовые переменные — artVars в ui/art.tsx). */
+.group.box .group-add { background: var(--art-box-back, #f6e0c2) center / contain no-repeat; border-color: transparent; }
+.group.plate .group-add { background: var(--art-plate, #fff) center / contain no-repeat; border-color: transparent; }
 .group-items {
   position: absolute;
   top: 8px;
@@ -527,6 +534,13 @@ body:has(.screen.map) { background: var(--sea); }
 .fact { text-align: center; font-size: 56px; font-weight: 800; }
 .dot-groups { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 .dot-group { display: flex; flex-wrap: wrap; gap: 4px; width: 64px; min-height: 36px; padding: 6px; justify-content: center; align-content: center; border: 3px solid #90a4ae; border-radius: 14px; background: #fff; }
+.dot-group { position: relative; }
+.expr-model { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 360px; margin: 0 auto; }
+.expr-model i { width: 18px; height: 18px; border-radius: 50%; background: #e63946; display: block; }
+.expr-model i.q { background: #118ab2; }
+.expr-model i.gone { background: #c9c3b5; }
+.group-sum { position: absolute; left: 50%; bottom: -26px; transform: translateX(-50%); font-size: 18px; font-weight: 900; color: #118ab2; }
+.dot-groups:has(.group-sum) { row-gap: 32px; padding-bottom: 26px; }
 .dot-group i { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); display: block; }
 
 .album-island { text-align: left; margin: 12px 0 8px; }
@@ -537,6 +551,8 @@ body:has(.screen.map) { background: var(--sea); }
 
 /* Задания по учебникам NCERT */
 .position-scene { position: relative; width: min(100%, 360px); aspect-ratio: 360 / 230; margin: 0 auto; background: var(--card); border: 3px solid var(--line); border-radius: var(--radius); }
+.cat-wait { display: flex; justify-content: center; min-height: 56px; }
+.cat { display: inline-flex; }
 .position-art { position: absolute; inset: 0; width: 100%; height: 100%; }
 .zone { position: absolute; display: flex; align-items: center; justify-content: center; background: transparent; border: 3px dashed transparent; border-radius: 16px; cursor: pointer; padding: 0; }
 .zone:hover, .zone:focus-visible { border-color: var(--line); }
@@ -555,6 +571,11 @@ body:has(.screen.map) { background: var(--sea); }
 .bead.blue { background: #118ab2; }
 .bead.yellow { background: #ffd166; }
 .bead.green { background: #2a9d8f; }
+/* Второй признак кроме цвета (для детей, плохо различающих цвета): у каждого цвета свой знак внутри. */
+.bead:is(.blue, .yellow, .green)::after { content: ''; display: block; width: 36%; height: 36%; }
+.bead.blue::after { background: rgba(255, 255, 255, 0.85); border-radius: 2px; }
+.bead.yellow::after { border: 3px solid rgba(61, 44, 0, 0.6); border-radius: 50%; }
+.bead.green::after { background: rgba(255, 255, 255, 0.85); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .bead.empty { background: #fff; border-style: dashed; color: var(--ink-soft); }
 .bead.gap { margin-left: 14px; }
 
@@ -575,6 +596,10 @@ body:has(.screen.map) { background: var(--sea); }
 @keyframes fall { from { transform: translateY(-160px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .hands { display: flex; gap: 16px; justify-content: center; }
+.hand.drawn { position: relative; width: min(150px, 38vw); }
+.hand.drawn img { display: block; width: 100%; height: auto; }
+.finger-label { position: absolute; transform: translate(-50%, -110%); min-width: 24px; padding: 0 4px; border-radius: 12px;
+  background: #fff; border: 2px solid #118ab2; color: #0b5d78; font-size: 14px; font-weight: 800; line-height: 20px; text-align: center; }
 
 .ribbons { display: flex; flex-direction: column; gap: 18px; margin: 0 auto; max-width: 100%; padding: 12px; background: var(--card); border: 3px solid var(--line); border-radius: var(--radius); }
 .ribbons.aligned { border-left: 6px solid #118ab2; }
@@ -644,6 +669,10 @@ body:has(.screen.map) { background: var(--sea); }
 .tray-empty { color: var(--ink-soft); font-weight: 700; }
 .coin { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; font-weight: 900; font-size: 22px; color: #3d2c00; background: radial-gradient(circle at 35% 30%, #fff1b8, #e9c46a 60%, #c99a2e); border: 3px solid #b5852a; }
 .coin.c10 { background: radial-gradient(circle at 35% 30%, #f1f1f1, #c0c4c8 60%, #8d949a); border-color: #7b8287; }
+.coin-art { position: relative; display: inline-block; width: 56px; height: 56px; }
+.coin-art img { display: block; }
+.coin-art b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900;
+  color: #3d2c00; text-shadow: 0 0 3px #fff8dc, 0 0 6px #fff8dc; }
 .coin-btn { border: 0; background: none; padding: 0; min-width: 56px; min-height: 56px; cursor: pointer; }
 .btn.choice.coin-pick { min-width: 88px; min-height: 88px; }
 .pay { align-self: center; }
@@ -720,8 +749,10 @@ body:has(.screen.map) { background: var(--sea); }
 .sym-half i.ghost { background: #e0c3fc; }
 .sym-axis { width: 0; align-self: stretch; border-left: 4px dashed #e76f51; margin: 0 8px; }
 .clock-scene { flex-direction: column; }
-.clock-face { fill: #fff; stroke: #3d2c00; stroke-width: 6; }
-.clock-num { font-size: 20px; font-weight: 800; text-anchor: middle; fill: #3d2c00; }
+.clock-face { fill: #fffaf0; stroke: #3d2c00; stroke-width: 6; }
+.clock-tick { stroke: #b9a77a; stroke-width: 1.5; }
+.clock-tick.big { stroke: #3d2c00; stroke-width: 3; }
+.clock-num { font-size: 19px; font-weight: 800; text-anchor: middle; fill: #3d2c00; }
 .clock-hour { stroke: #3d2c00; stroke-width: 9; stroke-linecap: round; }
 .clock-min { stroke: #3d2c00; stroke-width: 5; stroke-linecap: round; }
 .clock-hour.hint { stroke: #1d6fa5; }
@@ -783,3 +814,120 @@ details summary { min-height: 44px; display: flex; align-items: center; cursor: 
 
 /* Значок в метке «Вспомним» — свой рисунок с классом .emoji не должен вырастать до размера картинки миссии. */
 .today-card .today-reason .emoji { width: 18px; height: 18px; }
+
+/* ——— Правки по аудиту интерфейса ——— */
+/* Котёнок: куда можно посадить, видно сразу — лёгкий пунктир у всех зон. */
+.zone { border-color: rgba(61, 44, 0, 0.22); background: rgba(255, 255, 255, 0.18); }
+/* Остров таблицы: 9 камней на горе — камни меньше, подписи компактнее, чтобы не наезжали. */
+.island[data-island='table'] .island-map { --stone: 68px; }
+.island[data-island='table'] .stone-title { font-size: 13px; }
+@media (max-width: 520px) { .island[data-island='table'] .island-map { --stone: 46px; } }
+/* Пример на меловой доске читается: светлая плашка. */
+.fact { display: table; margin: 0 auto; padding: 4px 22px; border-radius: 20px; background: rgba(255, 253, 245, 0.92); box-shadow: 0 4px 0 var(--line); }
+/* Три варианта — в один ряд и на телефоне, без «сироты» во второй строке. */
+@media (max-width: 520px) {
+  .choices:has(> :nth-child(3):last-child) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
+  .choices:has(> :nth-child(3):last-child) > * { min-width: 0; }
+}
+/* Выключенная кнопка остаётся своего цвета: видно, что она станет нажимаемой. */
+.btn.primary:disabled { opacity: 1; background: #b9dfd8; border-color: #8cc7bd; color: #1f5f56; box-shadow: none; }
+/* Точки прогресса видны на любом фоне сцены. */
+.progress { background: rgba(255, 253, 245, 0.8); border-radius: 999px; padding: 6px 10px; }
+.dot { border-color: #3d2c00; }
+/* Подписи поверх нарисованных фонов — на светлой плашке. */
+.map-name { flex: 0 1 auto; background: rgba(255, 253, 245, 0.88); border-radius: 14px; padding: 2px 12px; margin-right: auto; }
+.field { background: rgba(255, 253, 245, 0.9); border-radius: 18px; padding: 10px 12px; color: var(--ink); }
+.error { color: #b23c1f; }
+.toggle input { flex: none; accent-color: var(--primary); }
+/* Пока грузится экран — фон сцены, а не пустота. */
+.screen.loading { min-height: 60vh; background: radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.6), transparent 70%); }
+/* Финиш на телефоне: Счётик не наезжает на медаль. */
+@media (max-width: 520px) { .finish-guide { margin-left: -8px; margin-top: 24px; } }
+/* «Сегодня» на телефоне ниже, чтобы острова были видны на первом экране. */
+@media (max-width: 520px) { .today-card { min-height: 72px; padding: 8px 12px; } .today-card .emoji { width: 52px; height: 52px; } }
+/* Плитки ответов на планшете крупнее. */
+@media (min-width: 900px) { .choices .btn.choice { min-width: 150px; min-height: 120px; } }
+
+/* ——— Правки по аудиту доступности ——— */
+/* Касание попадает только в саму кнопку камня: подпись и соседний камень не перехватывают его. */
+.stone, .stone-title, .stone-star, .stone-due, .stone-lock { pointer-events: none; }
+.stone-btn { pointer-events: auto; }
+.stone-due { font-size: 15px; }
+/* Главная кнопка: белый текст на более тёмном бирюзовом — контраст ≥ 4,5:1. */
+.btn.primary:not(:disabled) { background: #1f7a6f; border-color: #17594f; --ledge: #17594f; }
+.mark.ok { color: #1f7a6f; }
+/* Сотенная таблица на телефоне: клетки и цифры крупнее. */
+@media (max-width: 520px) {
+  .chart100 { grid-template-columns: repeat(10, minmax(0, 1fr)); width: 100%; }
+  .c100 { font-size: 14px; padding: 6px 0; }
+}
+.zone { min-width: 48px; }
+.finger-label { font-size: 18px; min-width: 30px; line-height: 26px; }
+.coin-art b { text-shadow: 0 0 3px #fff8dc, 0 0 6px #fff8dc, 0 0 10px #fff8dc; }
+details summary { min-height: 48px; }
+/* Повтор задания без звука — мягкая подсветка текста. */
+.task-text[data-flash] { animation: task-flash 900ms var(--ease-out); }
+@keyframes task-flash { 30% { box-shadow: 0 0 0 6px rgba(255, 209, 102, 0.9); } }
+@media (prefers-reduced-motion: reduce) { .task-text[data-flash] { animation: none; outline: 4px solid #ffd166; } }
+/* Телефон лёжа: миссия помещается по высоте — ниже шапка, реплика и плитки. */
+@media (max-height: 500px) {
+  .btn.choice { min-height: 72px; padding: 4px 12px; }
+  .btn.icon { width: 48px; height: 48px; }
+  .task-text { font-size: 19px; line-height: 1.25; }
+  .task-guide { width: 48px; height: 48px; --sch: 48px; }
+  .island-map { --stone: 56px; }
+  .island[data-island='table'] .island-map { --stone: 42px; }
+  .island-map .stone-title { display: none; }
+}
+/* Чашка каждому: пустое место под чашку — пунктирное блюдце, а не белая пустота. */
+.receiver-items { align-items: center; }
+.receiver-items:empty::before { content: ''; display: block; width: 60px; height: 22px; border-radius: 50%; border: 3px dashed #c9b27a; background: #fffaf0; }
+@media (max-height: 500px) {
+  .receiver { padding: 6px; gap: 2px; }
+  .receiver-main { min-height: 64px; }
+  .receiver-main .emoji, .receiver-main img { width: 56px; height: 56px; }
+  .receiver-items { min-height: 40px; }
+}
+
+/* Создание профиля: 10 зверят — двумя ровными рядами по 5. */
+.avatar-grid:has(> :nth-child(10):last-child) { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; width: min(100%, 640px); }
+.avatar-grid:has(> :nth-child(10):last-child) > * { min-width: 0; }
+/* Финиш: совет для взрослых — отдельной читаемой карточкой. */
+.home-idea { background: rgba(255, 253, 245, 0.95); border: 2px dashed var(--line); color: var(--ink); }
+/* Всё задание видно без прокрутки: на узком телефоне четыре гостя в ряд, лёжа — плотнее по высоте. */
+@media (max-width: 520px) {
+  .receivers { gap: 8px; }
+  .receiver { min-width: 0; flex: 1 1 64px; max-width: 120px; padding: 6px; }
+  .receiver-main { min-width: 0; min-height: 64px; }
+  .receiver-main .emoji, .receiver-main img { width: 60px; height: 60px; }
+  .receiver-items:empty::before { width: 48px; }
+}
+@media (max-height: 500px) {
+  .game { gap: 10px; }
+  .stock { min-height: 56px; padding: 6px; }
+  .hand.drawn { width: min(120px, 22vh); }
+  /* Лёжа гость и его блюдце — рядом, а не друг под другом. */
+  .receivers { flex-wrap: nowrap; }
+  .receiver { flex-direction: row; gap: 8px; min-width: 0; flex: 1 1 0; max-width: 200px; }
+  .receiver-items { flex: 1; min-width: 0; }
+  .receiver-items:empty::before { width: 44px; height: 18px; }
+  .screen.mission { padding: 8px 12px; gap: 8px; }
+  .screen.mission .btn.big { min-height: 56px; padding: 6px 40px; }
+}
+/* Совсем низкий экран лёжа (360 px): запас чашек — мельче, чтобы «Готово» оставалась на экране. */
+@media (max-height: 380px) {
+  .stock { min-height: 0; padding: 4px; }
+  .stock img { width: 34px; height: 34px; }
+}
+/* Телефон лёжа: картинка задания слева, ответы столбиком справа — ширины много, высоты мало. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .game:has(> :not(.choices) + .choices:last-child) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; row-gap: 0; align-items: center; }
+  .game:has(> :not(.choices) + .choices:last-child) > * { grid-column: 1; }
+  .game:has(> :not(.choices) + .choices:last-child) > * + :not(.choices) { margin-top: 8px; }
+  .game:has(> :not(.choices) + .choices:last-child) > .choices { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-columns: repeat(2, auto); gap: 8px; }
+  .game:has(> :not(.choices) + .choices:last-child) > .choices .btn.choice { min-height: 64px; min-width: 112px; }
+  .game:has(> :not(.choices) + .choices:last-child) > .choices:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, auto); }
+  /* Магазин: монеты и «Оплатить» — одной строкой под витриной. */
+  .game:has(> .coins-row + .pay) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: center; }
+  .game:has(> .coins-row + .pay) > :first-child { grid-column: 1 / -1; }
+}

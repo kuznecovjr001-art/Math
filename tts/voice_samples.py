@@ -2,7 +2,7 @@
 Прототип голоса Счётика: три варианта голоса Qwen3-TTS (VoiceDesign → клон-промпт на Base),
 одинаковый набор проверочных фраз, файлы для прослушивания и таблица длительностей и скорости.
 
-  tts-venv/Scripts/python tts/voice_samples.py [папка-вывода]
+  tts-venv/Scripts/python tts/voice_samples.py [папка-вывода] [имя-голоса …]   # без имён — все варианты
 
 Модели (Apache-2.0) скачиваются с Hugging Face при первом запуске (~9 ГБ).
 """
@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from normalize_ru import normalize  # noqa: E402
 
 OUT = Path(sys.argv[1] if len(sys.argv) > 1 else 'tts/out/samples')
+ONLY = set(sys.argv[2:])
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Счётик в текстах говорит о себе в мужском роде («Я задумал число»), поэтому два мужских варианта
@@ -32,9 +33,17 @@ VOICES = {
                           'intonation, very clear articulation. Not cartoonish, not squeaky, not like a voice assistant.',
     'c-teacher-female': 'A warm, calm adult female kindergarten teacher with a medium-pitched voice. Slow, clear '
                         'Russian speech, kind and gentle, without exaggerated emotion.',
+    # Голос самого Счётика (просьба владельца: «похожий на стиль Счётика») — добрый мультяшный черепашонок.
+    'd-schetik-bright': 'A cheerful, friendly young cartoon turtle character for small children: a light, bright young male '
+                        'tenor voice, warm and playful with a smile, lively but kind intonation. Speaks Russian clearly and '
+                        'not too fast, with natural pauses. Not squeaky, not robotic, not an adult announcer.',
+    'e-schetik-soft': 'A gentle, curious little cartoon character from a children cartoon series: a soft young male voice '
+                      'with a light, cozy timbre, encouraging and kind, like a good little friend. Clear Russian, calm '
+                      'pace, playful warmth in the voice. Not squeaky, not whispering.',
 }
 # Ожидаемая высота основного тона, Гц: голос другого пола или «мультяшный» не проходит.
-PITCH = {'a-teacher-male': (85, 170), 'b-storyteller-male': (95, 185), 'c-teacher-female': (165, 260)}
+PITCH = {'a-teacher-male': (85, 170), 'b-storyteller-male': (95, 185), 'c-teacher-female': (165, 260),
+         'd-schetik-bright': (120, 240), 'e-schetik-soft': (120, 240)}
 REFERENCE = 'Привет! Я Счётик. Давай посчитаем вместе: один, два, три. Посмотри внимательно и не спеши.'
 
 PHRASES = [
@@ -69,6 +78,8 @@ def main():
     refs = {}
     import librosa
     for name, instruct in VOICES.items():
+        if ONLY and name not in ONLY:
+            continue
         lo, hi = PITCH[name]
         for attempt in range(6):
             w, sr = design.generate_voice_design(text=REFERENCE, language='Russian', instruct=instruct)

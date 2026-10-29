@@ -1,7 +1,7 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
-import type { GameProps } from './types';
+import { useSolved, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'tens' }>;
 
@@ -24,6 +24,7 @@ export function tensChoices(tens: number, ones: number): number[] {
 }
 
 export function TensGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const answer = expectedAnswer(params);
   return (
     <div className="game">
@@ -37,7 +38,7 @@ export function TensGame({ params, help, locked, onSubmit }: GameProps<P>) {
         ))}
         {params.ones > 0 && <span className="loose"><Sticks n={params.ones} /></span>}
       </div>
-      {help >= 3 && (
+      {(help >= 3 || solved) && (
         <div className="sum-hint">
           {[...Array(params.tens).fill(10), ...(params.ones ? [params.ones] : [])].join(' + ')}
         </div>
@@ -46,7 +47,7 @@ export function TensGame({ params, help, locked, onSubmit }: GameProps<P>) {
         options={tensChoices(params.tens, params.ones)}
         render={(n) => <NumberTile n={n} dots={false} />}
         disabled={locked}
-        onPick={(n) => onSubmit({ correct: n === answer, answer: String(n) })}
+        onPick={(n) => submit({ correct: n === answer, answer: String(n) })}
       />
     </div>
   );

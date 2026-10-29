@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { sfx } from '../audio/sfx';
+import { PHRASE } from '../audio/phrases';
 import { expectedAnswer, FRUITS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'boxes' }>;
 
 export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const [inGroup, setInGroup] = useState<number[]>(() => Array(params.groups).fill(0));
   const [step, setStep] = useState<'arrange' | 'total'>('arrange');
   const fruit = FRUITS[params.fruit];
@@ -33,7 +35,7 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
     const correct = share
       ? stock === 0 && inGroup.every((n) => n === inGroup[0])
       : inGroup.every((n) => n === params.per);
-    onSubmit({ correct, answer: `раскладка ${inGroup.join(',')}`, final: false });
+    submit({ correct, answer: `раскладка ${inGroup.join(',')}`, final: false, next: share ? PHRASE.nextEach : undefined });
     if (correct) setStep('total');
   };
 
@@ -65,7 +67,7 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
           </div>
         ))}
       </div>
-      {help >= 3 && !share && (
+      {(help >= 3 || solved) && !share && (
         <div className="sum-hint" aria-live="polite">
           {Array(params.groups).fill(params.per).join(' + ')}
         </div>
@@ -83,7 +85,7 @@ export function BoxesGame({ params, help, locked, onSubmit }: GameProps<P>) {
                 key={n}
                 className="btn choice"
                 disabled={locked}
-                onClick={() => onSubmit({ correct: n === total, answer: `${share ? 'в каждой' : 'итог'} ${n}` })}
+                onClick={() => submit({ correct: n === total, answer: `${share ? 'в каждой' : 'итог'} ${n}` })}
               >
                 <NumberTile n={n} />
               </button>

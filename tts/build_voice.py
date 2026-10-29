@@ -35,8 +35,11 @@ MIN_CPS, MAX_CPS = 6.0, 22.0
 
 def spoken(text: str, stress: dict) -> str:
     t = normalize(text.replace('…', '.'))
+    # Ударная гласная заглавной буквой («сравнИ»): из знака ´, «+» и заглавной модель на слух слушается только её.
     for word, fixed in stress.items():
-        t = re.sub(rf'\b{re.escape(word)}\b', fixed, t)
+        # Без учёта регистра: «Сравни» в начале фразы тоже исправляется, заглавная первая буква сохраняется.
+        t = re.sub(rf'(?<![а-яё]){re.escape(word)}(?![а-яё])',
+                   lambda m: fixed[0].upper() + fixed[1:] if m.group()[0].isupper() else fixed, t, flags=re.I)
     return t
 
 
@@ -78,6 +81,8 @@ def main():
     ap.add_argument('--shard', default='0/1')
     ap.add_argument('--compression', type=float, default=0.96)  # ~19 кбит/с Opus: чистая речь, корпус ~140 МБ
     args = ap.parse_args()
+    # Сломанная замена ударений испортила бы тысячи записей, а Whisper ударений не слышит — проверяем до генерации.
+    assert spoken('Сравни 2 числа.', {'сравни': 'сравнИ'}) == 'СравнИ два числа.', spoken('Сравни 2 числа.', {'сравни': 'сравнИ'})
 
     phrases = json.loads((ROOT / 'tts/out/phrases.json').read_text(encoding='utf-8'))
     stress = json.loads(STRESS.read_text(encoding='utf-8')) if STRESS.exists() else {}

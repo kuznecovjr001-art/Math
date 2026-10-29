@@ -7,8 +7,8 @@ import type { GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'cups' }>;
 
-const GUESTS = ['1F431', '1F436', '1F430', '1F43B', '1F98A'];
-const GUEST_NAMES = ['котёнок', 'щенок', 'зайчик', 'медвежонок', 'лисёнок'];
+const GUESTS = ['1F431', '1F436', '1F430', '1F43B', '1F98A', '1F43C'];
+const GUEST_NAMES = ['котёнок', 'щенок', 'зайчик', 'медвежонок', 'лисёнок', 'панда'];
 
 export function CupsGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const [given, setGiven] = useState<number[]>(() => Array(params.receivers).fill(0));

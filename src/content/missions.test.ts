@@ -3,7 +3,7 @@ import { recordChoices } from '../games/RecordGame';
 import { tensChoices } from '../games/TensGame';
 import { answerChoices } from '../games/types';
 import {
-  cardId, expectedAnswer, factChoices, instruction, MISSIONS, strategyHint, voiceText,
+  cardId, expectedAnswer, factChoices, instruction, MISSIONS, strategyHint, voiceParts, voiceText,
 } from './missions';
 
 describe('missions content', () => {
@@ -99,5 +99,12 @@ describe('missions content', () => {
   it('reads signs aloud', () => {
     expect(voiceText('Сколько будет 6 × 7?')).toBe('Сколько будет 6 умножить на 7?');
     expect(voiceText('12 : 3 = 4')).toBe('12 разделить на 3 равно 4');
+  });
+
+  it('voices a fixed instruction tail as its own checked recording', () => {
+    expect(voiceParts('Сколько будет 26 + 13? Прыгай по числовой прямой: сначала десятками, потом единицами.')).toEqual([
+      'Сколько будет 26 плюс 13?', 'Прыгай по числовой прямой: сначала десятками, потом единицами.',
+    ]);
+    expect(voiceParts('Сколько будет 6 × 7?')).toEqual(['Сколько будет 6 умножить на 7?']);
   });
 });

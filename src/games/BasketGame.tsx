@@ -4,11 +4,12 @@ import { sfx } from '../audio/sfx';
 import { FRUITS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
-import type { GameProps } from './types';
+import { useSolved, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'basket' }>;
 
 export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const [inBasket, setInBasket] = useState(0);
   const from = useRef<DOMRect | null>(null);
   const basketRef = useRef<HTMLDivElement>(null);
@@ -33,7 +34,7 @@ export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
   };
 
   // Ступень 3: в корзине видны места на нужное количество.
-  const slots = help >= 3 ? Math.max(params.target, inBasket) : inBasket;
+  const slots = (help >= 3 || solved) ? Math.max(params.target, inBasket) : inBasket;
 
   return (
     <div className="game">
@@ -67,7 +68,7 @@ export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
       <button
         className="btn primary big"
         disabled={locked || inBasket === 0}
-        onClick={() => onSubmit({ correct: inBasket === params.target, answer: String(inBasket) })}
+        onClick={() => submit({ correct: inBasket === params.target, answer: String(inBasket) })}
       >
         Готово
       </button>

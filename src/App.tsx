@@ -1,7 +1,9 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { PHRASE } from './audio/phrases';
 import { setSfxEnabled, sfxForEvent } from './audio/sfx';
 import { emit, onGameEvent } from './motion/events';
+import { motionOff } from './motion/flight';
 import { setVoiceEnabled, setVoiceVolume, speak, stopSpeaking, voiceKeysLoaded } from './audio/voice';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { getMission } from './content/missions';
@@ -73,8 +75,14 @@ export function App() {
   }, [settings]);
 
   const go = (s: Screen) => {
-    setNow(Date.now());
-    setScreen(s);
+    const apply = () => {
+      flushSync(() => { setNow(Date.now()); setScreen(s); });
+      // Новый экран — с начала; карта сама возвращает ребёнка к его острову (MapScreen).
+      if (s.name !== 'map') window.scrollTo(0, 0);
+    };
+    // Старый экран растворяется в новом, а не пропадает до цвета фона (motion.css: ::view-transition).
+    if (document.startViewTransition && !motionOff()) document.startViewTransition(apply);
+    else apply();
   };
 
   // «Назад» на Android ведёт туда же, куда кнопки на экране; на первом экране приложение сворачивается.

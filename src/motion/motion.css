@@ -17,6 +17,8 @@
 .schetik-body { position: absolute; inset: 0; transform-origin: 50% 100%; }
 .schetik-body img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 180ms var(--ease-out); }
 .schetik-body img.on { opacity: 1; }
+/* Риг двигает себя сам (motion/rig/animate): CSS-движение поз к нему не относится. */
+.schetik-rig, .schetik-rig svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 
 /* Дыхание в покое и при слушании: едва заметно, 4 с. */
 .schetik[data-mood='idle'] .schetik-body,
@@ -59,6 +61,42 @@ html[data-motion='minimal'] .schetik-z { animation: none !important; transform: 
 .map-clouds span + span { top: 55%; width: 26vmax; height: 9vmax; animation-duration: 110s; animation-delay: -50s; opacity: 0.8; }
 @keyframes cloud { to { transform: translateX(160vw); } }
 
+/* Живая карта острова (MapLife): над рисунком, под камнями; координаты — в процентах рисунка. */
+.map-life { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.map-life > div { position: absolute; inset: 0; }
+.map-life .life-port { display: none; }
+@media (orientation: portrait) { .map-life .life-land { display: none; } .map-life .life-port { display: block; } }
+.island-map > .stone { z-index: 1; }
+.life-part { position: absolute; object-fit: contain; }
+.life-spin { animation: life-spin 14s linear infinite; }
+.life-flag { transform-origin: 0 50%; animation: life-flag 2.4s ease-in-out infinite; }
+.life-bob { transform-origin: 50% 80%; animation: life-bob 4s ease-in-out infinite; }
+.life-glint, .life-wave { position: absolute; transform: translate(-50%, -50%); }
+.life-glint { width: 20px; height: 20px; opacity: 0; animation: life-glint 3.6s ease-in-out infinite;
+  background: radial-gradient(closest-side, #fff 30%, rgba(255, 255, 255, 0)); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+.life-wave { width: 22px; height: 8px; border-bottom: 3px solid rgba(255, 255, 255, 0.55); border-radius: 0 0 50% 50%; animation: life-wave 5s ease-in-out infinite; }
+.life-cloud { position: absolute; left: 0; width: 16%; opacity: 0.92; animation: life-cloud 70s linear infinite; }
+.life-cloud.slow { width: 11%; opacity: 0.8; animation-duration: 105s; animation-delay: -60s; }
+.life-cloud svg { display: block; width: 100%; height: auto; }
+@keyframes life-spin { to { transform: rotate(360deg); } }
+@keyframes life-flag { 0%, 100% { transform: skewY(0) scaleX(1); } 50% { transform: skewY(-5deg) scaleX(0.93); } }
+@keyframes life-bob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-3%) rotate(1.5deg); } }
+@keyframes life-glint { 0%, 60%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 30% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); } }
+@keyframes life-wave { 0%, 100% { opacity: 0.25; transform: translate(-60%, -50%); } 50% { opacity: 0.8; transform: translate(-40%, -50%); } }
+@keyframes life-cloud { from { transform: translateX(-120%); } to { transform: translateX(760%); } }
+/* Карта вне экрана не тратит кадры. */
+/* Не пауза, а снятие анимации: на паузе блики и облака всех островов держат композитные слои (109 против 11). */
+.island-map:not([data-live]) .map-life * { animation: none; }
+/* Движение выключено: детали стоят на месте, облаков и бликов нет. */
+html[data-ambient='false'] .map-life *, html[data-motion='moderate'] .map-life *, html[data-motion='minimal'] .map-life * { animation: none; }
+html[data-ambient='false'] .map-life :is(.life-cloud, .life-glint, .life-wave),
+html[data-motion='moderate'] .map-life :is(.life-cloud, .life-glint, .life-wave),
+html[data-motion='minimal'] .map-life :is(.life-cloud, .life-glint, .life-wave) { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .map-life * { animation: none !important; }
+  .map-life :is(.life-cloud, .life-glint, .life-wave) { display: none; }
+}
+
 /* Лёгкий параллакс морского фона при прокрутке карты (только фон экрана, не карты островов). */
 @supports (animation-timeline: scroll()) {
   .screen.map .scene-bg { bottom: -8vh; animation: map-parallax linear both; animation-timeline: scroll(root); }
@@ -84,16 +122,63 @@ html[data-motion='minimal'] .beam { animation: none; }
 
 /* Числовая прямая: прыжки рисуются по одному (--k — номер прыжка), подпись приземления — после дуги. */
 .nl-hop .nl-arc { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-arc var(--dur-step) var(--ease-out) forwards;
-  animation-delay: calc(var(--k) * 380ms); }
-.nl-hop text { opacity: 0; animation: fade-in var(--dur-appear) var(--ease-out) forwards; animation-delay: calc(var(--k) * 380ms + 300ms); }
+  animation-delay: calc(var(--k) * var(--hop, 380ms)); }
+.nl-hop text { opacity: 0; animation: fade-in var(--dur-appear) var(--ease-out) forwards; animation-delay: calc(var(--k) * var(--hop, 380ms) + 300ms); }
 @keyframes draw-arc { to { stroke-dashoffset: 0; } }
 @keyframes fade-in { to { opacity: 1; } }
 .frog-track { position: absolute; inset: 0; pointer-events: none; }
-.frog-track .frog.hopping { animation: frog-hop 380ms ease-in-out var(--n); }
-.frog-track:has(.hopping) { animation: frog-go calc(var(--n) * 380ms) linear forwards; }
+.frog-track .frog.hopping { animation: frog-hop var(--hop, 380ms) ease-in-out var(--n); }
+.frog-track:has(.hopping) { animation: frog-go calc(var(--n) * var(--hop, 380ms)) linear forwards; }
 @keyframes frog-go { to { transform: translateX(var(--to)); } }
 /* Отдельное свойство translate не мешает transform(-50%) у лягушки: прыжок вверх на каждой дуге. */
 @keyframes frog-hop { 50% { translate: 0 -28px; } }
+
+/* Под салфеткой: после верного ответа салфетка уезжает вверх-вбок, спрятанное появляется. */
+.napkin.lifted { animation: napkin-lift 700ms var(--ease-out) forwards; }
+@keyframes napkin-lift { to { transform: translate(38%, -58%) rotate(18deg); opacity: 0.35; } }
+.under-napkin { animation: reveal 400ms var(--ease-out) 250ms both; }
+@keyframes reveal { from { opacity: 0; transform: scale(0.8); } }
+html[data-motion='minimal'] .napkin.lifted { animation: none; opacity: 0; }
+
+/* Деление по сколько: держатели с предметами появляются по одному после верного ответа. */
+.group-set.deal { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * 300ms); }
+html[data-motion='minimal'] .group-set.deal { animation: none; }
+
+/* Задача: точки модели выкладываются по одной, «ушедшие» при вычитании отлетают. */
+.expr-model i { animation: pop 300ms var(--ease-spring) backwards; animation-delay: calc(var(--i) * 35ms); }
+.expr-model i.gone { animation: leave 600ms var(--ease-out) forwards; animation-delay: calc(400ms + var(--i) * 35ms); }
+@keyframes leave { to { transform: translate(14px, -18px); opacity: 0.25; } }
+html[data-motion='minimal'] .expr-model i { animation: none; }
+html[data-motion='minimal'] .expr-model i.gone { opacity: 0.25; }
+
+/* Мерки: недостающие скрепки и карандаши ложатся по одной. */
+.unit-cell.auto { animation: pop 260ms var(--ease-spring) backwards; animation-delay: calc(var(--i) * 150ms); }
+html[data-motion='minimal'] .unit-cell.auto { animation: none; }
+
+/* Симметрия: отражение раскрывается от линии, как крыло. */
+.sym-flip { display: inline-block; transform-origin: 0 50%; animation: sym-flip 700ms var(--ease-out) both; }
+@keyframes sym-flip { from { transform: perspective(400px) rotateY(-90deg); } }
+html[data-motion='minimal'] .sym-flip { animation: none; }
+
+/* Бусы: выбранная бусина садится на место, нитка продолжается. */
+.bead.placed { animation: pop 300ms var(--ease-spring) both; }
+.bead.grow { animation: pop 300ms var(--ease-spring) backwards; animation-delay: calc(300ms + var(--i) * 220ms); }
+html[data-motion='minimal'] .bead:is(.placed, .grow) { animation: none; }
+
+/* Магазин: монеты уезжают к игрушке, игрушка подпрыгивает. */
+.coin-btn.paid { animation: coin-pay 500ms var(--ease-out) forwards; animation-delay: calc(var(--i) * 150ms); }
+@keyframes coin-pay { to { transform: translateY(-90px) scale(0.6); opacity: 0; } }
+.price-tag.bought { animation: sch-hop var(--dur-joy) var(--ease-spring) 500ms 1; }
+html[data-motion='minimal'] :is(.coin-btn.paid, .price-tag.bought) { animation: none; }
+
+/* Вместо «?» — ответ: появляется с отскоком и мягкой подсветкой. */
+.revealed { animation: revealed 600ms var(--ease-spring) both; }
+@keyframes revealed { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: none; } }
+html[data-motion='minimal'] .revealed { animation: none; }
+
+/* Сотня: недостающие клетки заливаются по одной до полной сотни (весь показ не дольше ~1,2 с). */
+.g100.add { background: #ffd166; animation: pop 200ms var(--ease-out) backwards; animation-delay: calc(var(--k) * 12ms); }
+html[data-motion='minimal'] .g100.add { animation: none; }
 
 /* Массив: ряды вспыхивают по очереди. */
 .row-glow { display: inline-flex; animation: row-glow 500ms var(--ease-spring) both; animation-delay: calc(var(--r) * 350ms); }
@@ -131,7 +216,7 @@ html[data-motion='minimal'] .finish .sticker-burst::after { display: none; }
 }
 
 /* Касания: пружинящее возвращение после нажатия (нажатие — в styles.css через :active). */
-.tap { transition: transform var(--dur-press) var(--ease-spring); }
+.tap { transition: transform var(--dur-press) var(--ease-spring), box-shadow var(--dur-press) var(--ease-out); }
 .avatar.selected { animation: pick var(--dur-step) var(--ease-spring); }
 @keyframes pick { 40% { transform: scale(1.08); } }
 
@@ -165,8 +250,8 @@ html[data-motion='minimal'] .bin.near { transform: none; }
   animation: pop var(--dur-appear) var(--ease-spring) backwards; pointer-events: none; }
 
 /* Старые анимации из styles.css на уровнях движения. Пульс помощи — сигнал, но не бесконечный в «умеренном». */
-html[data-motion='moderate'] .btn.help.pulse { animation-iteration-count: 3; }
-html[data-motion='minimal'] .btn.help.pulse, html[data-motion='minimal'] .parcel.arrive,
+html[data-motion='moderate'] .btn.help.pulse::after { animation-iteration-count: 3; }
+html[data-motion='minimal'] .btn.help.pulse::after, html[data-motion='minimal'] .parcel.arrive,
 html[data-motion='minimal'] .array-scene.turned, html[data-motion='minimal'] .shirt-button.fallen,
 html[data-motion='minimal'] .finish-guide, html[data-motion='minimal'] .ribbon { animation: none; transition: none; }
 
@@ -176,5 +261,37 @@ html[data-motion='minimal'] .finish-guide, html[data-motion='minimal'] .ribbon {
 html[data-motion='minimal'] .clock-hand { animation: none; }
 
 /* Умножение: группы точек появляются по очереди. */
-.dot-group { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * 320ms); }
+.dot-group { animation: pop var(--dur-appear) var(--ease-spring) backwards; animation-delay: calc(var(--g) * var(--step, 320ms)); }
 html[data-motion='minimal'] .dot-group { animation: none; }
+
+/* Смена карточки: старая мягко уходит (MissionPlayer LEAVE_MS), новая проявляется. Экраны появляются плавно. */
+.screen { animation: screen-in 280ms var(--ease-out) both; }
+@keyframes screen-in { from { opacity: 0; } }
+.screen.mission > .game, .screen.mission .task-text { animation: card-in 380ms var(--ease-out) both; }
+@keyframes card-in { from { opacity: 0; transform: translateY(12px); } }
+.screen.mission .task-text[data-flash] { animation: task-flash 900ms var(--ease-out); }
+.screen.mission > .game, .screen.mission .task-text, .screen.mission .bubble { transition: opacity 320ms var(--ease-out), transform 320ms var(--ease-out); }
+.screen.mission[data-leaving] > .game, .screen.mission[data-leaving] .task-text, .screen.mission[data-leaving] .bubble { opacity: 0; transform: translateY(-10px); }
+html[data-motion='minimal'] .screen, html[data-motion='minimal'] .screen.mission > .game, html[data-motion='minimal'] .screen.mission .task-text { animation: none; }
+
+/* Плавность (аудит 2026-10-29). */
+html, body { overscroll-behavior-y: contain; }
+/* Смена экранов — растворение старого в новом (App.go); собственное проявление экрана тогда не нужно. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 260ms; animation-timing-function: var(--ease-out); }
+html.vt .screen { animation: none; }
+/* Реплика Счётика: место под две строки зарезервировано, она появляется мягко и не двигает игру. */
+.bubble-slot { min-height: 84px; display: flex; justify-content: center; align-items: flex-start; }
+@media (max-height: 500px), (max-height: 700px) and (max-width: 420px) {
+  /* Лёжа и на маленьком телефоне места нет: реплика всплывает поверх верха игры, ничего не сдвигая. */
+  .bubble-slot { min-height: 0; height: 0; position: relative; z-index: 3; }
+  .bubble-slot .bubble { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; width: fit-content; }
+}
+.sum-hint { animation: hint-in var(--dur-appear) var(--ease-out) both; }
+@keyframes hint-in { from { opacity: 0; transform: translateY(6px); } }
+/* Мягкий отклик на нажатие у всего, что нажимает ребёнок. */
+:is(.zone, .group-add, .ribbon-row, .pan, .coin-btn) { transition: transform var(--dur-press) var(--ease-spring); }
+:is(.zone, .group-add, .ribbon-row, .pan, .coin-btn):active:not(:disabled) { transform: scale(0.95); }
+.today-card:is(.new, .assigned, .review):active { box-shadow: 0 2px 0 var(--line); }
+.dot { transition: transform 200ms var(--ease-out), background-color 200ms var(--ease-out), border-color 200ms var(--ease-out); }
+html[data-motion='minimal'] :is(.bubble, .sum-hint) { animation: none; }
+html[data-motion='minimal'] :is(.zone, .group-add, .ribbon-row, .pan, .coin-btn, .dot) { transition: none; }

@@ -1,7 +1,7 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { SIGNS } from '../content/numbers';
 import { Choices } from './Choices';
-import type { GameProps } from './types';
+import { useSolved, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'compare3' }>;
 
@@ -19,6 +19,7 @@ function Digits({ n, help }: { n: number; help: number }) {
 /** Сравнение трёхзначных чисел: сначала сотни, потом десятки, потом единицы. */
 export function Compare3Game({ params, help, locked, onSubmit }: GameProps<P>) {
   const answer = expectedAnswer(params);
+  const [solved, submit] = useSolved(onSubmit);
   const da = String(params.a).split('');
   const db = String(params.b).split('');
   const first = da.findIndex((c, i) => c !== db[i]);
@@ -27,10 +28,10 @@ export function Compare3Game({ params, help, locked, onSubmit }: GameProps<P>) {
     <div className="game">
       <div className="more-scene cmp-scene">
         <Digits n={params.a} help={help} />
-        <span className="cmp-slot">?</span>
+        <span className={`cmp-slot ${solved ? 'revealed' : ''}`}>{solved ? SIGNS[answer] : '?'}</span>
         <Digits n={params.b} help={help} />
       </div>
-      {help >= 3 && (
+      {(help >= 3 || solved) && (
         <div className="sum-hint">
           {first < 0 ? 'Все цифры одинаковые' : `Сравни ${place}: ${da[first]} и ${db[first]}`}
         </div>
@@ -40,7 +41,7 @@ export function Compare3Game({ params, help, locked, onSubmit }: GameProps<P>) {
         render={(i) => <span className="sign">{SIGNS[i]}</span>}
         label={(i) => SIGN_NAME[SIGNS[i]]}
         disabled={locked}
-        onPick={(i) => onSubmit({ correct: i === answer, answer: SIGNS[i] })}
+        onPick={(i) => submit({ correct: i === answer, answer: SIGNS[i] })}
       />
     </div>
   );

@@ -1,0 +1,62 @@
+[
+  {
+    "file": "windmill-rotor.png",
+    "sheet_box": [
+      55,
+      202,
+      715,
+      821
+    ],
+    "single_box": [
+      182,
+      202,
+      842,
+      821
+    ]
+  },
+  {
+    "file": "flag-clock-lilac.png",
+    "sheet_box": [
+      935,
+      124,
+      1385,
+      297
+    ],
+    "single_box": [
+      287,
+      425,
+      737,
+      598
+    ]
+  },
+  {
+    "file": "flag-lighthouse-green.png",
+    "sheet_box": [
+      935,
+      414,
+      1385,
+      606
+    ],
+    "single_box": [
+      287,
+      416,
+      737,
+      608
+    ]
+  },
+  {
+    "file": "wooden-boat.png",
+    "sheet_box": [
+      900,
+      716,
+      1400,
+      945
+    ],
+    "single_box": [
+      262,
+      397,
+      762,
+      626
+    ]
+  }
+]

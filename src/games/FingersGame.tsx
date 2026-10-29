@@ -1,12 +1,37 @@
+import { customArt } from '../content/art';
+import TIPS from '../content/handTips.json';
 import type { CardParams } from '../content/missions';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'fingers' }>;
 
-/** Рука: up пальцев поднято, остальные загнуты и видны на ладони. Пальцы поднимаются от большого. */
+/**
+ * Нарисованная ладошка (art-src/hand → assets/art/hand): ладонь к зрителю, большой палец наружу —
+ * у первой руки слева (правая рука), у второй справа (левая). Подписи — над кончиками поднятых пальцев.
+ */
+function DrawnHand({ src, up, tips, labels, from }: { src: string; up: number; tips: number[][]; labels: boolean; from: number }) {
+  return (
+    <div className="hand drawn" role="img" aria-label={`Поднято пальцев: ${up}`}>
+      <img src={src} alt="" draggable={false} />
+      {labels && tips.map(([x, y], i) => (
+        <span key={i} className="finger-label" style={{ left: `${x}%`, top: `${y}%` }}>{from + i + 1}</span>
+      ))}
+    </div>
+  );
+}
+
+/** Рука: up пальцев поднято, остальные загнуты и видны на ладони. Есть рисунок — ладошка, нет — схема. */
 function Hand({ up, mirror, labels, from }: { up: number; mirror: boolean; labels: boolean; from: number }) {
+  const name = `hand-${mirror ? 'left' : 'right'}-${up}`;
+  const src = customArt(`hand/${name}`);
+  if (src) return <DrawnHand src={src} up={up} tips={(TIPS as Record<string, number[][]>)[name] ?? []} labels={labels} from={from} />;
+  return <SchemeHand up={up} mirror={mirror} labels={labels} from={from} />;
+}
+
+/** Схема руки: пальцы поднимаются от большого. Запасной вид, пока нет рисунка. */
+function SchemeHand({ up, mirror, labels, from }: { up: number; mirror: boolean; labels: boolean; from: number }) {
   const xs = [32, 52, 72, 92];
   const skin = '#f6c99b';
   const fold = '#d9925a';
@@ -16,7 +41,7 @@ function Hand({ up, mirror, labels, from }: { up: number; mirror: boolean; label
       transform={mirror ? `translate(${2 * x} 0) scale(-1 1)` : undefined}>{n}</text>
   );
   return (
-    <svg width="124" height="150" viewBox="0 0 124 150" className="hand" aria-label={`Поднято пальцев: ${up}`}>
+    <svg width="124" height="150" viewBox="0 0 124 150" className="hand" role="img" aria-label={`Поднято пальцев: ${up}`}>
       <g transform={mirror ? 'translate(124 0) scale(-1 1)' : undefined}>
         {/* Поднятые пальцы рисуются за ладонью. */}
         {xs.map((x, i) => i + 1 <= up - 1
@@ -38,6 +63,7 @@ function Hand({ up, mirror, labels, from }: { up: number; mirror: boolean; label
 }
 
 export function FingersGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const folded = params.total - params.up;
   const first = Math.min(params.up, 5);
   return (
@@ -46,12 +72,12 @@ export function FingersGame({ params, help, locked, onSubmit }: GameProps<P>) {
         <Hand up={first} mirror={false} labels={help >= 2} from={0} />
         {params.total === 10 && <Hand up={params.up - first} mirror labels={help >= 2} from={5} />}
       </div>
-      {help >= 3 && <div className="sum-hint">{params.total} = {params.up} + ?</div>}
+      {(help >= 3 || solved) && <div className="sum-hint">{params.total} = {params.up} + {solved ? folded : '?'}</div>}
       <Choices
         options={answerChoices(folded, 0)}
         render={(n) => <NumberTile n={n} />}
         disabled={locked}
-        onPick={(n) => onSubmit({ correct: n === folded, answer: String(n) })}
+        onPick={(n) => submit({ correct: n === folded, answer: String(n) })}
       />
     </div>
   );

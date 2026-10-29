@@ -13,13 +13,16 @@ test('Счётик реагирует на начало задания, каса
   await page.getByRole('button', { name: 'QA' }).click();
   expect(await mood(page)).toBe('idle');
   await page.locator('.today-card').first().click();
-  await expect(page.locator('.screen.mission')).toBeVisible();
+  // Первый вход в миссию на холодном dev-сервере собирает чанк игр дольше 5 с.
+  await expect(page.locator('.screen.mission')).toBeVisible({ timeout: 20_000 });
   expect(await mood(page)).toBe('greeting');
   // «Чашка каждому»: дать каждому гостю по чашке и нажать «Готово».
   for (const b of await page.locator('.receiver-main').all()) await b.click();
   await page.getByRole('button', { name: 'Готово' }).click();
   expect(await mood(page)).toBe('happy');
   await expect.poll(() => mood(page), { timeout: 4000 }).toBe('listening');
+  // После верного ответа игра сама переходит к следующей карточке.
+  await expect(page.getByRole('img', { name: /^Задание 2 из/ })).toBeVisible({ timeout: 5000 });
   expect(errors).toEqual([]);
 });
 
@@ -52,8 +55,16 @@ test('уменьшенное движение: анимации выключен
   await page.goto('/');
   await page.getByRole('button', { name: 'QA' }).click();
   await page.locator('.today-card').first().click();
-  const anim = await page.locator('.schetik-body').first().evaluate((el) => getComputedStyle(el).animationName);
-  expect(anim).toBe('none');
+  // Риг Счётика замирает: поза и выражение меняются сразу, без движения, дыхания и моргания.
+  const rig = page.locator('.schetik-rig').first();
+  await expect(rig).toBeVisible();
+  const frame = () => rig.evaluate((el) => [...el.querySelectorAll('[data-node], [data-v]')]
+    .map((g) => `${g.getAttribute('transform')}|${g.getAttribute('display')}`).join(';'));
+  // Приветствие держится 1,5 с, потом «слушает» — смена позы мгновенная; дальше ничего не должно двигаться.
+  await page.waitForTimeout(2000);
+  const a = await frame();
+  await page.waitForTimeout(1500);
+  expect(await frame()).toBe(a);
 });
 
 test('настройки анимаций и звука хранятся отдельно от прогресса', async ({ page }) => {
@@ -70,7 +81,8 @@ test('сортировка: предмет перетаскивается пал
   await page.getByRole('button', { name: 'QA' }).click();
   await page.locator(`button.stone-btn[aria-label^="${getMission('N10')!.title}"]`).click();
   const item = page.locator('.drag-item');
-  await expect(item).toBeVisible();
+  // Ждём, пока предмет встанет и примет касание: экран и карточка ещё проявляются (смена экрана, card-in).
+  await item.click({ trial: true });
   const before = await page.locator('.bin-items button').count();
   const bin = page.locator('.bin').first();
   const a = (await item.boundingBox())!, b = (await bin.boundingBox())!;

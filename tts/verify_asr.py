@@ -21,7 +21,11 @@ from normalize_ru import normalize  # noqa: E402
 
 
 def words(t: str) -> list[str]:
-    t = normalize(t.replace('×', ' умножить на ').replace('+', ' плюс ').replace('=', ' равно '))
+    t = t.replace('×', ' умножить на ').replace('+', ' плюс ').replace('=', ' равно ')
+    try:
+        t = normalize(t)
+    except KeyError:  # Whisper услышал число за тысячу: цифры выпадут из слов, фраза уйдёт в несовпадения
+        pass
     t = t.lower().replace('ё', 'е')
     return re.findall(r'[а-я]+', t)
 
@@ -70,6 +74,8 @@ def main():
         e = 0.0 if ''.join(ref) == ''.join(got) else wer(ref, got)
         total += e
         rows.append({'file': f.name, 'text': text, 'heard': hyp.strip(), 'wer': round(e, 3)})
+        if len(rows) % 500 == 0:  # промежуточное сохранение: сбой не теряет час распознавания
+            out.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding='utf-8')
     rows.sort(key=lambda r: -r['wer'])
     out.write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding='utf-8')
     exact = sum(r['wer'] == 0 for r in rows)

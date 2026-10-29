@@ -9,22 +9,23 @@
  * поэтому набор должен быть насыщен: отчёт печатает, сколько новых фраз дали последние сиды.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { PHRASE } from '../src/audio/phrases';
+import { PHRASE, PRAISE, SUPPORT } from '../src/audio/phrases';
 import { phraseKey } from '../src/audio/phraseKey';
 import { seededRng } from '../src/content/generate';
 import { missionLength } from '../src/content/levels';
-import { instruction, MISSIONS, voiceText } from '../src/content/missions';
+import { instruction, MISSIONS, voiceParts } from '../src/content/missions';
 import { buildSteps, type PlayMode } from '../src/content/steps';
 import type { VoiceEmotion } from '../src/motion/events';
 
 const SEEDS = Number(process.env.SEEDS ?? 5000);
 const out = new Map<string, { key: string; text: string; emotion: VoiceEmotion; source: string }>();
 const add = (text: string, emotion: VoiceEmotion, source: string) => {
-  const t = voiceText(text);
-  if (!out.has(t)) out.set(t, { key: phraseKey(t), text: t, emotion, source });
+  for (const t of voiceParts(text)) if (!out.has(t)) out.set(t, { key: phraseKey(t), text: t, emotion, source });
 };
 
 for (const [name, t] of Object.entries(PHRASE)) add(t, name === 'good' ? 'praise' : name === 'again' ? 'support' : 'question', `PHRASE.${name}`);
+for (const t of PRAISE) add(t, 'praise', 'PRAISE');
+for (const t of SUPPORT) add(t, 'support', 'SUPPORT');
 for (const m of MISSIONS) {
   add(m.praise, 'praise', `${m.id}.praise`);
   add(`${m.praise} ${m.finish}`, 'praise', `${m.id}.finish`);
