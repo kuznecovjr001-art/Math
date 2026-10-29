@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PHRASE, PRAISE, pickPhrase, SUPPORT } from '../audio/phrases';
 import { hasRecording, speak, speakAll, stopSpeaking, voiceReady } from '../audio/voice';
 import { stickerArt } from '../content/art';
@@ -65,6 +65,27 @@ const voiced = (m: Mission) => (p: CardParams) =>
 const MODE_OF: Record<Variant, Mode> = { A: 'learn', B: 'probe', C: 'review' };
 /** Пауза после фразы Счётика, прежде чем сменится карточка: фраза не обрывается на полуслове. */
 const BREATH_MS = 350;
+/**
+ * Всё задание — на одном экране: если игра не помещается по высоте, её самые высокие части по очереди уменьшаются
+ * ровно настолько, чтобы «Готово» и ответы остались видны. Ребёнок не знает, что можно прокрутить.
+ * Ответы — не мельче 3/4 (плитка остаётся не меньше 48 px), картинка сцены — не мельче половины.
+ */
+function fitScene(screen: HTMLElement) {
+  const game = screen.querySelector<HTMLElement>(':scope > .game');
+  if (!game) return;
+  const parts = ([...game.children] as HTMLElement[]).filter((el) => !el.matches('button'));
+  parts.forEach((el) => { el.style.zoom = ''; });
+  const over = () => document.documentElement.scrollHeight - window.innerHeight;
+  for (const el of parts.sort((a, b) => b.offsetHeight - a.offsetHeight)) {
+    const was = over();
+    if (was <= 0) return;
+    const h = el.offsetHeight;
+    el.style.zoom = String(Math.max(el.matches('.choices') ? 0.75 : 0.5, (h - was - 2) / h));
+    // Часть не задавала высоту (рядом выше соседняя колонка): уменьшать её незачем.
+    if (over() >= was) el.style.zoom = '';
+  }
+}
+
 /** Уход карточки — как .screen.mission[data-leaving] в motion.css. */
 const LEAVE_MS = 320;
 
@@ -121,6 +142,20 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     alive.current = true;
     return () => { alive.current = false; stopSpeaking(); };
   }, []);
+
+  // До первого кадра новой карточки и при любом изменении размеров игры (поворот, предметы в корзине).
+  const screenRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const screen = screenRef.current;
+    const game = screen?.querySelector(':scope > .game');
+    if (!screen || !game) return;
+    const fit = () => fitScene(screen);
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(game);
+    window.addEventListener('resize', fit);
+    return () => { ro.disconnect(); window.removeEventListener('resize', fit); };
+  }, [round.seed, pos, done]);
 
   // После показа финиша: Счётик финишного экрана уже подписан на события и празднует.
   useEffect(() => { if (done) emit({ type: 'MISSION_COMPLETED' }); }, [done]);
@@ -256,6 +291,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
 
   return (
     <div
+      ref={screenRef}
       className="screen mission"
       data-leaving={leaving || undefined}
       // Касание предмета в игре: Счётик просыпается и смотрит на действие (кнопки панели не считаются).

@@ -919,3 +919,15 @@ details summary { min-height: 48px; }
   .stock { min-height: 0; padding: 4px; }
   .stock img { width: 34px; height: 34px; }
 }
+/* Телефон лёжа: картинка задания слева, ответы столбиком справа — ширины много, высоты мало. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .game:has(> :not(.choices) + .choices:last-child) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; row-gap: 0; align-items: center; }
+  .game:has(> :not(.choices) + .choices:last-child) > * { grid-column: 1; }
+  .game:has(> :not(.choices) + .choices:last-child) > * + :not(.choices) { margin-top: 8px; }
+  .game:has(> :not(.choices) + .choices:last-child) > .choices { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-columns: repeat(2, auto); gap: 8px; }
+  .game:has(> :not(.choices) + .choices:last-child) > .choices .btn.choice { min-height: 64px; min-width: 112px; }
+  .game:has(> :not(.choices) + .choices:last-child) > .choices:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, auto); }
+  /* Магазин: монеты и «Оплатить» — одной строкой под витриной. */
+  .game:has(> .coins-row + .pay) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: center; }
+  .game:has(> .coins-row + .pay) > :first-child { grid-column: 1 / -1; }
+}

@@ -75,9 +75,13 @@ export function App() {
   }, [settings]);
 
   const go = (s: Screen) => {
-    const apply = () => { setNow(Date.now()); setScreen(s); };
+    const apply = () => {
+      flushSync(() => { setNow(Date.now()); setScreen(s); });
+      // Новый экран — с начала; карта сама возвращает ребёнка к его острову (MapScreen).
+      if (s.name !== 'map') window.scrollTo(0, 0);
+    };
     // Старый экран растворяется в новом, а не пропадает до цвета фона (motion.css: ::view-transition).
-    if (document.startViewTransition && !motionOff()) document.startViewTransition(() => flushSync(apply));
+    if (document.startViewTransition && !motionOff()) document.startViewTransition(apply);
     else apply();
   };
 

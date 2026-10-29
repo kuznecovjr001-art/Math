@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { PHRASE } from '../audio/phrases';
 import { speak } from '../audio/voice';
 import { ISLANDS, islandOpen, missionOpen } from '../content/levels';
@@ -28,6 +28,11 @@ const REASON = { review: 'Вспомним', new: 'Новое', again: 'Ещё �
 
 /** Что было открыто и пройдено при прошлом показе карты (в этой сессии): новое появляется плавно один раз. */
 const lastSeen = new Map<string, { open: Set<string>; done: Set<string> }>();
+/**
+ * Где ребёнок был на карте: вернувшись из задания или альбома, он видит свой остров, а не начало карты.
+ * Запоминаем остров у верха экрана и его отступ, а не scrollY: блок «Сегодня» над островами мог смениться.
+ */
+const lastSpot = new Map<string, { island: string; top: number }>();
 
 export function MapScreen({ profile, attempts, sessions, stickers, now, onStart, onAlbum, onSwitch }: Props) {
   const own = attempts.filter((a) => a.profileId === profile.id);
@@ -40,7 +45,19 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
     // Озвучиваем только при входе на карту.
   }, []);
 
-  const start = (id: string) => onStart(id, isReviewDue(own, id, now) ? 'review' : 'play');
+  // До отрисовки: новый кадр (и снимок плавной смены экрана) сразу на прежнем месте, без прыжка.
+  useLayoutEffect(() => {
+    const spot = lastSpot.get(profile.id);
+    const el = spot && document.querySelector(`.island[data-island="${spot.island}"]`);
+    window.scrollTo(0, el ? window.scrollY + el.getBoundingClientRect().top - spot.top : 0);
+  }, []);
+  const leave = (go: () => void) => {
+    const el = [...document.querySelectorAll<HTMLElement>('.island')].find((e) => e.getBoundingClientRect().bottom > 0);
+    if (el && window.scrollY > 0) lastSpot.set(profile.id, { island: el.dataset.island!, top: el.getBoundingClientRect().top });
+    else lastSpot.delete(profile.id);
+    go();
+  };
+  const start = (id: string) => leave(() => onStart(id, isReviewDue(own, id, now) ? 'review' : 'play'));
 
   const ids = ISLANDS.flatMap((i) => i.missions);
   const [fresh] = useState(() => {
@@ -100,7 +117,7 @@ export function MapScreen({ profile, attempts, sessions, stickers, now, onStart,
         </button>
         <h1 className="sr-only">Карта островов</h1>
         <span className="map-name">{profile.name || 'Привет!'}</span>
-        <button className="btn album-btn" onClick={onAlbum} aria-label={`Альбом наклеек: ${stickers.length}`}>
+        <button className="btn album-btn" onClick={() => leave(onAlbum)} aria-label={`Альбом наклеек: ${stickers.length}`}>
           <Icon name="star" size={32} /> {stickers.length}
         </button>
       </header>
