@@ -72,12 +72,14 @@ for (const id of ids) {
   await wait(1800);
   const r = await js<{ ok: boolean; overflowX: number; small: string[]; outside: string[]; scrollY: number; title: string }>(`(() => {
     const vw = innerWidth, vh = document.documentElement.scrollHeight;
-    const vis = (el) => { const s = getComputedStyle(el); const b = el.getBoundingClientRect(); return s.visibility !== 'hidden' && s.display !== 'none' && b.width > 0 && b.height > 0; };
+    // WebView младше 128 отдаёт прямоугольник внутри CSS zoom в масштабе сцены, а не экрана (src/motion/flight.ts).
+    const rect = (el) => { const r = el.getBoundingClientRect(); if ('currentCSSZoom' in el) return r; let z = 1; for (let e = el; e; e = e.parentElement) z *= parseFloat(getComputedStyle(e).zoom) || 1; return { left: r.left * z, right: r.right * z, width: r.width * z, height: r.height * z }; };
+    const vis = (el) => { const s = getComputedStyle(el); const b = rect(el); return s.visibility !== 'hidden' && s.display !== 'none' && b.width > 0 && b.height > 0; };
     const name = (el) => (el.getAttribute('aria-label') || el.textContent || el.className || el.tagName).trim().slice(0, 24);
     const ctl = [...document.querySelectorAll('.mission button, .mission [role=button], .mission input')].filter(vis);
-    const small = ctl.filter((el) => { const b = el.getBoundingClientRect(); return b.width < 44 || b.height < 44; }).map(name);
+    const small = ctl.filter((el) => { const b = rect(el); return b.width < 44 || b.height < 44; }).map(name);
     const outside = [...document.querySelectorAll('.mission button, .mission img, .mission svg')].filter(vis)
-      .filter((el) => { const b = el.getBoundingClientRect(); return b.left < -1 || b.right > vw + 1; }).map(name);
+      .filter((el) => { const b = rect(el); return b.left < -1 || b.right > vw + 1; }).map(name);
     return { ok: !!document.querySelector('.screen.mission'), overflowX: document.documentElement.scrollWidth - vw,
       small: [...new Set(small)], outside: [...new Set(outside)], scrollY: Math.max(0, vh - innerHeight),
       title: document.querySelector('.task-text')?.textContent?.slice(0, 60) ?? '' };

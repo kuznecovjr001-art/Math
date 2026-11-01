@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { sfx } from '../audio/sfx';
 import { WHERE_LABEL, WHERE_TEXT, type CardParams, type Where } from '../content/missions';
-import { flyFrom } from '../motion/flight';
+import { flyFrom, screenRect } from '../motion/flight';
 import { Emoji } from '../ui/art';
 import type { GameProps } from './types';
 
@@ -32,7 +32,8 @@ export function PositionGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const put = (w: Where) => {
     if (locked) return;
     sfx.pop();
-    from.current = scene.current?.parentElement?.querySelector('.cat')?.getBoundingClientRect() ?? null;
+    const was = scene.current?.parentElement?.querySelector('.cat');
+    from.current = was ? screenRect(was) : null;
     setCat(w);
     onSubmit({ correct: w === params.where, answer: WHERE_TEXT[w] });
   };

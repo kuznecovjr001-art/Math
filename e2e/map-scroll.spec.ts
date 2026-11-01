@@ -17,5 +17,6 @@ test('карта помнит, где был ребёнок', async ({ page }) =
   expect(await page.evaluate(() => scrollY)).toBe(0);
   await page.getByRole('button', { name: 'Домой' }).click();
   await expect(page.locator('.screen.map')).toBeVisible();
-  expect(Math.abs((await stone.boundingBox())!.y - top)).toBeLessThan(2);
+  // Камни въезжают на экран анимацией: сравниваем, когда она закончится.
+  await expect.poll(async () => Math.abs((await stone.boundingBox())!.y - top)).toBeLessThan(2);
 });

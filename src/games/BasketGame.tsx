@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { flyFrom } from '../motion/flight';
+import { flyFrom, screenRect } from '../motion/flight';
 import { sfx } from '../audio/sfx';
 import { FRUITS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
@@ -23,7 +23,7 @@ export function BasketGame({ params, help, locked, onSubmit }: GameProps<P>) {
 
   const put = (e: React.MouseEvent<HTMLElement>) => {
     if (locked || stock <= 0) return;
-    from.current = e.currentTarget.getBoundingClientRect();
+    from.current = screenRect(e.currentTarget);
     sfx.pop();
     setInBasket((n) => n + 1);
   };

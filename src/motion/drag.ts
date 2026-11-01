@@ -1,14 +1,14 @@
 import { useRef } from 'react';
 import { DUR, EASE } from './tokens';
 import { emit } from './events';
-import { motionOff } from './flight';
+import { cssZoom, motionOff, screenRect } from './flight';
 
 /** Детская рука неточна: зона засчитывается и с промахом на столько пикселей вокруг. */
 const SLOP = 28;
 
 function zoneAt(x: number, y: number): HTMLElement | null {
   for (const el of document.querySelectorAll<HTMLElement>('[data-drop-zone]')) {
-    const r = el.getBoundingClientRect();
+    const r = screenRect(el);
     if (x >= r.left - SLOP && x <= r.right + SLOP && y >= r.top - SLOP && y <= r.bottom + SLOP) return el;
   }
   return null;
@@ -42,7 +42,7 @@ export function useDragToZone(onDrop: (zone: number) => void, disabled: boolean)
       const s = st.current;
       if (!s) return;
       // Внутри увеличенной или уменьшенной сцены (CSS zoom) сдвиг пересчитываем, чтобы предмет шёл ровно под пальцем.
-      const z = (s.el as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom || 1;
+      const z = cssZoom(s.el);
       s.el.style.transform = `translate(${(e.clientX - s.x) / z}px, ${(e.clientY - s.y) / z}px) scale(1.08)`;
       setNear(zoneAt(e.clientX, e.clientY));
     },

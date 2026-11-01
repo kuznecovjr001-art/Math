@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { flyFrom } from '../motion/flight';
+import { flyFrom, screenRect } from '../motion/flight';
 import { sfx } from '../audio/sfx';
 import type { CardParams } from '../content/missions';
 import { Cup, Emoji, Plate, Spoon } from '../ui/art';
@@ -27,7 +27,8 @@ export function CupsGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const give = (i: number) => {
     if (locked || stock <= 0) return;
     sfx.pop();
-    const last = stockRef.current?.lastElementChild?.getBoundingClientRect();
+    const stockItem = stockRef.current?.lastElementChild;
+    const last = stockItem && screenRect(stockItem);
     if (last) flight.current = { i, from: last };
     setGiven((g) => g.map((x, j) => (j === i ? x + 1 : x)));
   };

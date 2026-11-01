@@ -7,6 +7,11 @@ $root = Split-Path $PSScriptRoot -Parent
 if (-not $env:JAVA_HOME) { $env:JAVA_HOME = Join-Path $HOME 'dev-tools\jdk-21.0.12.1+1' }
 $keytool = Join-Path $env:JAVA_HOME 'bin\keytool.exe'
 
+# Политика лежит внутри APK: заглушка контакта попала бы к семьям и на модерацию.
+if (Select-String -Path (Join-Path $root 'public\privacy.html') -Pattern 'data-owner="contact">\[' -Quiet) {
+  throw 'Сначала впишите контакт в public\privacy.html (строка «Контакты»)'
+}
+
 function Read-Secret($prompt) {
   $s = Read-Host $prompt -AsSecureString
   $p = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)
