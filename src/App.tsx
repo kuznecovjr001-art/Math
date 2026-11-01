@@ -81,7 +81,8 @@ export function App() {
       if (s.name !== 'map') window.scrollTo(0, 0);
     };
     // Старый экран растворяется в новом, а не пропадает до цвета фона (motion.css: ::view-transition).
-    if (document.startViewTransition && !motionOff()) document.startViewTransition(apply);
+    // Поворот экрана прерывает переход: экран уже сменился, ошибка перехода не важна.
+    if (document.startViewTransition && !motionOff()) document.startViewTransition(apply).ready.catch(() => undefined);
     else apply();
   };
 

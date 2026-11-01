@@ -71,21 +71,30 @@ const noBreak = (t: string) => t.replace(/(\d) ([+×=–−:]) (?=\d)/g, '$1\u00
 /**
  * Всё задание — на одном экране: если игра не помещается по высоте, её самые высокие части по очереди уменьшаются
  * ровно настолько, чтобы «Готово» и ответы остались видны. Ребёнок не знает, что можно прокрутить.
- * Ответы — не мельче 3/4 (плитка остаётся не меньше 48 px), картинка сцены — не мельче половины.
+ * Часть с кнопками не мельче, чем нужно для цели 48 px; картинка без кнопок — не мельче половины.
+ * Что не поместилось и так, прокручивается под закреплёнными ответами (.game > .choices в styles.css).
  */
 function fitScene(screen: HTMLElement) {
   const game = screen.querySelector<HTMLElement>(':scope > .game');
   if (!game) return;
   const parts = ([...game.children] as HTMLElement[]).filter((el) => !el.matches('button'));
-  parts.forEach((el) => { el.style.zoom = ''; });
+  parts.forEach((el) => { el.style.zoom = ''; el.style.maxWidth = ''; el.style.marginInline = ''; });
   const over = () => document.documentElement.scrollHeight - window.innerHeight;
+  const smallest = (el: HTMLElement) => Math.min(96, ...[...el.querySelectorAll<HTMLElement>('button, [draggable="true"], .tap')]
+    .map((b) => Math.min(b.offsetWidth, b.offsetHeight)).filter(Boolean));
   for (const el of parts.sort((a, b) => b.offsetHeight - a.offsetHeight)) {
     const was = over();
     if (was <= 0) return;
     const h = el.offsetHeight;
-    el.style.zoom = String(Math.max(el.matches('.choices') ? 0.75 : 0.5, (h - was - 2) / h));
-    // Часть не задавала высоту (рядом выше соседняя колонка): уменьшать её незачем.
-    if (over() >= was) el.style.zoom = '';
+    const z = Math.max(0.5, Math.min(1, 48 / smallest(el)), (h - was - 2) / h);
+    if (z >= 1) continue;
+    el.style.zoom = String(z);
+    if (over() >= was) {
+      // Рисунок с шириной 100% (числовая прямая) под zoom не становится ниже: ему нужно сузить саму колонку.
+      el.style.maxWidth = `${z * 100}%`;
+      el.style.marginInline = 'auto';
+    }
+    if (over() >= was) { el.style.zoom = ''; el.style.maxWidth = ''; el.style.marginInline = ''; }
   }
 }
 
@@ -118,6 +127,8 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
     [mission, round],
   );
   const [pos, setPos] = useState(0);
+  // Только в разработке: e2e проверяет вёрстку каждой карточки, не проходя предыдущие (e2e/fold.spec.ts).
+  if (import.meta.env.DEV) (window as { qaCard?: (n: number) => void }).qaCard = setPos;
   const [help, setHelp] = useState<HelpLevel>(0);
   const [locked, setLocked] = useState(false);
   const [errors, setErrors] = useState(0);
@@ -321,16 +332,16 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
         </button>
       </header>
       <h1 className="sr-only">{mission.title}</h1>
-      <div className="task-row">
+      <div className="task-row" aria-live="polite">
         <Schetik size={84} className="task-guide" />
         {/* Повтор задания виден и без звука: текст мягко подсвечивается. Новая карточка объявляется читалке. */}
-        <div className="task-text" aria-live="polite" key={`t${pos}-${replay}`} data-flash={replay > 0 || undefined}>
+        <div className="task-text" key={`t${pos}-${replay}`} data-flash={replay > 0 || undefined}>
           <span className="step-tag">{step.variant === 'C' && <Icon name="review" size={16} />}{STEP_TITLE[step.variant]}</span>
           {noBreak(text)}
         </div>
       </div>
       {/* Место под реплику занято всегда: появляясь, она не сдвигает игру из-под пальца. */}
-      <div className="bubble-slot">{message && <div className="bubble" role="status" key={message}>{message}</div>}</div>
+      <div className="bubble-slot" role="status">{message && <div className="bubble" key={message}>{message}</div>}</div>
       {p.kind === 'cups' && <CupsGame key={key} params={p} {...gameProps} />}
       {p.kind === 'basket' && <BasketGame key={key} params={p} {...gameProps} />}
       {p.kind === 'seats' && <SeatsGame key={key} params={p} {...gameProps} />}
