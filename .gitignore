@@ -7,3 +7,10 @@ tsconfig.tsbuildinfo
 .qa/
 tts/out/
 __pycache__/
+# Ключи подписи и секреты никогда не попадают в Git (docs/release-signing.md).
+*.jks
+*.keystore
+*.pem
+*.p12
+keystore.properties
+.env*

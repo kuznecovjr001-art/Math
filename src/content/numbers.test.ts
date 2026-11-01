@@ -104,7 +104,7 @@ describe('islands 3–6 cards', () => {
 
   it('offers three different clock times with the right one among them', () => {
     for (let h = 1; h <= 12; h++) {
-      for (const m of [0, 30] as const) {
+      for (const m of [0, 15, 30, 45]) {
         const opts = clockChoices({ h, m });
         expect(opts, `${h}:${m}`).toContain(clockText(h, m));
         expect(new Set(opts).size, `${h}:${m} ${opts.join()}`).toBe(3);

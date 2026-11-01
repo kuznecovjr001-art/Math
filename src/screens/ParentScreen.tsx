@@ -155,14 +155,14 @@ export function ParentScreen({ data, onBack, settings, onSettings, onDeleteProfi
           <button
             className="btn danger"
             onClick={() => {
-              if (confirm('Удалить профиль и всю историю этого ребёнка на этом устройстве?')) onDeleteProfile(profile.id);
+              if (confirm('Удалить профиль и всю историю этого ребёнка на этом устройстве? Это нельзя отменить. Сначала можно сохранить копию.')) onDeleteProfile(profile.id);
             }}
           >
             Удалить профиль «{profile.name || 'Без имени'}»
           </button>
         )}
         <p className="note">
-          Все данные хранятся только в этом браузере. Приложение не собирает фото, голос и настоящие имена.
+          Все данные хранятся только на этом устройстве. Приложение не собирает фото, голос и настоящие имена.
         </p>
         <h3>Резервная копия</h3>
         <p className="note">

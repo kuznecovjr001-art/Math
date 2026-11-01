@@ -141,7 +141,7 @@ export const MORE_MISSIONS: Mission[] = [
         { kind: 'fraction', ask: 'threeQuarters', options: [
           { shape: 'circle', parts: 4, shaded: 3, equal: false }, { shape: 'circle', parts: 4, shaded: 1, equal: true }, { shape: 'circle', parts: 4, shaded: 3, equal: true }] },
         { kind: 'fraction', ask: 'half', options: [
-          { shape: 'rect', parts: 4, shaded: 1, equal: true }, { shape: 'rect', parts: 4, shaded: 2, equal: true }, { shape: 'rect', parts: 2, shaded: 1, equal: false }] },
+          { shape: 'rect', parts: 4, shaded: 1, equal: true }, { shape: 'rect', parts: 2, shaded: 1, equal: true }, { shape: 'rect', parts: 2, shaded: 1, equal: false }] },
       ],
       C: [
         { kind: 'fraction', ask: 'quarter', options: [
@@ -295,8 +295,8 @@ export const MORE_MISSIONS: Mission[] = [
     id: 'N32', title: 'Часы и календарь', skill: 'M18', requires: [], icon: '1F570',
     cards: {
       A: [{ kind: 'clock', h: 3, m: 0 }, { kind: 'week', day: 2, dir: 1 }],
-      B: [{ kind: 'clock', h: 7, m: 30 }, { kind: 'week', day: 4, dir: -1 }],
-      C: [{ kind: 'clock', h: 10, m: 0 }, { kind: 'week', day: 0, dir: -1 }],
+      B: [{ kind: 'clock', h: 2, m: 15 }, { kind: 'week', day: 4, dir: -1 }],
+      C: [{ kind: 'clock', h: 4, m: 45 }, { kind: 'week', day: 0, dir: -1 }],
     },
     help: [
       'Где короткая стрелка? Где длинная? Какие дни недели ты знаешь?',
@@ -305,7 +305,9 @@ export const MORE_MISSIONS: Mission[] = [
     ],
     helpFor: (p) => p.kind === 'week'
       ? ['Какие дни недели ты знаешь?', 'Я выписал дни недели по порядку.', 'Неделя идёт по кругу: после воскресенья снова понедельник.']
-      : ['Где короткая стрелка? Где длинная?', 'Короткая стрелка — часы, длинная — минуты.', 'Длинная на 12 — ровно час, на 6 — половина часа.'],
+      : ['Где короткая стрелка? Где длинная?', 'Короткая стрелка — часы, длинная — минуты.', p.kind === 'clock' && p.m % 30 !== 0
+        ? 'Длинная стрелка считает минуты: от цифры к цифре пять минут. На 3 — пятнадцать, на 9 — сорок пять.'
+        : 'Длинная на 12 — ровно час, на 6 — половина часа.'],
     praise: 'Ты разбираешься во времени!',
     finish: 'Часы идут, неделя по порядку.',
     home: 'Смотрите на часы в важные моменты дня: «Сейчас ровно 8, пора завтракать».',

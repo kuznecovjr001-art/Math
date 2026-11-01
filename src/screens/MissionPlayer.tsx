@@ -65,6 +65,9 @@ const voiced = (m: Mission) => (p: CardParams) =>
 const MODE_OF: Record<Variant, Mode> = { A: 'learn', B: 'probe', C: 'review' };
 /** Пауза после фразы Счётика, прежде чем сменится карточка: фраза не обрывается на полуслове. */
 const BREATH_MS = 350;
+/** Пример не разрывается на две строки: «8 + 7» читается целиком. Озвучка и ключи записей идут от исходного текста. */
+const noBreak = (t: string) => t.replace(/(\d) ([+×=–−:]) (?=\d)/g, '$1\u00a0$2\u00a0');
+
 /**
  * Всё задание — на одном экране: если игра не помещается по высоте, её самые высокие части по очереди уменьшаются
  * ровно настолько, чтобы «Готово» и ответы остались видны. Ребёнок не знает, что можно прокрутить.
@@ -323,7 +326,7 @@ export function MissionPlayer({ mission, mode, onAttempt, onSession, onFinish, o
         {/* Повтор задания виден и без звука: текст мягко подсвечивается. Новая карточка объявляется читалке. */}
         <div className="task-text" aria-live="polite" key={`t${pos}-${replay}`} data-flash={replay > 0 || undefined}>
           <span className="step-tag">{step.variant === 'C' && <Icon name="review" size={16} />}{STEP_TITLE[step.variant]}</span>
-          {text}
+          {noBreak(text)}
         </div>
       </div>
       {/* Место под реплику занято всегда: появляясь, она не сдвигает игру из-под пальца. */}

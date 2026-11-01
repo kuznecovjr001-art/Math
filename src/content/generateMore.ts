@@ -23,7 +23,8 @@ const THINGS = Object.keys(MEASURE_THINGS) as Measurable[];
 /** Доля фигуры: верная, неравные части (главная ловушка) и другая доля. */
 export function fractionOptions(ask: FracAsk, rng: Rng): FracShape[] {
   const shape = pick(rng, ['circle', 'rect'] as const);
-  const parts: 2 | 4 = ask === 'half' ? pick(rng, [2, 4] as const) : 4;
+  // Половина — одна из двух равных частей: 2/4 здесь ещё не проходят.
+  const parts: 2 | 4 = ask === 'half' ? 2 : 4;
   const shaded = ask === 'half' ? parts / 2 : ask === 'quarter' ? 1 : 3;
   const right: FracShape = { shape, parts, shaded, equal: true };
   const unequal: FracShape = { shape, parts, shaded, equal: false };
@@ -123,7 +124,8 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
     case 'symmetry':
       return { ...t, half: symmetryHalf(rng), shift: int(rng, 0, 2) };
     case 'clock':
-      return { ...t, h: int(rng, 1, 12), m: pick(rng, [0, 30] as const) };
+      // Сложность карточки сохраняется: часы и половины — как в ней, четверти — только у карточек с четвертями.
+      return { ...t, h: int(rng, 1, 12), m: pick(rng, t.m % 30 === 0 ? [0, 30] : [0, 15, 30, 45]) };
     case 'week':
       return { ...t, day: int(rng, 0, 6), dir: pick(rng, [1, -1] as const) };
     case 'unitPick':

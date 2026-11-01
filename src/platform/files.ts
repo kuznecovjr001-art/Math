@@ -6,13 +6,15 @@ export async function saveTextFile(name: string, text: string): Promise<void> {
     const [{ Filesystem, Directory, Encoding }, { Share }] = await Promise.all([
       import('@capacitor/filesystem'), import('@capacitor/share'),
     ]);
-    // Файл с именами и прогрессом детей лежит в кэше только на время «Поделиться».
+    // Файл с именами и прогрессом детей лежит в закрытом кэше недолго. Получатель (Диск, почта) читает его уже после
+    // выбора в «Поделиться», поэтому сразу удалять нельзя: прошлую копию стираем здесь, эту — через 10 минут.
+    await Filesystem.rmdir({ path: 'share', directory: Directory.Cache, recursive: true }).catch(() => undefined);
     const path = `share/${name}`;
     const { uri } = await Filesystem.writeFile({ path, data: text, directory: Directory.Cache, encoding: Encoding.UTF8, recursive: true });
     try {
       await Share.share({ title: name, files: [uri] });
     } finally {
-      await Filesystem.deleteFile({ path, directory: Directory.Cache }).catch(() => undefined);
+      setTimeout(() => void Filesystem.deleteFile({ path, directory: Directory.Cache }).catch(() => undefined), 10 * 60_000);
     }
     return;
   }

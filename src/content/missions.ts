@@ -163,7 +163,7 @@ export function instruction(p: CardParams): string {
       return `На двух тарелках вместе ${itemCount(p.total, p.item)}. На одной ${p.visible}. Сколько спрятано под салфеткой?`;
     case 'parcels':
       return p.op === 'add'
-        ? `Было ${count(p.start, 'посылка', 'посылки', 'посылок')}. Привезли ещё ${p.change === 1 ? 'одну' : p.change}. Сколько стало?`
+        ? `${p.start === 1 ? 'Была' : 'Было'} ${count(p.start, 'посылка', 'посылки', 'посылок')}. Привезли ещё ${p.change === 1 ? 'одну' : p.change}. Сколько стало?`
         : `Было ${count(p.start, 'посылка', 'посылки', 'посылок')}. ${p.change === 1 ? 'Одну посылку' : p.change} отправили. Сколько осталось?`;
     case 'shapes':
       return `Найди такую же фигуру: ${SHAPE_NAMES[p.target]}.`;
@@ -446,12 +446,12 @@ export const MISSIONS: Mission[] = [
         { kind: 'parcels', start: 5, change: 2, op: 'sub' },
       ],
       B: [
-        { kind: 'parcels', start: 2, change: 2, op: 'add' },
-        { kind: 'parcels', start: 4, change: 1, op: 'sub' },
+        { kind: 'parcels', start: 4, change: 3, op: 'add' },
+        { kind: 'parcels', start: 6, change: 2, op: 'sub' },
       ],
       C: [
-        { kind: 'parcels', start: 4, change: 1, op: 'add' },
-        { kind: 'parcels', start: 5, change: 3, op: 'sub' },
+        { kind: 'parcels', start: 6, change: 3, op: 'add' },
+        { kind: 'parcels', start: 8, change: 3, op: 'sub' },
       ],
     },
     help: [
@@ -484,6 +484,15 @@ export const MISSIONS: Mission[] = [
       'Я отмечу углы у всех фигур.',
       'Поворот и размер не меняют фигуру. Ищи ту, у которой столько же углов и такие же стороны.',
     ],
+    // Круг с овалом и квадрат с прямоугольником углами не различить: подсказка называет настоящее отличие.
+    helpFor: (p) => {
+      const near = (a: Shape, b: Shape) => p.kind === 'shapes' && p.target === a && p.options.includes(b);
+      const second = 'Я отмечу углы у всех фигур.';
+      if (near('circle', 'oval')) return ['Есть ли у фигуры углы? Какие ещё фигуры совсем без углов?', second, 'Круг везде одинаково круглый. Овал вытянутый, как яйцо.'];
+      if (near('oval', 'circle')) return ['Есть ли у фигуры углы? Какие ещё фигуры совсем без углов?', second, 'Овал вытянутый, как яйцо. Круг везде одинаково круглый.'];
+      if (near('square', 'rectangle')) return ['Посчитай углы и сравни стороны. Какие они у фигуры сверху?', second, 'У квадрата все четыре стороны одинаковые, у прямоугольника две длинные и две короткие.'];
+      return ['Посчитай углы. Сколько их у фигуры сверху?', second, 'Поворот и размер не меняют фигуру. Ищи ту, у которой столько же углов и такие же стороны.'];
+    },
     praise: 'Фигура узнана, даже повёрнутая!',
     finish: 'Все детали встали на свои места.',
     home: 'Найдите дома предметы-круги и предметы-прямоугольники.',
@@ -519,7 +528,7 @@ export const MISSIONS: Mission[] = [
       'Например, 8 + 7 = 8 + 2 + 5 = 10 + 5.',
     ],
     praise: 'Десяток собран, остаток досчитан!',
-    finish: 'Десяток собран, остаток досчитан.',
+    finish: 'Все рамки собраны в полные десятки.',
     home: 'Спросите: 8 + 7 — как удобнее, досчитать или сначала до 10?',
   },
   {
@@ -623,7 +632,7 @@ export const MISSIONS: Mission[] = [
   factsMission('T78', 'По семь и по восемь', '1F989', ['T06', 'T04'], [7, 8], [4, 6], [7, 3], [8, 9],
     'Перемешайте карточки с примерами из всех групп и решайте вместе.'),
   {
-    id: 'S01', title: 'Задачи', skill: 'M14', requires: ['T05'], icon: '1F4DA',
+    id: 'S01', title: 'Задачи', skill: 'M14', requires: ['T03', 'T04', 'T06'], icon: '1F4DA',
     cards: {
       A: [
         { kind: 'story', text: 'В вазе 8 красных и 7 жёлтых тюльпанов. Сколько всего тюльпанов?', ops: ['8 + 7', '8 − 7'], op: 0, answer: 15 },
@@ -631,11 +640,11 @@ export const MISSIONS: Mission[] = [
       ],
       B: [
         { kind: 'story', text: '12 конфет разложили поровну на 3 тарелки. Сколько конфет на каждой?', ops: ['12 − 3', '12 + 3', '12 : 3'], op: 2, answer: 4 },
-        { kind: 'story', text: 'В автобусе было 15 пассажиров. 6 вышли. Сколько осталось?', ops: ['15 − 6', '15 + 6'], op: 0, answer: 9 },
+        { kind: 'story', text: 'В автобусе было 15 пассажиров. 4 вышли. Сколько осталось?', ops: ['15 − 4', '15 + 4'], op: 0, answer: 11 },
       ],
       C: [
         { kind: 'story', text: '18 яблок разложили по 6 в пакет. Сколько получилось пакетов?', ops: ['18 × 6', '18 : 6', '18 − 6'], op: 1, answer: 3 },
-        { kind: 'story', text: 'У Маши 3 пакета по 5 яблок. Она съела 2 яблока. Сколько осталось?', ops: ['5 × 3 + 2', '5 + 3 − 2', '5 × 3 − 2'], op: 2, answer: 13 },
+        { kind: 'story', text: 'В 3 коробках по 5 карандашей. Сколько всего карандашей?', ops: ['5 × 3', '5 + 3', '5 − 3'], op: 0, answer: 15 },
       ],
     },
     help: [
@@ -782,7 +791,7 @@ export const MISSIONS: Mission[] = [
         { kind: 'measure', attr: 'heavier', a: { icon: '1FAA8', name: 'камень', weight: 5 }, b: { icon: '1F388', name: 'шарик', weight: 1 } },
       ],
       C: [
-        { kind: 'measure', attr: 'longer', a: { len: 7, shift: 0 }, b: { len: 5, shift: 3 } },
+        { kind: 'measure', attr: 'longer', a: { len: 7, shift: 0 }, b: { len: 5, shift: 1 } },
         { kind: 'measure', attr: 'lighter', a: { icon: '270F', name: 'карандаш', weight: 2 }, b: { icon: '1FAB6', name: 'перо', weight: 1 } },
       ],
     },

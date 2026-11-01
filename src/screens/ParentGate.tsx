@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Icon, SceneBg } from '../ui/art';
 
-/** Простой барьер от случайного входа ребёнка. Это не защита данных. */
+/**
+ * Простой барьер от случайного входа ребёнка. Это не защита данных.
+ * Пример вне таблицы умножения, которой учит приложение; после трёх ошибок — выход, чтобы не подбирать ответ.
+ */
 export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () => void }) {
-  const [a, b] = useMemo(() => [6 + Math.floor(Math.random() * 4), 6 + Math.floor(Math.random() * 4)], []);
+  const [a, b] = useMemo(() => [12 + Math.floor(Math.random() * 8), 6 + Math.floor(Math.random() * 4)], []);
   const [value, setValue] = useState('');
   const [wrong, setWrong] = useState(false);
+  const [fails, setFails] = useState(0);
 
   const press = (d: string) => {
     setWrong(false);
@@ -13,7 +17,9 @@ export function ParentGate({ onPass, onBack }: { onPass: () => void; onBack: () 
   };
   const check = () => {
     if (Number(value) === a * b) onPass();
+    else if (fails >= 2) onBack();
     else {
+      setFails(fails + 1);
       setWrong(true);
       setValue('');
     }

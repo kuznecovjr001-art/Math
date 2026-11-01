@@ -90,8 +90,9 @@ function story(rng: Rng, kind: 'add' | 'sub' | 'mul' | 'div'): Extract<CardParam
       };
     }
     case 'sub': {
-      const a = int(rng, 11, 18);
-      const b = int(rng, 3, 9);
+      // Без перехода через десяток: вычитанию через десяток приложение не учит, здесь важен выбор действия.
+      const a = int(rng, 13, 18);
+      const b = int(rng, 3, a % 10);
       return {
         kind: 'story',
         text: `В автобусе было ${count(a, 'пассажир', 'пассажира', 'пассажиров')}. ${b} вышли. Сколько осталось?`,
@@ -275,8 +276,9 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
       if (t.a.len !== undefined) {
         const long = int(rng, 5, 7);
         const short = int(rng, 3, long - 2);
-        // Короткую ленту сдвигаем вправо: на глаз её конец дальше.
-        const shortThing = { len: short, shift: long - short + 1 };
+        // В половине карточек короткую ленту сдвигаем так, что её конец дальше: это ловушка на глаз.
+        // В другой половине концы честные: иначе правило «бери ленту, что кончается раньше» решало бы всё.
+        const shortThing = { len: short, shift: rng() < 0.5 ? long - short + 1 : int(rng, 0, long - short) };
         const longThing = { len: long, shift: 0 };
         const longFirst = rng() < 0.5;
         return {

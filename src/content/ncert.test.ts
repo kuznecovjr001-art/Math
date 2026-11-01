@@ -47,13 +47,15 @@ describe('missions from the NCERT books', () => {
     expect(cards('N13').some((p) => expectedAnswer(p) === 0)).toBe(true);
   });
 
-  it('makes length cards misleading by eye until aligned', () => {
-    // Длинная лента начинается раньше, короткая сдвинута: на глаз концы почти рядом.
-    for (const p of cards('N15')) {
-      if (p.kind !== 'measure' || !p.a.len) continue;
-      const shorter = p.a.len! < p.b.len! ? p.a : p.b;
-      expect(shorter.shift).toBeGreaterThan(0);
-    }
+  it('mixes misleading and honest length cards', () => {
+    // Иначе правило «бери ленту, что кончается раньше» решало бы всё без сравнения длин.
+    const ends = cards('N15').flatMap((p) => {
+      if (p.kind !== 'measure' || !p.a.len) return [];
+      const [short, long] = p.a.len! < p.b.len! ? [p.a, p.b] : [p.b, p.a];
+      return [short.shift! + short.len! > long.shift! + long.len!];
+    });
+    expect(ends).toContain(true);
+    expect(ends).toContain(false);
   });
 
   it('reads the scale by weight, not by picture size', () => {

@@ -29,7 +29,7 @@ export type MoreParams =
   | { kind: 'openLine'; a: number; b: number }
   | { kind: 'bar'; story: BarStory; a: number; b: number; find: 'part' | 'whole' }
   | { kind: 'symmetry'; half: string[]; shift: number }
-  | { kind: 'clock'; h: number; m: 0 | 30 }
+  | { kind: 'clock'; h: number; m: number } // минуты кратны 5
   | { kind: 'week'; day: number; dir: 1 | -1 }
   | { kind: 'unitPick'; thing: Measurable };
 
@@ -149,15 +149,16 @@ export function fractionAnswer(p: { ask: FracAsk; options: FracShape[] }): numbe
 /** Время словами для кнопки: 3:00, 3:30. */
 export const clockText = (h: number, m: number) => `${h}:${String(m).padStart(2, '0')}`;
 
-/** Варианты времени: верное, перепутанные стрелки и частая ошибка «на час вперёд» у половины часа. */
-export function clockChoices(p: { h: number; m: 0 | 30 }): string[] {
-  const right = clockText(p.h, p.m);
+/**
+ * Варианты времени: верное и частые ошибки — час вперёд и неверно прочитанная длинная стрелка.
+ * Хвост минут не выдаёт ответ: часовую стрелку приходится читать всегда.
+ */
+export function clockChoices(p: { h: number; m: number }): string[] {
   const next = p.h === 12 ? 1 : p.h + 1;
-  // Перепутанные стрелки: минутная читается как часы, часовая как минуты.
-  const swapped = p.m === 0 ? clockText(12, (p.h % 12) * 5) : clockText(6, (p.h % 12) * 5);
-  const wrong = p.m === 30 ? [clockText(next, 30), swapped] : [swapped, clockText(p.h, 30)];
-  // Запасные варианты на случай совпадений (6:30 — стрелки «перепутаны» в тот же ответ).
-  const all = [...new Set([right, ...wrong, clockText(next, p.m), clockText(p.h, p.m === 0 ? 30 : 0)])].slice(0, 3);
+  const wrong = p.m === 0 ? [clockText(next, 0), clockText(p.h, 30)]
+    : p.m === 30 ? [clockText(next, 30), clockText(p.h, 0)]
+    : [clockText(p.h, p.m / 5), clockText(next, p.m)]; // 3:45 → «3:09»: цифра на циферблате прочитана как минуты
+  const all = [clockText(p.h, p.m), ...wrong];
   const k = p.h % 3;
   return all.slice(k).concat(all.slice(0, k));
 }
@@ -198,15 +199,19 @@ export function riddleChoices(p: { h: number; t: number; o: number; order: ('h' 
   return all.slice(k).concat(all.slice(0, k));
 }
 
-/** Три варианта числа с ошибками на десяток и на единицу. */
+/** Три варианта числа с ошибками на десяток и на единицу. Ответ бывает меньшим, средним и большим из трёх. */
 export function tenChoices(answer: number, min = 0, max = 1000): number[] {
-  const set = new Set([answer]);
+  const ok = (d: number) => answer + d >= min && answer + d <= max;
+  const pairs = [[-10, 10], [10, 1], [-10, -1]];
+  const from = answer % 3;
+  const near = [0, 1, 2].map((i) => pairs[(from + i) % 3]).find((pair) => pair.every(ok));
+  const set = new Set([answer, ...(near ?? []).map((d) => answer + d)]);
   for (const d of [10, -10, 1, -1]) {
     if (set.size >= 3) break;
-    if (answer + d >= min && answer + d <= max) set.add(answer + d);
+    if (ok(d)) set.add(answer + d);
   }
   const arr = [...set].sort((a, b) => a - b);
-  const k = answer % 3;
+  const k = Math.floor(answer / 3) % arr.length;
   return arr.slice(k).concat(arr.slice(0, k));
 }
 
