@@ -39,16 +39,15 @@
 
 ## Озвучка
 
-Задания, подсказки и похвала заранее записаны в `public/audio/<ключ>.mp3`; список записей — `public/audio/manifest.json`. Ключ — FNV-1a от текста фразы (`src/audio/phraseKey.ts`). Фраза без записи (сгенерированная карточка с новыми числами) читается синтезом речи браузера, без сети — тоже.
+Все фразы Счётика заранее записаны одним голосом (Qwen3-TTS, Apache-2.0) и лежат в `public/voice/<голос>/<ключ>.ogg`;
+список — `src/audio/voice-keys.json`. Синтез речи устройства не используется: генератор карточек берёт только
+озвученные карточки. Конвейер (извлечение фраз, числа в словах с падежами, генерация, проверка Whisper,
+замена на запись диктора) — `docs/VOICE_PIPELINE.md`; сравнение голосов — `docs/voice-samples/index.html`.
 
-Перезаписать голос:
+## Анимации
 
-```bash
-npx vite-node scripts/voice-phrases.ts > /tmp/phrases.json   # все фразы; SEEDS=10 добавит частые сгенерированные
-python3 scripts/voice-build.py /tmp/phrases.json ru-irinia-medium.onnx   # pip install piper-tts; голос из релиза rhasspy/piper v0.0.2
-```
-
-Живой диктор может записать фразы по таблице `public/audio/phrases.tsv` и положить файлы с теми же именами — код менять не нужно.
+События игры → состояния Счётика, движение, звуки: `docs/MOTION_SYSTEM.md`. Уровни анимаций и звук настраиваются
+в разделе «Для взрослых», системное «Убрать анимацию» уважается всегда.
 
 ## Запуск
 
@@ -60,6 +59,17 @@ npm run build     # сборка в dist/
 npm run preview   # проверка собранной версии (включая офлайн)
 ```
 
+## Android
+
+Та же сборка в приложении Capacitor 8 (`android/`), полностью офлайн, без разрешений. Нужны JDK 21 и Android SDK 36.
+
+```bash
+npm run build && npx cap sync android
+cd android && ./gradlew assembleDebug   # app/build/outputs/apk/debug/app-debug.apk
+```
+
+Проверка всех миссий на эмуляторе — `docs/android-qa.md`, подпись релиза — `docs/release-signing.md`.
+
 После слияния в `main` GitHub Actions прогоняет тесты, собирает приложение и кладёт сборку в ветку `gh-pages`, откуда её публикует GitHub Pages.
 
 ## Структура
@@ -69,14 +79,16 @@ src/engine/    прогресс, статусы навыков, расписан
 src/content/   карта навыков M01–M23, миссии с вариантами A/B/C и помощью, острова-уровни
 src/games/     игровая механика каждой миссии
 src/screens/   экраны: профили, карта, миссия, альбом, раздел для взрослых
-src/audio/     озвучка (записи с запасным синтезом речи) и короткие звуки
-scripts/       список фраз и запись озвучки
+src/audio/     голос (только записи) и короткие звуки
+src/motion/    события игры, состояния Счётика, анимации
+tts/           конвейер озвучки (Python)
+scripts/       извлечение фраз, проверки на Android
 public/        манифест PWA, service worker, картинки OpenMoji и их лицензия
 ```
 
 ## Что дальше
 
-- Прослушать записанную озвучку; при желании перезаписать живым диктором по `public/audio/phrases.tsv`.
+- Прослушать записанную озвучку; при желании перезаписать живым диктором: `tts/human/<ключ>.ogg` по списку `tts/out/phrases.json`.
 - Методист проверяет формулировки, числа и помощь в миссиях.
 - Заменить временные картинки OpenMoji на собственную графику (положить файлы в `src/assets/art/`).
 
@@ -84,4 +96,4 @@ public/        манифест PWA, service worker, картинки OpenMoji �
 
 Картинки животных, фруктов, подарка, поезда и звезды — [OpenMoji](https://openmoji.org/), лицензия [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), без изменений. Текст лицензии: `public/licenses/openmoji-LICENSE.txt`.
 
-Озвучка — синтезатор [Piper](https://github.com/rhasspy/piper), голос Irina (данные [RHVoice](https://github.com/RHVoice/RHVoice)).
+Голос Счётика синтезирован заранее моделью [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) (Alibaba Qwen, лицензия Apache-2.0). Голос создан по текстовому описанию, это не копия голоса реального человека.

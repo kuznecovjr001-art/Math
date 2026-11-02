@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Считалочка</string>
+    <string name="title_activity_main">Считалочка</string>
+    <string name="package_name">io.github.kuznecovjr001_art.schitalochka</string>
+    <string name="custom_url_scheme">io.github.kuznecovjr001_art.schitalochka</string>
+</resources>

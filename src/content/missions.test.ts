@@ -3,7 +3,7 @@ import { recordChoices } from '../games/RecordGame';
 import { tensChoices } from '../games/TensGame';
 import { answerChoices } from '../games/types';
 import {
-  cardId, expectedAnswer, factChoices, instruction, MISSIONS, strategyHint, voiceText,
+  cardId, expectedAnswer, factChoices, instruction, MISSIONS, strategyHint, voiceParts, voiceText,
 } from './missions';
 
 describe('missions content', () => {
@@ -31,6 +31,7 @@ describe('missions content', () => {
         if (p.kind === 'hidden') expect(p.visible).toBeLessThan(p.total);
         if (p.kind === 'tenframe') expect(p.a).toBeLessThan(10);
         if (p.kind === 'shapes') expect(p.options).toContain(p.target);
+        if (p.kind === 'shapes' && p.target === 'rectangle') expect(p.options).not.toContain('square');
         if (p.kind === 'story') expect(p.ops[p.op]).toBeDefined();
       }
     }
@@ -98,5 +99,12 @@ describe('missions content', () => {
   it('reads signs aloud', () => {
     expect(voiceText('Сколько будет 6 × 7?')).toBe('Сколько будет 6 умножить на 7?');
     expect(voiceText('12 : 3 = 4')).toBe('12 разделить на 3 равно 4');
+  });
+
+  it('voices a fixed instruction tail as its own checked recording', () => {
+    expect(voiceParts('Сколько будет 26 + 13? Прыгай по числовой прямой: сначала десятками, потом единицами.')).toEqual([
+      'Сколько будет 26 плюс 13?', 'Прыгай по числовой прямой: сначала десятками, потом единицами.',
+    ]);
+    expect(voiceParts('Сколько будет 6 × 7?')).toEqual(['Сколько будет 6 умножить на 7?']);
   });
 });

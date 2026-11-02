@@ -67,8 +67,8 @@ const WEIGHTS: Required<Pick<Thing, 'icon' | 'name' | 'weight'>>[] = [
 /** События дня по порядку: утро, день, вечер, ночь. */
 const DAY_PARTS: DayEvent[][] = [
   [{ icon: '1F305', name: 'просыпаемся' }, { icon: '1FAA5', name: 'чистим зубы утром' }],
-  [{ icon: '1F3EB', name: 'идём в садик' }, { icon: '1F37D', name: 'обедаем' }],
-  [{ icon: '1F319', name: 'наступает вечер' }, { icon: '1F319', name: 'смотрим на луну' }],
+  [{ icon: '26BD', name: 'играем днём' }, { icon: '1F37D', name: 'обедаем' }],
+  [{ icon: '1F319', name: 'смотрим на луну' }],
   [{ icon: '1F6CF', name: 'ложимся спать' }],
 ];
 
@@ -90,8 +90,9 @@ function story(rng: Rng, kind: 'add' | 'sub' | 'mul' | 'div'): Extract<CardParam
       };
     }
     case 'sub': {
-      const a = int(rng, 11, 18);
-      const b = int(rng, 3, 9);
+      // Без перехода через десяток: вычитанию через десяток приложение не учит, здесь важен выбор действия.
+      const a = int(rng, 13, 18);
+      const b = int(rng, 3, a % 10);
       return {
         kind: 'story',
         text: `В автобусе было ${count(a, 'пассажир', 'пассажира', 'пассажиров')}. ${b} вышли. Сколько осталось?`,
@@ -100,8 +101,13 @@ function story(rng: Rng, kind: 'add' | 'sub' | 'mul' | 'div'): Extract<CardParam
       };
     }
     case 'mul': {
-      const g = int(rng, 2, 6);
-      const per = int(rng, 3, 8);
+      // per > g: иначе «per − g» не имеет смысла; ответ до 24, как у автора.
+      let g = 2;
+      let per = 3;
+      do {
+        g = int(rng, 2, 6);
+        per = int(rng, 3, 8);
+      } while (per <= g || per * g > 24);
       return {
         kind: 'story',
         text: `В ${g} коробках по ${count(per, 'карандашу', 'карандаша', 'карандашей')}. Сколько всего карандашей?`,
@@ -110,8 +116,13 @@ function story(rng: Rng, kind: 'add' | 'sub' | 'mul' | 'div'): Extract<CardParam
       };
     }
     case 'div': {
-      const g = int(rng, 2, 5);
-      const per = int(rng, 2, 6);
+      // Делимое до 18, как у автора; 4 : 2 = 4 − 2, такой пример не различает действия.
+      let g = 2;
+      let per = 2;
+      do {
+        g = int(rng, 2, 5);
+        per = int(rng, 2, 6);
+      } while (g * per > 18 || (g === 2 && per === 2));
       const n = g * per;
       return {
         kind: 'story',
@@ -181,11 +192,12 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
     }
     case 'shapes': {
       const target = pick(rng, SHAPES);
-      const others = shuffle(rng, SHAPES.filter((s) => s !== target)).slice(0, 2);
+      // Квадрат — тоже прямоугольник, поэтому рядом с прямоугольником его не ставим.
+      const others = shuffle(rng, SHAPES.filter((s) => s !== target && !(target === 'rectangle' && s === 'square'))).slice(0, 2);
       return { ...t, target, options: shuffle(rng, [target, ...others]), turn: pick(rng, TURNS) };
     }
     case 'tenframe': {
-      if (t.b === 0) return { ...t, a: int(rng, 1, 9) };
+      if (t.b === 0) return { ...t, a: int(rng, 2, 9) }; // a ≥ 2: иначе среди вариантов «10» — весь десяток
       const [, maxSum] = span(pool, 'tenframe', (p) => p.a + p.b);
       const a = int(rng, 6, 9);
       return { ...t, a, b: int(rng, 11 - a, Math.min(9, maxSum - a)) };
@@ -212,7 +224,8 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
       do {
         per = int(rng, 2, 4);
         groups = int(rng, 2, 4);
-      } while (per * groups > maxTotal);
+        // per === groups: «2 + 2» и «2 × 2» обе верны — такую карточку не даём.
+      } while (per * groups > maxTotal || per === groups);
       return { ...t, per, groups, item: pick(rng, FRUITS) };
     }
     case 'array': {
@@ -263,8 +276,9 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
       if (t.a.len !== undefined) {
         const long = int(rng, 5, 7);
         const short = int(rng, 3, long - 2);
-        // Короткую ленту сдвигаем вправо: на глаз её конец дальше.
-        const shortThing = { len: short, shift: long - short + 1 };
+        // В половине карточек короткую ленту сдвигаем так, что её конец дальше: это ловушка на глаз.
+        // В другой половине концы честные: иначе правило «бери ленту, что кончается раньше» решало бы всё.
+        const shortThing = { len: short, shift: rng() < 0.5 ? long - short + 1 : int(rng, 0, long - short) };
         const longThing = { len: long, shift: 0 };
         const longFirst = rng() < 0.5;
         return {
@@ -274,8 +288,9 @@ export function varyCard(t: CardParams, pool: CardParams[], rng: Rng): CardParam
           b: longFirst ? shortThing : longThing,
         };
       }
-      const [x, y] = shuffle(rng, WEIGHTS);
-      const b = x.weight === y.weight ? WEIGHTS.find((w) => w.weight !== x.weight)! : y;
+      // Разница в весе явная (≥ 2): весы не должны спорить со здравым смыслом («мишка тяжелее яблока?»).
+      const [x, ...rest] = shuffle(rng, WEIGHTS);
+      const b = rest.find((w) => Math.abs(w.weight - x.weight) >= 2)!;
       return { ...t, attr: pick(rng, ['heavier', 'lighter'] as const), a: x, b };
     }
     case 'order': {
@@ -294,17 +309,26 @@ const keyOf = (p: CardParams) => JSON.stringify(p);
  */
 export function extendCards(
   authored: CardParams[], templates: CardParams[], pool: CardParams[], total: number, rng: Rng,
-  seen: Set<string> = new Set(),
+  seen: Set<string> = new Set(), avoid: Set<string> = new Set(),
+  /** Карточка озвучена записью (задание и подсказки). Неозвученная заменяется другой — голос не пропадает. */
+  voiced?: (p: CardParams) => boolean,
 ): CardParams[] {
   const out = [...authored];
   authored.forEach((p) => seen.add(keyOf(p)));
   for (let i = 0; out.length < total; i++) {
     const t = templates[i % templates.length];
     let card = varyCard(t, pool, rng);
-    for (let tries = 0; tries < 40 && seen.has(keyOf(card)); tries++) card = varyCard(t, pool, rng);
+    // avoid — карточки не из этого захода: их лишь стараемся не брать, повтор внутри захода хуже.
+    for (let tries = 0; tries < 40 && (seen.has(keyOf(card)) || avoid.has(keyOf(card))); tries++) card = varyCard(t, pool, rng);
+    for (let tries = 0; tries < 200 && seen.has(keyOf(card)); tries++) card = varyCard(t, pool, rng);
     // Если вариантов мало, повтор возможен, но не подряд.
     const last = out.length ? keyOf(out[out.length - 1]) : '';
     for (let tries = 0; tries < 20 && keyOf(card) === last; tries++) card = varyCard(t, pool, rng);
+    if (voiced && !voiced(card)) {
+      for (let tries = 0; tries < 100 && !voiced(card); tries++) card = varyCard(t, pool, rng);
+      // Совсем не нашлось — берём авторскую карточку: они озвучены всегда.
+      if (!voiced(card)) card = [t, ...pool].find(voiced) ?? card;
+    }
     seen.add(keyOf(card));
     out.push(card);
   }

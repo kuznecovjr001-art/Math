@@ -1,4 +1,4 @@
-import { missionCompleted } from '../engine/progress';
+import { probeReached } from '../engine/progress';
 import type { Attempt } from '../engine/types';
 import { getMission, MISSIONS, type Mission } from './missions';
 
@@ -97,7 +97,7 @@ export function islandOf(missionId: string): number {
 export function islandOpen(attempts: Attempt[], index: number, startIsland = 0): boolean {
   if (index <= startIsland) return true;
   const prev = ISLANDS[index - 1];
-  return islandOpen(attempts, index - 1, startIsland) && prev.core.every((id) => missionCompleted(attempts, id));
+  return islandOpen(attempts, index - 1, startIsland) && prev.core.every((id) => probeReached(attempts, id));
 }
 
 export function missionOpen(attempts: Attempt[], m: Mission, startIsland = 0): boolean {
@@ -105,7 +105,7 @@ export function missionOpen(attempts: Attempt[], m: Mission, startIsland = 0): b
   if (island < 0 || !islandOpen(attempts, island, startIsland)) return false;
   // На острове, с которого начали по решению взрослого, внутренние предпосылки
   // всё равно действуют: начинаем с первой миссии острова.
-  return m.requires.every((r) => missionCompleted(attempts, r));
+  return m.requires.every((r) => probeReached(attempts, r));
 }
 
 /** Миссии в порядке островов — так их показываем и предлагаем. */

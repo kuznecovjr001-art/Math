@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ударения Счётика</title>
+<style>
+  :root { --bg: #fff8e8; --card: #fff; --ink: #3a2e1f; --soft: #7a6a52; --line: #e7d5ad; --accent: #1f7a6f; --bad: #b3261e; --bad-bg: #fde7e4; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.45 system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .lead { margin: 0 0 14px; color: var(--soft); }
+  .now { position: sticky; top: 0; z-index: 2; background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 14px; box-shadow: 0 6px 18px #0000000f; }
+  .word { font-size: 40px; font-weight: 800; letter-spacing: .5px; }
+  .phrase { color: var(--soft); min-height: 1.45em; }
+  .phrase b { color: var(--ink); background: #ffe7a3; border-radius: 4px; padding: 0 2px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  button { min-height: 48px; min-width: 48px; padding: 0 16px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .stats { margin-top: 8px; color: var(--soft); font-size: 15px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0 8px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+  td { border-top: 1px solid var(--line); padding: 6px 8px; vertical-align: middle; }
+  tr.cur { outline: 3px solid var(--accent); outline-offset: -3px; }
+  tr.marked { background: var(--bad-bg); }
+  tr.heard td.w::after { content: ' ✓'; color: var(--accent); font-size: 13px; }
+  td.w { font-weight: 700; font-size: 19px; }
+  td.n { color: var(--soft); font-size: 14px; white-space: nowrap; }
+  td input[type=text] { width: 140px; min-height: 40px; font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; }
+  label.chk { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; cursor: pointer; }
+  label.chk input { width: 22px; height: 22px; }
+  textarea { width: 100%; min-height: 120px; font: 15px/1.4 ui-monospace, monospace; border: 2px solid var(--line); border-radius: 12px; padding: 8px; box-sizing: border-box; }
+  @media (max-width: 600px) { td.n, td.p { display: none; } .word { font-size: 32px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ударения Счётика</h1>
+  <p class="lead">Нажмите «Слушать подряд»: звучит отрывок с каждым словом, самые частые слова идут первыми.
+    Услышали неверное ударение — жмите «Неверно» (или клавишу <b>Н</b>). Можно вписать, как правильно: большой буквой
+    ударная гласная, например <b>тарЕлки</b>. В конце нажмите «Скопировать отмеченные» и вставьте список в чат.
+    Отметки сохраняются в этом браузере.</p>
+
+  <section class="now" aria-live="polite">
+    <div class="word" id="word">—</div>
+    <div class="phrase" id="phrase"></div>
+    <div class="bar">
+      <button class="primary" id="auto">▶ Слушать подряд</button>
+      <button id="again" title="Клавиша Пробел">↺ Ещё раз</button>
+      <button id="whole">Вся фраза</button>
+      <button class="bad" id="bad" title="Клавиша Н">✗ Неверно</button>
+      <button id="prev" aria-label="Предыдущее слово">←</button>
+      <button id="next" aria-label="Следующее слово">→</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <div class="tools">
+    <label class="chk"><input type="checkbox" id="onlyMarked"> только отмеченные</label>
+    <button class="primary" id="copy">Скопировать отмеченные</button>
+  </div>
+  <textarea id="out" readonly aria-label="Список отмеченных слов" placeholder="Здесь появится список отмеченных слов"></textarea>
+
+  <table><tbody id="list"></tbody></table>
+</main>
+<audio id="player" preload="auto"></audio>
+<script>
+const VOICE = '__VOICE__';
+const ROWS = __ROWS__;
+const STORE = 'stress-check:' + VOICE;
+let state = { marks: {}, fix: {}, heard: {}, pos: 0 };
+try { Object.assign(state, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} };
+
+const $ = (id) => document.getElementById(id);
+const player = $('player');
+let auto = false, stopTimer = 0, nextTimer = 0;
+
+const src = (r) => `../../public/voice/${VOICE}/${r.k}.ogg`;
+function play(r, whole) {
+  clearTimeout(stopTimer);
+  player.src = src(r);
+  const [t0, t1] = !whole && r.t ? r.t : [0, null];
+  return new Promise((done) => {
+    const finish = () => { player.pause(); player.onended = null; done(); };
+    player.onended = finish;
+    player.onloadedmetadata = () => {
+      player.currentTime = t0;
+      player.play().catch(finish);
+      // Конец отрывка — по времени самой записи: таймер от загрузки обрезал бы слово на задержку старта.
+      const watch = () => { if (player.src && player.currentTime < t1 && !player.paused) stopTimer = setTimeout(watch, 20); else if (!player.ended) finish(); };
+      if (t1 != null) stopTimer = setTimeout(watch, 60);
+    };
+  });
+}
+
+function esc(s) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function show() {
+  const r = ROWS[state.pos];
+  $('word').textContent = r.w + (state.marks[r.w] ? '  ✗' : '');
+  $('phrase').innerHTML = esc(r.s).replace(new RegExp(`(^|[^а-яё])(${r.w})(?![а-яё])`, 'i'), '$1<b>$2</b>');
+  const marked = Object.keys(state.marks).length, heard = Object.keys(state.heard).length;
+  $('stats').textContent = `Слово ${state.pos + 1} из ${ROWS.length} · прослушано ${heard} · отмечено ${marked}`;
+  document.querySelectorAll('#list tr').forEach((tr) => tr.classList.toggle('cur', +tr.dataset.i === state.pos));
+  document.querySelector('#list tr.cur')?.scrollIntoView({ block: 'nearest' });
+}
+async function playCurrent(whole) {
+  const r = ROWS[state.pos];
+  state.heard[r.w] = 1; save();
+  rowOf(state.pos)?.classList.add('heard');
+  show();
+  await play(r, whole);
+}
+function go(i) { state.pos = Math.max(0, Math.min(ROWS.length - 1, i)); save(); show(); }
+
+async function run() {
+  while (auto) {
+    const at = state.pos;
+    await playCurrent(false);
+    // Пауза, чтобы успеть нажать «Неверно» про только что прозвучавшее слово.
+    await new Promise((r) => { nextTimer = setTimeout(r, 1100); });
+    if (!auto || state.pos !== at) continue;
+    if (state.pos >= ROWS.length - 1) { setAuto(false); break; }
+    go(state.pos + 1);
+  }
+}
+function setAuto(on) {
+  auto = on;
+  $('auto').textContent = on ? '⏸ Пауза' : '▶ Слушать подряд';
+  if (on) run(); else { clearTimeout(nextTimer); clearTimeout(stopTimer); player.pause(); }
+}
+
+function toggleMark(i, on) {
+  const w = ROWS[i].w;
+  if (on ?? !state.marks[w]) state.marks[w] = 1; else delete state.marks[w];
+  save();
+  const tr = rowOf(i);
+  if (tr) { tr.classList.toggle('marked', !!state.marks[w]); tr.querySelector('input[type=checkbox]').checked = !!state.marks[w]; }
+  render(false); show(); output();
+}
+function output() {
+  const lines = ROWS.filter((r) => state.marks[r.w]).map((r) => state.fix[r.w] ? `${r.w} → ${state.fix[r.w]}` : r.w);
+  $('out').value = lines.length ? `Неверные ударения (${VOICE}):\n` + lines.join('\n') : '';
+}
+
+const rowOf = (i) => document.querySelector(`#list tr[data-i="${i}"]`);
+function render(full = true) {
+  const only = $('onlyMarked').checked;
+  if (!full) { if (only) render(true); return; }
+  $('list').innerHTML = ROWS.map((r, i) => (only && !state.marks[r.w]) ? '' :
+    `<tr data-i="${i}" class="${state.marks[r.w] ? 'marked' : ''} ${state.heard[r.w] ? 'heard' : ''}">
+      <td><button data-play="${i}" aria-label="Послушать ${esc(r.w)}">▶</button></td>
+      <td class="w">${esc(r.w)}</td><td class="n">${r.n}×</td>
+      <td><label class="chk"><input type="checkbox" data-mark="${i}" ${state.marks[r.w] ? 'checked' : ''}> неверно</label></td>
+      <td><input type="text" data-fix="${i}" value="${esc(state.fix[r.w] || '')}" placeholder="как надо" aria-label="Как правильно: ${esc(r.w)}"></td>
+    </tr>`).join('');
+  show();
+}
+
+$('list').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-play]');
+  if (b) { setAuto(false); go(+b.dataset.play); playCurrent(false); }
+});
+$('list').addEventListener('change', (e) => {
+  if (e.target.dataset.mark) toggleMark(+e.target.dataset.mark, e.target.checked);
+});
+$('list').addEventListener('input', (e) => {
+  if (!e.target.dataset.fix) return;
+  const i = +e.target.dataset.fix, w = ROWS[i].w, v = e.target.value.trim();
+  if (v) { state.fix[w] = v; state.marks[w] = 1; rowOf(i)?.classList.add('marked'); rowOf(i).querySelector('input[type=checkbox]').checked = true; }
+  else delete state.fix[w];
+  save(); output(); show();
+});
+$('auto').onclick = () => setAuto(!auto);
+$('again').onclick = () => { setAuto(false); playCurrent(false); };
+$('whole').onclick = () => { setAuto(false); playCurrent(true); };
+$('bad').onclick = () => toggleMark(state.pos, true);
+$('prev').onclick = () => { setAuto(false); go(state.pos - 1); };
+$('next').onclick = () => { setAuto(false); go(state.pos + 1); };
+$('onlyMarked').onchange = () => render();
+$('copy').onclick = async () => {
+  output();
+  try { await navigator.clipboard.writeText($('out').value); $('copy').textContent = 'Скопировано ✓'; }
+  catch (e) { $('out').select(); document.execCommand('copy'); $('copy').textContent = 'Скопировано ✓'; }
+  setTimeout(() => { $('copy').textContent = 'Скопировать отмеченные'; }, 1500);
+};
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input[type=text], textarea')) return;
+  if (e.code === 'KeyY' || e.key === 'н' || e.key === 'Н') { e.preventDefault(); toggleMark(state.pos, true); }
+  else if (e.code === 'Space') { e.preventDefault(); setAuto(false); playCurrent(false); }
+  else if (e.key === 'ArrowRight') { setAuto(false); go(state.pos + 1); }
+  else if (e.key === 'ArrowLeft') { setAuto(false); go(state.pos - 1); }
+});
+
+render(); output();
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import { expectedAnswer, type CardParams } from '../content/missions';
 import type { FracShape } from '../content/numbers';
 import { Choices } from './Choices';
-import type { GameProps } from './types';
+import { useSolved, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'fraction' }>;
 
@@ -39,6 +39,7 @@ function FracPicture({ f, id }: { f: FracShape; id: string }) {
 
 /** Где закрашена половина, четверть или три четверти. Подсказка приглушает фигуры с неравными частями. */
 export function FractionGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const answer = expectedAnswer(params);
   return (
     <div className="game">
@@ -47,12 +48,12 @@ export function FractionGame({ params, help, locked, onSubmit }: GameProps<P>) {
         render={(i) => (
           <span className={`frac-opt ${help >= 2 && !params.options[i].equal ? 'dim' : ''}`}>
             <FracPicture f={params.options[i]} id={`${i}`} />
-            {help >= 3 && <span className="frac-label">{params.options[i].shaded} из {params.options[i].parts}</span>}
+            {(help >= 3 || solved) && <span className="frac-label">{params.options[i].shaded} из {params.options[i].parts}</span>}
           </span>
         )}
         label={(i) => `Фигура ${i + 1}`}
         disabled={locked}
-        onPick={(i) => onSubmit({ correct: i === answer, answer: String(i) })}
+        onPick={(i) => submit({ correct: i === answer, answer: String(i) })}
       />
     </div>
   );

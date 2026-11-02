@@ -4,7 +4,7 @@ import { ITEMS, type CardParams } from '../content/missions';
 import { Emoji } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
 import { Choices } from './Choices';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'record' }>;
 
@@ -16,6 +16,7 @@ export function recordChoices(per: number, groups: number): string[] {
 }
 
 export function RecordGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const [step, setStep] = useState<'record' | 'total'>('record');
   const item = ITEMS[params.item];
   const right = `${params.per} × ${params.groups}`;
@@ -28,7 +29,7 @@ export function RecordGame({ params, help, locked, onSubmit }: GameProps<P>) {
             <div className="group-items">
               {Array.from({ length: params.per }, (_, k) => <Emoji key={k} code={item.img} size={40} />)}
             </div>
-            {help >= 3 && <span className="badge static">{params.per}</span>}
+            {(help >= 3 || solved) && <span className="badge static">{params.per}</span>}
           </div>
         ))}
       </div>
@@ -40,7 +41,7 @@ export function RecordGame({ params, help, locked, onSubmit }: GameProps<P>) {
           disabled={locked}
           onPick={(r) => {
             const correct = r === right;
-            onSubmit({ correct, answer: r, final: false, next: PHRASE.nextTotal });
+            submit({ correct, answer: r, final: false, next: PHRASE.nextTotal });
             if (correct) setStep('total');
           }}
         />
@@ -51,7 +52,7 @@ export function RecordGame({ params, help, locked, onSubmit }: GameProps<P>) {
             options={answerChoices(total)}
             render={(n) => <NumberTile n={n} dots={false} />}
             disabled={locked}
-            onPick={(n) => onSubmit({ correct: n === total, answer: `итог ${n}` })}
+            onPick={(n) => submit({ correct: n === total, answer: `итог ${n}` })}
           />
         </>
       )}

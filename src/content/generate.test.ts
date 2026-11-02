@@ -62,13 +62,18 @@ describe('generated cards', () => {
   });
 
   it('does not repeat a card inside one entry when there is room', () => {
-    for (const m of MISSIONS) {
-      for (const seed of SEEDS.slice(0, 10)) {
-        const keys = buildSteps(m, 'play', missionLength(m.id), seededRng(seed)).map((s) => JSON.stringify(s.params));
-        keys.slice(1).forEach((k, i) => expect(k, `${m.id} seed ${seed}`).not.toBe(keys[i]));
-        // Где вариантов меньше, чем карточек, повтор возможен: у котёнка 4 места,
-        // у автобуса на 4–5 мест 7 раскладок, у сада до 12 деревьев 7 размеров.
-        if (!['N09', 'A03', 'A11'].includes(m.id)) expect(new Set(keys).size, `${m.id} seed ${seed}`).toBe(keys.length);
+    // Где вариантов меньше, чем карточек, повтор возможен: у котёнка 4 места,
+    // у автобуса на 4–5 мест 7 раскладок, у сада до 12 деревьев 7 размеров,
+    // у карандаша 3 длины (3–5 мерок), а в обычном заходе нужно 4 карандаша.
+    const few: Record<PlayMode, string[]> = { play: ['N09', 'A03', 'A11', 'N24'], again: ['N09'], review: [] };
+    for (const mode of MODES) {
+      for (const m of MISSIONS) {
+        for (const seed of SEEDS) {
+          const where = `${mode} ${m.id} seed ${seed}`;
+          const keys = buildSteps(m, mode, missionLength(m.id), seededRng(seed)).map((s) => JSON.stringify(s.params));
+          keys.slice(1).forEach((k, i) => expect(k, where).not.toBe(keys[i]));
+          if (!few[mode].includes(m.id)) expect(new Set(keys).size, where).toBe(keys.length);
+        }
       }
     }
   });
@@ -95,6 +100,8 @@ describe('generated cards', () => {
         case 'shapes':
           expect(p.options, where).toContain(p.target);
           expect(new Set(p.options).size, where).toBe(3);
+          // Квадрат — тоже прямоугольник: среди «не таких» его быть не может.
+          if (p.target === 'rectangle') expect(p.options, where).not.toContain('square');
           break;
         case 'tenframe':
           if (p.b === 0) expect(p.a >= 1 && p.a <= 9, where).toBe(true);
@@ -102,10 +109,25 @@ describe('generated cards', () => {
           break;
         case 'boxes': expect(p.stock, where).toBeGreaterThanOrEqual(p.groups * p.per); break;
         case 'array': expect(p.rows, where).not.toBe(p.cols); break;
-        case 'story':
+        case 'story': {
           expect(p.op >= 0 && p.op < p.ops.length, where).toBe(true);
           expect(ans, where).toBeGreaterThan(0);
+          const calc = (op: string) => {
+            const [a, sign, b] = op.split(' ');
+            const [x, y] = [Number(a), Number(b)];
+            return sign === '+' ? x + y : sign === '−' ? x - y : sign === '×' ? x * y : x / y;
+          };
+          expect(calc(p.ops[p.op]), where).toBe(ans);
+          for (const op of p.ops) {
+            expect(calc(op), where).toBeGreaterThanOrEqual(0);
+            // Неверное действие не должно случайно давать верный ответ (4 : 2 и 4 − 2).
+            if (op !== p.ops[p.op]) expect(calc(op), where).not.toBe(ans);
+          }
+          // Числа не выходят за авторские: умножение до 24, делимое до 18.
+          if (p.ops[p.op].includes('×')) expect(ans, where).toBeLessThanOrEqual(24);
+          if (p.ops[p.op].includes(':')) expect(Number(p.ops[p.op].split(' ')[0]), where).toBeLessThanOrEqual(18);
           break;
+        }
         case 'sort':
           expect(p.items.length, where).toBe(6);
           expect(p.items.filter((x) => x.bin === 0).length, where).toBe(3);
@@ -129,8 +151,8 @@ describe('generated cards', () => {
           if (len) {
             const short = p.a.len! < p.b.len! ? p.a : p.b;
             const long = short === p.a ? p.b : p.a;
-            // На глаз короткая лента кажется длиннее: её конец дальше.
-            expect(short.shift! + short.len!, where).toBeGreaterThan(long.shift! + long.len!);
+            // Ловушка «конец дальше» встречается не всегда, но лента всегда целиком в поле.
+            expect(short.shift! + short.len!, where).toBeLessThanOrEqual(long.len! + 1);
           }
           break;
         }
@@ -182,5 +204,24 @@ describe('generated cards', () => {
     expect(out[0]).toBe(t);
     expect(out).toHaveLength(4);
     expect(varyCard(t, [t], seededRng(9)).kind).toBe('fingers');
+  });
+});
+
+describe('voiced cards', () => {
+  it('never returns a generated card without a recording', async () => {
+    const { MISSIONS, instruction } = await import('./missions');
+    const { buildSteps } = await import('./steps');
+    const { missionLength } = await import('./levels');
+    const { seededRng } = await import('./generate');
+    for (const m of MISSIONS) {
+      const authored = new Set([...m.cards.A, ...m.cards.B, ...m.cards.C].map((p) => instruction(p)));
+      // Озвучены только авторские фразы и чётные варианты сгенерированных — генератор обязан обойтись ими.
+      const voiced = (p: Parameters<typeof instruction>[0]) => authored.has(instruction(p)) || instruction(p).length % 2 === 0;
+      for (let seed = 1; seed <= 20; seed++) {
+        for (const mode of ['play', 'review', 'again'] as const) {
+          for (const s of buildSteps(m, mode, missionLength(m.id), seededRng(seed), voiced)) expect(voiced(s.params), `${m.id} ${instruction(s.params)}`).toBe(true);
+        }
+      }
+    }
   });
 });

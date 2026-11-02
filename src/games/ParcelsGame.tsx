@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
-import { Parcel } from '../ui/art';
+import { Icon, Parcel } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
-import { answerChoices, type GameProps } from './types';
+import { answerChoices, type GameProps, useSolved } from './types';
 
 type P = Extract<CardParams, { kind: 'parcels' }>;
 type Stage = 'start' | 'change' | 'ask';
 
 export function ParcelsGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, submit] = useSolved(onSubmit);
   const [stage, setStage] = useState<Stage>('start');
   const [replay, setReplay] = useState(0);
   const answer = expectedAnswer(params);
@@ -50,19 +51,25 @@ export function ParcelsGame({ params, help, locked, onSubmit }: GameProps<P>) {
             return (
               <div key={`${replay}-${i}`} className={cls}>
                 <Parcel size={64} />
-                {help >= 3 && stage === 'ask' && stays && <span className="badge">{stayNo}</span>}
+                {(help >= 3 || solved) && stage === 'ask' && stays && <span className="badge">{stayNo}</span>}
               </div>
             );
           })}
         </div>
       </div>
-      <div className="choices">
+      {stage === 'ask' && (
+        <button className="btn icon replay" onClick={() => setReplay((r) => r + 1)} disabled={locked} aria-label="Показать ещё раз">
+          <Icon name="review" size={36} />
+        </button>
+      )}
+      {/* Пока идёт сценка, ответы спрятаны, а не «серые»: ребёнок смотрит на склад, а не на неактивные кнопки. */}
+      <div className={`choices ${stage === 'ask' ? 'ready' : 'waiting'}`}>
         {answerChoices(answer, 0).map((n) => (
           <button
             key={n}
             className="btn choice"
             disabled={locked || stage !== 'ask'}
-            onClick={() => onSubmit({ correct: n === answer, answer: String(n) })}
+            onClick={() => submit({ correct: n === answer, answer: String(n) })}
           >
             <NumberTile n={n} />
           </button>

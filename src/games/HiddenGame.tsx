@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ITEMS, type CardParams } from '../content/missions';
 import { Emoji, Plate } from '../ui/art';
 import { NumberTile } from '../ui/NumberTile';
@@ -6,7 +7,9 @@ import { answerChoices, type GameProps } from './types';
 
 type P = Extract<CardParams, { kind: 'hidden' }>;
 
+/** После верного ответа салфетка приподнимается: под ней ровно столько, сколько ребёнок назвал. */
 export function HiddenGame({ params, help, locked, onSubmit }: GameProps<P>) {
+  const [solved, setSolved] = useState(false);
   const item = ITEMS[params.item];
   const hidden = params.total - params.visible;
   return (
@@ -20,7 +23,12 @@ export function HiddenGame({ params, help, locked, onSubmit }: GameProps<P>) {
         </div>
         <div className="plate-wrap">
           <Plate size={170} />
-          <div className="napkin" role="img" aria-label="Салфетка">?</div>
+          {solved && (
+            <div className="plate-items under-napkin">
+              {Array.from({ length: hidden }, (_, i) => <Emoji key={i} code={item.img} size={44} />)}
+            </div>
+          )}
+          <div className={`napkin ${solved ? 'lifted' : ''}`} role="img" aria-label="Салфетка">{solved ? '' : '?'}</div>
         </div>
       </div>
       {help >= 2 && (
@@ -33,10 +41,13 @@ export function HiddenGame({ params, help, locked, onSubmit }: GameProps<P>) {
         </div>
       )}
       <Choices
-        options={answerChoices(hidden, 0)}
+        options={answerChoices(hidden, 1).filter((n) => n < params.total)}
         render={(n) => <NumberTile n={n} />}
         disabled={locked}
-        onPick={(n) => onSubmit({ correct: n === hidden, answer: String(n) })}
+        onPick={(n) => {
+          if (n === hidden) setSolved(true);
+          onSubmit({ correct: n === hidden, answer: String(n), showMs: n === hidden ? 1300 : undefined });
+        }}
       />
     </div>
   );

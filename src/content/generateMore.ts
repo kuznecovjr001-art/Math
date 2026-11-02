@@ -23,7 +23,8 @@ const THINGS = Object.keys(MEASURE_THINGS) as Measurable[];
 /** Доля фигуры: верная, неравные части (главная ловушка) и другая доля. */
 export function fractionOptions(ask: FracAsk, rng: Rng): FracShape[] {
   const shape = pick(rng, ['circle', 'rect'] as const);
-  const parts: 2 | 4 = ask === 'half' ? pick(rng, [2, 4] as const) : 4;
+  // Половина — одна из двух равных частей: 2/4 здесь ещё не проходят.
+  const parts: 2 | 4 = ask === 'half' ? 2 : 4;
   const shaded = ask === 'half' ? parts / 2 : ask === 'quarter' ? 1 : 3;
   const right: FracShape = { shape, parts, shaded, equal: true };
   const unequal: FracShape = { shape, parts, shaded, equal: false };
@@ -50,7 +51,9 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
     }
     case 'chart100': {
       const [lo, hi] = span(pool, 'chart100', (p) => p.missing);
-      return { ...t, missing: int(rng, lo, hi) };
+      // У пропущенной клетки должны быть соседи слева и справа в ряду, как у автора.
+      const cells = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).filter((x) => x % 10 >= 2);
+      return { ...t, missing: pick(rng, cells) };
     }
     case 'coins': {
       const [lo, hi] = span(pool, 'coins', (p) => p.price);
@@ -63,8 +66,9 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
       return { ...t, counts, ask: t.ask === 'most' ? 'most' : pick(rng, items) };
     }
     case 'groupsOf': {
-      const [, hi] = span(pool, 'groupsOf', (p) => p.total / p.size);
-      return { ...t, total: t.size * int(rng, 2, hi) };
+      // Диапазон — по тому же размеру группы: у машин (по 4) авторских групп меньше, чем у велосипедов.
+      const [, hi] = span(pool.filter((p) => p.kind !== 'groupsOf' || p.size === t.size), 'groupsOf', (p) => p.total / p.size);
+      return { ...t, total: t.size * int(rng, 2, Math.max(hi, 4)) };
     }
     case 'jumps': {
       const [, hiStep] = span(pool, 'jumps', (p) => p.step);
@@ -78,7 +82,8 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
       return { ...t, ask, options: fractionOptions(ask, rng) };
     }
     case 'units': {
-      const [lo, hi] = span(pool, 'units', (p) => p.len);
+      // Диапазон — по той же мерке: у карандаша авторские длины меньше, чем у скрепки.
+      const [lo, hi] = span(pool.filter((p) => p.kind !== 'units' || p.unit === t.unit), 'units', (p) => p.len);
       return { ...t, len: int(rng, lo, hi) };
     }
     case 'complete100': {
@@ -87,7 +92,7 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
     }
     case 'placeValue': {
       const tens = int(rng, 0, 9);
-      return { ...t, h: int(rng, 1, 9), t: tens, o: pick(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter((x) => x !== tens)) };
+      return { ...t, h: int(rng, 1, 5), t: tens, o: pick(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter((x) => x !== tens)) };
     }
     case 'riddle': {
       const [h, tt, o] = shuffle(rng, [1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3);
@@ -119,7 +124,8 @@ export function varyMore(t: MoreParams, pool: CardParams[], rng: Rng): MoreParam
     case 'symmetry':
       return { ...t, half: symmetryHalf(rng), shift: int(rng, 0, 2) };
     case 'clock':
-      return { ...t, h: int(rng, 1, 12), m: pick(rng, [0, 30] as const) };
+      // Сложность карточки сохраняется: часы и половины — как в ней, четверти — только у карточек с четвертями.
+      return { ...t, h: int(rng, 1, 12), m: pick(rng, t.m % 30 === 0 ? [0, 30] : [0, 15, 30, 45]) };
     case 'week':
       return { ...t, day: int(rng, 0, 6), dir: pick(rng, [1, -1] as const) };
     case 'unitPick':

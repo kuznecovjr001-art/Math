@@ -31,7 +31,7 @@ export const SKILLS: Record<SkillId, { title: string; requires: SkillId[] }> = {
 export const STATUS_TEXT: Record<SkillStatus, string> = {
   none: 'Ещё не встречали',
   meeting: 'Знакомится',
-  withHelp: 'Выполняет с помощью',
+  withHelp: 'Получается с помощью или со второй попытки',
   independent: 'Есть самостоятельный успех',
   solid: 'Уверенно, в разные дни',
   confirmed: 'Подтверждено после паузы',

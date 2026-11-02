@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { expectedAnswer, type CardParams } from '../content/missions';
 import { customArt } from '../content/art';
 import { NumberChoices } from './NumberChoices';
@@ -25,11 +25,15 @@ function Unit({ unit }: { unit: P['unit'] }) {
   );
 }
 
-/** Мерка: ребёнок прикладывает скрепки или карандаши вдоль ленты встык и считает их. */
+/**
+ * Мерка: ребёнок прикладывает скрепки или карандаши вдоль ленты встык и считает их.
+ * После верного ответа недостающие мерки сами ложатся до конца ленты и нумеруются.
+ */
 export function UnitsGame({ params, help, locked, onSubmit }: GameProps<P>) {
   const answer = expectedAnswer(params);
   const [laid, setLaid] = useState(0);
-  const shown = help >= 2 ? params.len : laid;
+  const [solved, setSolved] = useState(false);
+  const shown = help >= 2 || solved ? params.len : laid;
   const w = UNIT_PX[params.unit] * params.len;
   return (
     <div className="game">
@@ -37,9 +41,9 @@ export function UnitsGame({ params, help, locked, onSubmit }: GameProps<P>) {
         <div className="units-ribbon" style={{ width: w }} />
         <div className="units-row" style={{ width: w }}>
           {Array.from({ length: shown }, (_, i) => (
-            <span key={i} className="unit-cell">
+            <span key={i} className={`unit-cell ${i >= laid ? 'auto' : ''}`} style={{ '--i': i - laid } as CSSProperties}>
               <Unit unit={params.unit} />
-              {help >= 3 && <span className="unit-n">{i + 1}</span>}
+              {(help >= 3 || solved) && <span className="unit-n">{i + 1}</span>}
             </span>
           ))}
         </div>
@@ -52,7 +56,10 @@ export function UnitsGame({ params, help, locked, onSubmit }: GameProps<P>) {
           <Unit unit={params.unit} /> +
         </button>
       </div>
-      <NumberChoices options={answerChoices(answer)} answer={answer} locked={locked} onSubmit={onSubmit} />
+      <NumberChoices options={answerChoices(answer)} answer={answer} locked={locked} onSubmit={(r) => {
+        if (r.correct) setSolved(true);
+        onSubmit({ ...r, showMs: r.correct ? Math.max(0, params.len - laid) * 150 + 700 : undefined });
+      }} />
     </div>
   );
 }

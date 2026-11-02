@@ -2,3 +2,15 @@ node_modules
 dist
 *.log
 .DS_Store
+tsconfig.tsbuildinfo
+.claude/worktrees/
+.qa/
+tts/out/
+__pycache__/
+# Ключи подписи и секреты никогда не попадают в Git (docs/release-signing.md).
+*.jks
+*.keystore
+*.pem
+*.p12
+keystore.properties
+.env*
