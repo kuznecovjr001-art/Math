@@ -21,8 +21,8 @@ if (-not $env:SCHITALOCHKA_KEYSTORE) {
 if (-not $env:SCHITALOCHKA_KEY_ALIAS) { $env:SCHITALOCHKA_KEY_ALIAS = 'schitalochka' }
 
 if (-not (Test-Path $env:SCHITALOCHKA_KEYSTORE)) {
-  Write-Host "Ключа ещё нет. keytool спросит пароль и данные о владельце, ключ будет здесь: $env:SCHITALOCHKA_KEYSTORE"
-  & $keytool -genkeypair -v -keystore $env:SCHITALOCHKA_KEYSTORE -alias $env:SCHITALOCHKA_KEY_ALIAS -keyalg RSA -keysize 4096 -validity 10000
+  Write-Host "Ключа ещё нет. keytool дважды спросит новый пароль, ключ будет здесь: $env:SCHITALOCHKA_KEYSTORE"
+  & $keytool -genkeypair -v -keystore $env:SCHITALOCHKA_KEYSTORE -alias $env:SCHITALOCHKA_KEY_ALIAS -keyalg RSA -keysize 4096 -validity 10000 -dname 'CN=Schitalochka'
   if ($LASTEXITCODE) { throw 'Ключ не создан' }
   Write-Host 'Сохраните этот файл и пароль минимум в двух местах: без них обновления выпустить нельзя.'
 }

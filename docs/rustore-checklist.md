@@ -1,6 +1,6 @@
 # RuStore: требования и что сделано
 
-Источники прочитаны 2026-10-25, размер файла и альфа-тест сверены 2026-11-01 (требования могут меняться — перепроверить в день подачи):
+Источники прочитаны 2026-10-25, размер файла сверен 2026-11-01, альфа- и бета-тест 2026-11-02 (требования могут меняться — перепроверить в день подачи):
 R = https://www.rustore.ru/help/developers/publishing-and-verifying-apps/requirement-apps,
 P = https://www.rustore.ru/help/developers/publishing-and-verifying-apps/app-publication.
 
