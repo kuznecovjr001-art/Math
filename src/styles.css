@@ -470,6 +470,8 @@ body:has(.screen.map) { background: var(--sea); }
 .parent-bar { display: flex; align-items: center; gap: 12px; }
 .parent-bar h1 { margin: 0; text-align: left; }
 .card { background: var(--card); border-radius: var(--radius); padding: 16px 20px; border: 2px solid var(--line); }
+/* Длинная ссылка в политике не должна раздвигать экран. */
+.screen.parent .card p { overflow-wrap: anywhere; }
 .report { width: 100%; border-collapse: collapse; font-size: 16px; }
 .report td { padding: 8px 6px; border-top: 1px solid var(--line); }
 .status { font-weight: 700; }
